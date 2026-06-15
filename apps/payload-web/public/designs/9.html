@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BlockVibe - Friendly Pastel Theme</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    /* Global Styles & Design Tokens */
+    :root {
+      --bg-color: #faf5ff;
+      --text-color: #3b0764;
+      --text-muted: #6b21a8;
+      --accent-color: #8b5cf6;
+      --accent-light: #f3e8ff;
+      --accent-gradient: linear-gradient(135deg, #a78bfa, #f472b6);
+      --card-bg: #ffffff;
+      --card-border: #f3e8ff;
+      --shadow-color: rgba(139, 92, 246, 0.06);
+      --font-display: 'Quicksand', sans-serif;
+      --font-body: 'Nunito', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: var(--font-body);
+      line-height: 1.6;
+      overflow-x: hidden;
+      padding-bottom: 60px;
+    }
+
+    /* Layout Wrapper */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Navigation */
+    header {
+      background-color: rgba(250, 245, 255, 0.8);
+      backdrop-filter: blur(12px);
+      padding: 20px 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 1px solid var(--card-border);
+    }
+    .nav-flex {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo {
+      font-family: var(--font-display);
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-color);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .logo-dot {
+      width: 14px;
+      height: 14px;
+      background: var(--accent-gradient);
+      border-radius: 50%;
+    }
+    .nav-btn {
+      background: var(--card-bg);
+      color: var(--accent-color);
+      border: 1px solid var(--card-border);
+      padding: 10px 22px;
+      border-radius: 20px;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 14px;
+      text-decoration: none;
+      box-shadow: 0 4px 10px var(--shadow-color);
+      transition: all 0.25s ease;
+    }
+    .nav-btn:hover {
+      background: var(--accent-color);
+      color: #ffffff;
+      border-color: var(--accent-color);
+      transform: translateY(-1px);
+    }
+
+    /* Hero Section */
+    .hero {
+      padding: 80px 0 48px;
+      text-align: center;
+    }
+    h1 {
+      font-family: var(--font-display);
+      font-size: 50px;
+      font-weight: 700;
+      color: var(--text-color);
+      margin-bottom: 20px;
+      letter-spacing: -0.5px;
+      line-height: 1.2;
+    }
+    .hero p {
+      font-size: 18px;
+      color: var(--text-muted);
+      max-width: 760px;
+      margin: 0 auto 32px;
+      font-weight: 400;
+    }
+
+    /* Action Card */
+    .action-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 36px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      text-align: left;
+      box-shadow: 0 10px 25px var(--shadow-color);
+      margin-bottom: 80px;
+    }
+    .action-info h3 {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .action-info p {
+      color: var(--text-muted);
+      font-size: 15px;
+    }
+    .primary-btn {
+      background: var(--accent-gradient);
+      color: #ffffff;
+      font-family: var(--font-display);
+      font-weight: 700;
+      padding: 14px 28px;
+      border-radius: 24px;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(167, 139, 250, 0.35);
+      transition: all 0.25s ease;
+      white-space: nowrap;
+    }
+    .primary-btn:hover {
+      box-shadow: 0 6px 20px rgba(167, 139, 250, 0.5);
+      transform: translateY(-2px);
+    }
+
+    /* Features Grid */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 28px;
+      margin-bottom: 96px;
+    }
+    .feature-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 32px;
+      box-shadow: 0 8px 20px var(--shadow-color);
+      transition: all 0.25s ease;
+    }
+    .feature-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 25px rgba(139, 92, 246, 0.12);
+    }
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--accent-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      color: var(--accent-color);
+    }
+    .feature-card h4 {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .feature-card p {
+      color: var(--text-muted);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    /* Form Section */
+    .form-section {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 32px;
+      padding: 48px;
+      max-width: 800px;
+      margin: 0 auto 96px;
+      box-shadow: 0 15px 30px var(--shadow-color);
+    }
+    .form-title {
+      font-family: var(--font-display);
+      font-size: 30px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+    .form-subtitle {
+      text-align: center;
+      color: var(--text-muted);
+      margin-bottom: 32px;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .form-group.full-width {
+      grid-column: span 2;
+    }
+    label {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-color);
+      font-family: var(--font-display);
+    }
+    input {
+      background: var(--bg-color);
+      border: 1px solid var(--card-border);
+      padding: 12px 16px;
+      border-radius: 14px;
+      color: var(--text-color);
+      font-family: var(--font-body);
+      transition: all 0.25s ease;
+    }
+    input:focus {
+      outline: none;
+      border-color: var(--accent-color);
+      background-color: #ffffff;
+    }
+    .captcha-box {
+      background: var(--accent-light);
+      border: 1px solid var(--card-border);
+      padding: 16px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      grid-column: span 2;
+      margin: 8px 0;
+    }
+    .captcha-question {
+      font-family: var(--font-display);
+      font-weight: 700;
+      color: var(--text-color);
+    }
+    .form-submit-btn {
+      width: 100%;
+      grid-column: span 2;
+      padding: 14px;
+      border-radius: 24px;
+      border: none;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 16px;
+      background: var(--accent-gradient);
+      color: #ffffff;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(167, 139, 250, 0.35);
+      transition: all 0.25s ease;
+    }
+    .form-submit-btn:hover {
+      box-shadow: 0 6px 20px rgba(167, 139, 250, 0.5);
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--card-border);
+      padding: 40px 0;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    /* ==========================================================================
+       DESIGN DOC FLOATING SIDEBAR
+       ========================================================================== */
+    .design-doc-trigger {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--accent-gradient);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+      z-index: 1000;
+      transition: all 0.25s ease;
+      border: none;
+    }
+    .design-doc-trigger:hover {
+      transform: scale(1.05);
+    }
+    .design-sidebar {
+      position: fixed;
+      top: 0;
+      right: -400px;
+      width: 400px;
+      height: 100%;
+      background: #ffffff;
+      border-left: 1px solid var(--card-border);
+      box-shadow: -10px 0 30px rgba(139, 92, 246, 0.05);
+      z-index: 1001;
+      padding: 40px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      transition: right 0.3s ease;
+      overflow-y: auto;
+    }
+    .design-sidebar.open {
+      right: 0;
+    }
+    .sidebar-close {
+      align-self: flex-end;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 24px;
+      transition: color 0.2s;
+    }
+    .sidebar-close:hover {
+      color: var(--text-color);
+    }
+    .sidebar-title {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-color);
+      margin-bottom: 4px;
+    }
+    .sidebar-section {
+      border-top: 1px solid var(--card-border);
+      padding-top: 20px;
+    }
+    .sidebar-section h5 {
+      font-family: var(--font-display);
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--accent-color);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .sidebar-section p, .sidebar-section li {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    .sidebar-section ul {
+      list-style-type: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .palette-box {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .palette-color {
+      flex: 1;
+      height: 32px;
+      border-radius: 6px;
+      border: 1px solid rgba(0,0,0,0.05);
+    }
+    .portal-link {
+      margin-top: auto;
+      display: block;
+      text-align: center;
+      background: var(--bg-color);
+      border: 1px solid var(--card-border);
+      color: var(--text-color);
+      padding: 12px;
+      border-radius: 20px;
+      text-decoration: none;
+      font-family: var(--font-display);
+      font-weight: 700;
+      transition: all 0.2s;
+    }
+    .portal-link:hover {
+      background: var(--accent-color);
+      color: #ffffff;
+      border-color: var(--accent-color);
+    }
+    .backdrop-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.05);
+      z-index: 1000;
+      display: none;
+    }
+    .backdrop-overlay.open {
+      display: block;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      h1 { font-size: 36px; }
+      .features-grid { grid-template-columns: 1fr; }
+      .action-card { flex-direction: column; gap: 24px; text-align: center; }
+      .form-grid { grid-template-columns: 1fr; }
+      .form-group.full-width, .captcha-box, .form-submit-btn { grid-column: span 1; }
+      .design-sidebar { width: 100%; right: -100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="container nav-flex">
+      <a href="#" class="logo">
+        <div class="logo-dot"></div>
+        BlockVibe
+      </a>
+      <a href="http://nog.localhost:3000" class="nav-btn">Showcase Site</a>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container">
+      <h1>One platform for your neighborhood</h1>
+      <p>BlockVibe provides neighborhood associations with the digital tools they need to connect residents, build community trust, run democratic polls, and secure support.</p>
+    </div>
+  </section>
+
+  <!-- Content Containers -->
+  <main class="container">
+    
+    <!-- Action Card -->
+    <div class="action-card">
+      <div class="action-info">
+        <h3>See BlockVibe in Action</h3>
+        <p>Explore our showcase site modeled for the North of Grand neighborhood in Des Moines, Iowa.</p>
+      </div>
+      <a href="http://nog.localhost:3000" class="primary-btn">Visit Site</a>
+    </div>
+
+    <!-- Features Grid -->
+    <section class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        </div>
+        <h4>Modern Site Builder</h4>
+        <p>Launch a clean public website for your association with custom themes, static pages, contact forms, and layouts.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        </div>
+        <h4>Resident CRM & Directory</h4>
+        <p>Maintain a secure registry of neighbors, track registered members vs mailing contacts, and manage roles in one workspace.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+        </div>
+        <h4>Email Broadcaster</h4>
+        <p>Compose and send announcements directly to your verified neighborhood contact list using AWS SES.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9 12l2 2 4-4"></path></svg>
+        </div>
+        <h4>Democratic Voting</h4>
+        <p>Run secure board elections, budget approvals, and community opinion polls with one ballot per member rules.</p>
+      </div>
+    </section>
+
+    <!-- Space Request Form -->
+    <section class="form-section">
+      <h2 class="form-title">Bring BlockVibe to Your Neighborhood</h2>
+      <p class="form-subtitle">Submit a request to set up a digital workspace for your neighborhood association.</p>
+      
+      <form id="spaceRequestForm" onsubmit="handleFormSubmit(event)">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="appName">Your Name</label>
+            <input type="text" id="appName" required placeholder="Your Name">
+          </div>
+          <div class="form-group">
+            <label for="appEmail">Email Address</label>
+            <input type="email" id="appEmail" required placeholder="Email">
+          </div>
+          <div class="form-group">
+            <label for="neighborhoodName">Neighborhood Name</label>
+            <input type="text" id="neighborhoodName" required placeholder="Neighborhood">
+          </div>
+          <div class="form-group">
+            <label for="city">City</label>
+            <input type="text" id="city" required placeholder="City">
+          </div>
+          
+          <div class="captcha-box">
+            <div>
+              <span class="captcha-question">Solve Challenge: What is 7 + 6?</span>
+            </div>
+            <input type="number" id="captchaAnswer" required placeholder="Value" style="width: 120px;">
+          </div>
+
+          <button type="submit" class="form-submit-btn">Submit Request</button>
+        </div>
+      </form>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <p>&copy; 2026 BlockVibe. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- ==========================================================================
+       DESIGN DOC OVERLAY & SIDEBAR INTERACTION
+       ========================================================================== -->
+  <div class="backdrop-overlay" id="backdropOverlay" onclick="toggleSidebar()"></div>
+  
+  <button class="design-doc-trigger" onclick="toggleSidebar()" title="View Design Approach">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+  </button>
+
+  <div class="design-sidebar" id="designSidebar">
+    <button class="sidebar-close" onclick="toggleSidebar()">&times;</button>
+    
+    <div>
+      <h3 class="sidebar-title">Design 9: Pastel & Lavender</h3>
+      <p style="font-size: 13px; color: var(--accent-color); font-family: var(--font-display); font-weight: 700; text-transform: uppercase;">Soft Friendly Mode</p>
+    </div>
+
+    <div class="sidebar-section">
+      <h5>Theme Concept</h5>
+      <p>Soft rounded cards, friendly colors (lavender and peach), bubble-like drop shadows, and rounded buttons. Ideal for suburban blocks, local playgroups, and family-oriented homeowner associations.</p>
+    </div>
+
+    <div class="sidebar-section">
+      <h5>Typography</h5>
+      <ul style="margin-top: 8px;">
+        <li><strong>Headers:</strong> Quicksand (Friendly rounded display sans-serif)</li>
+        <li><strong>Body:</strong> Nunito (Approachable sans-serif with rounded glyph outlines)</li>
+      </ul>
+    </div>
+
+    <div class="sidebar-section">
+      <h5>Color Palette</h5>
+      <div class="palette-box">
+        <div class="palette-color" style="background-color: #faf5ff;" title="Background: #faf5ff"></div>
+        <div class="palette-color" style="background-color: #8b5cf6;" title="Accent Purple: #8b5cf6"></div>
+        <div class="palette-color" style="background-color: #ffedd5;" title="Accent Peach: #ffedd5"></div>
+        <div class="palette-color" style="background-color: #ffffff;" title="Card Fill"></div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <h5>Key Visual Techniques</h5>
+      <p style="margin-top: 8px;">Very rounded card frames (24px border-radius), soft gradient buttons, wide padded margins, bubble drop-shadows, and friendly color overlays.</p>
+    </div>
+
+    <a href="/designs/index.html" class="portal-link">Back to Designs Portal</a>
+  </div>
+
+  <script>
+    function toggleSidebar() {
+      const sidebar = document.getElementById('designSidebar');
+      const overlay = document.getElementById('backdropOverlay');
+      sidebar.classList.toggle('open');
+      overlay.classList.toggle('open');
+    }
+
+    function handleFormSubmit(event) {
+      event.preventDefault();
+      const captchaAnswer = document.getElementById('captchaAnswer').value;
+      if (parseInt(captchaAnswer) === 13) {
+        alert('Space request submitted successfully! (Challenge verified)');
+        document.getElementById('spaceRequestForm').reset();
+      } else {
+        alert('Incorrect challenge solution. Please try again.');
+      }
+    }
+  </script>
+</body>
+</html>

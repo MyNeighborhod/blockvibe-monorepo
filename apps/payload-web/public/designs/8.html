@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BlockVibe - Swiss Minimalist Theme</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Arimo:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  
+  <style>
+    /* Global Styles & Design Tokens */
+    :root {
+      --bg-color: #ffffff;
+      --text-color: #111111;
+      --text-muted: #555555;
+      --accent-color: #dc2626;
+      --card-bg: #ffffff;
+      --card-border: #111111;
+      --font-display: 'Arimo', sans-serif;
+      --font-body: 'Arimo', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: var(--font-body);
+      line-height: 1.5;
+      overflow-x: hidden;
+      padding-bottom: 60px;
+    }
+
+    /* Layout Wrapper */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Navigation */
+    header {
+      padding: 30px 0;
+      border-bottom: 2px solid var(--text-color);
+      background-color: var(--bg-color);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-flex {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+    .logo {
+      font-family: var(--font-display);
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text-color);
+      text-decoration: none;
+      letter-spacing: -1px;
+      line-height: 1;
+    }
+    .nav-btn {
+      color: var(--text-color);
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 13px;
+      text-decoration: none;
+      border-bottom: 2px solid var(--text-color);
+      transition: all 0.2s;
+      text-transform: uppercase;
+      padding-bottom: 4px;
+    }
+    .nav-btn:hover {
+      color: var(--accent-color);
+      border-color: var(--accent-color);
+    }
+
+    /* Hero Section */
+    .hero {
+      padding: 96px 0 64px;
+      text-align: left;
+      border-bottom: 2px solid var(--text-color);
+    }
+    h1 {
+      font-family: var(--font-display);
+      font-size: 72px;
+      font-weight: 700;
+      line-height: 0.95;
+      color: var(--text-color);
+      margin-bottom: 32px;
+      letter-spacing: -3px;
+      text-transform: uppercase;
+      max-width: 900px;
+    }
+    .hero p {
+      font-size: 20px;
+      color: var(--text-muted);
+      max-width: 760px;
+      font-weight: 400;
+      margin-top: 16px;
+    }
+
+    /* Action Card */
+    .action-card {
+      border-bottom: 1px solid var(--text-color);
+      padding: 48px 0;
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      align-items: center;
+      text-align: left;
+    }
+    .action-info h3 {
+      font-family: var(--font-display);
+      font-size: 32px;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      letter-spacing: -1px;
+    }
+    .action-info p {
+      color: var(--text-muted);
+      font-size: 16px;
+    }
+    .primary-btn {
+      background: var(--text-color);
+      color: var(--bg-color);
+      font-family: var(--font-display);
+      font-weight: 700;
+      padding: 16px 32px;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      text-align: center;
+      text-transform: uppercase;
+      font-size: 14px;
+      justify-self: end;
+    }
+    .primary-btn:hover {
+      background: var(--accent-color);
+      color: #ffffff;
+    }
+
+    /* Features Grid */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 32px;
+      margin-top: 64px;
+      margin-bottom: 96px;
+      border-bottom: 2px solid var(--text-color);
+      padding-bottom: 64px;
+    }
+    .feature-card {
+      display: flex;
+      flex-direction: column;
+    }
+    .feature-icon {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--accent-color);
+      margin-bottom: 24px;
+    }
+    .feature-card h4 {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      letter-spacing: -0.5px;
+      border-bottom: 1px solid var(--text-color);
+      padding-bottom: 12px;
+    }
+    .feature-card p {
+      color: var(--text-muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* Form Section */
+    .form-section {
+      max-width: 800px;
+      margin: 0 auto 96px;
+    }
+    .form-title {
+      font-family: var(--font-display);
+      font-size: 40px;
+      font-weight: 700;
+      text-transform: uppercase;
+      text-align: left;
+      margin-bottom: 16px;
+      letter-spacing: -1.5px;
+    }
+    .form-subtitle {
+      text-align: left;
+      color: var(--text-muted);
+      margin-bottom: 48px;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 32px;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .form-group.full-width {
+      grid-column: span 2;
+    }
+    label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-color);
+      text-transform: uppercase;
+    }
+    input {
+      background: none;
+      border: 2px solid var(--text-color);
+      padding: 14px 16px;
+      color: var(--text-color);
+      font-family: var(--font-body);
+      font-size: 15px;
+      transition: all 0.2s;
+    }
+    input:focus {
+      outline: none;
+      border-color: var(--accent-color);
+    }
+    .captcha-box {
+      border: 2px solid var(--text-color);
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      grid-column: span 2;
+      margin: 8px 0;
+    }
+    .captcha-question {
+      font-family: var(--font-display);
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--accent-color);
+    }
+    .form-submit-btn {
+      width: 100%;
+      grid-column: span 2;
+      padding: 16px;
+      border: none;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 16px;
+      text-transform: uppercase;
+      background: var(--text-color);
+      color: var(--bg-color);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .form-submit-btn:hover {
+      background: var(--accent-color);
+      color: #ffffff;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--text-color);
+      padding: 40px 0;
+      text-align: left;
+      color: var(--text-muted);
+      font-size: 13px;
+      text-transform: uppercase;
+    }
+
+    /* ==========================================================================
+       DESIGN DOC FLOATING SIDEBAR
+       ========================================================================== */
+    .design-doc-trigger {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 56px;
+      height: 56px;
+      background: var(--text-color);
+      color: var(--bg-color);
+      border: 2px solid var(--text-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 1000;
+      transition: all 0.2s ease;
+    }
+    .design-doc-trigger:hover {
+      background: var(--accent-color);
+      border-color: var(--accent-color);
+      color: #ffffff;
+    }
+    .design-sidebar {
+      position: fixed;
+      top: 0;
+      right: -400px;
+      width: 400px;
+      height: 100%;
+      background: #ffffff;
+      border-left: 2px solid var(--text-color);
+      box-shadow: -10px 0 30px rgba(0,0,0,0.02);
+      z-index: 1001;
+      padding: 40px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      transition: right 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      overflow-y: auto;
+    }
+    .design-sidebar.open {
+      right: 0;
+    }
+    .sidebar-close {
+      align-self: flex-end;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 24px;
+      transition: color 0.2s;
+    }
+    .sidebar-close:hover {
+      color: var(--accent-color);
+    }
+    .sidebar-title {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-color);
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: -0.5px;
+    }
+    .sidebar-section {
+      border-top: 1px solid var(--text-color);
+      padding-top: 20px;
+    }
+    .sidebar-section h5 {
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--accent-color);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+    .sidebar-section p, .sidebar-section li {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    .sidebar-section ul {
+      list-style-type: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .palette-box {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .palette-color {
+      flex: 1;
+      height: 32px;
+      border: 1px solid var(--text-color);
+    }
+    .portal-link {
+      margin-top: auto;
+      display: block;
+      text-align: center;
+      background: none;
+      border: 2px solid var(--text-color);
+      color: var(--text-color);
+      padding: 12px;
+      text-decoration: none;
+      font-family: var(--font-display);
+      font-weight: 700;
+      transition: all 0.2s;
+      text-transform: uppercase;
+      font-size: 13px;
+    }
+    .portal-link:hover {
+      background: var(--text-color);
+      color: var(--bg-color);
+    }
+    .backdrop-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.05);
+      z-index: 1000;
+      display: none;
+    }
+    .backdrop-overlay.open {
+      display: block;
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+      .features-grid { grid-template-columns: repeat(2, 1fr); }
+      .action-card { grid-template-columns: 1fr; gap: 24px; }
+      .primary-btn { justify-self: start; }
+    }
+    @media (max-width: 768px) {
+      h1 { font-size: 44px; letter-spacing: -2px; }
+      .features-grid { grid-template-columns: 1fr; }
+      .form-grid { grid-template-columns: 1fr; }
+      .form-group.full-width, .captcha-box, .form-submit-btn { grid-column: span 1; }
+      .design-sidebar { width: 100%; right: -100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="container nav-flex">
+      <a href="#" class="logo">
+        BLOCKVIBE
+      </a>
+      <a href="http://nog.localhost:3000" class="nav-btn">Showcase Site</a>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container">
+      <h1>One platform for your neighborhood</h1>
+      <p>BlockVibe provides neighborhood associations with the digital tools they need to connect residents, build community trust, run democratic polls, and secure support.</p>
+    </div>
+  </section>
+
+  <!-- Content Containers -->
+  <main class="container">
+    
+    <!-- Action Card -->
+    <div class="action-card">
+      <div class="action-info">
+        <h3>See BlockVibe in Action</h3>
+        <p>Explore our showcase site modeled for the North of Grand neighborhood in Des Moines, Iowa.</p>
+      </div>
+      <a href="http://nog.localhost:3000" class="primary-btn">Visit Site</a>
+    </div>
+
+    <!-- Features Grid -->
+    <section class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">01.</div>
+        <h4>Site Builder</h4>
+        <p>Launch a clean public website for your association with custom themes, static pages, contact forms, and layouts.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">02.</div>
+        <h4>CRM & Directory</h4>
+        <p>Maintain a secure registry of neighbors, track registered members vs mailing contacts, and manage roles in one workspace.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">03.</div>
+        <h4>Broadcaster</h4>
+        <p>Compose and send announcements directly to your verified neighborhood contact list using AWS SES.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">04.</div>
+        <h4>Voting Engine</h4>
+        <p>Run secure board elections, budget approvals, and community opinion polls with one ballot per member rules.</p>
+      </div>
+    </section>
+
+    <!-- Space Request Form -->
+    <section class="form-section">
+      <h2 class="form-title">Launch BlockVibe</h2>
+      <p class="form-subtitle">Submit a request to set up a digital workspace for your neighborhood association.</p>
+      
+      <form id="spaceRequestForm" onsubmit="handleFormSubmit(event)">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="appName">Your Name</label>
+            <input type="text" id="appName" required placeholder="Name">
+          </div>
+          <div class="form-group">
+            <label for="appEmail">Email Address</label>
+            <input type="email" id="appEmail" required placeholder="Email">
+          </div>
+          <div class="form-group">
+            <label for="neighborhoodName">Neighborhood Name</label>
+            <input type="text" id="neighborhoodName" required placeholder="Neighborhood">
+          </div>
+          <div class="form-group">
+            <label for="city">City</label>
+            <input type="text" id="city" required placeholder="City">
+          </div>
+          
+          <div class="captcha-box">
+            <div>
+              <span class="captcha-question">Solve Challenge: 7 + 6 = ?</span>
+            </div>
+            <input type="number" id="captchaAnswer" required placeholder="Value" style="width: 120px;">
+          </div>
+
+          <button type="submit" class="form-submit-btn">Submit Request</button>
+        </div>
+      </form>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <p>&copy; 2026 BlockVibe. All rights reserved. Platform Design Studio.</p>
+    </div>
+  </footer>
+
+  <!-- ==========================================================================
+       DESIGN DOC OVERLAY & SIDEBAR INTERACTION
+       ========================================================================== -->
+  <div class="backdrop-overlay" id="backdropOverlay" onclick="toggleSidebar()"></div>
+  
+  <button class="design-doc-trigger" onclick="toggleSidebar()" title="View Design Approach">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+  </button>
+
+  <div class="design-sidebar" id="designSidebar">
+    <button class="sidebar-close" onclick="toggleSidebar()">&times;</button>
+    
+    <div>
+      <h3 class="sidebar-title">Design 8: Swiss Design</h3>
+      <p style="font-size: 13px; color: var(--accent-color); font-family: var(--font-display); font-weight: 700; text-transform: uppercase;">Typographic Minimalist</p>
+    </div>
+
+    <div class="sidebar-section">
+      <h5>Theme Concept</h5>
+      <p>Inspired by mid-century modernist typography (Swiss Style). Strict grid placement, bold typography scale contrasts, and stark crimson color overlays. Focused entirely on clean layouts.</p>
+    </div>
+
+    <div class="sidebar-section">
+      <h5>Typography</h5>
+      <ul style="margin-top: 8px;">
+        <li><strong>Headers & Body:</strong> Arimo (Structured geometric sans-serif that mimics Helvetica Neue)</li>
+      </ul>
+    </div>
+
+    <div class="sidebar-section">
+      <h5>Color Palette</h5>
+      <div class="palette-box">
+        <div class="palette-color" style="background-color: #ffffff;" title="Background: #ffffff"></div>
+        <div class="palette-color" style="background-color: #111111;" title="Accent Dark: #111111"></div>
+        <div class="palette-color" style="background-color: #dc2626;" title="Accent Red: #dc2626"></div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <h5>Key Visual Techniques</h5>
+      <p style="margin-top: 8px;">Rigid asymmetrical grids, oversized sans headers, thin line spacers, high contrasts, and uppercase menu utilities.</p>
+    </div>
+
+    <a href="/designs/index.html" class="portal-link">Back to Designs Portal</a>
+  </div>
+
+  <script>
+    function toggleSidebar() {
+      const sidebar = document.getElementById('designSidebar');
+      const overlay = document.getElementById('backdropOverlay');
+      sidebar.classList.toggle('open');
+      overlay.classList.toggle('open');
+    }
+
+    function handleFormSubmit(event) {
+      event.preventDefault();
+      const captchaAnswer = document.getElementById('captchaAnswer').value;
+      if (parseInt(captchaAnswer) === 13) {
+        alert('Space request submitted successfully! (Challenge verified)');
+        document.getElementById('spaceRequestForm').reset();
+      } else {
+        alert('Incorrect challenge solution. Please try again.');
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,245 @@
+/* BlockVibe Theme - Design 9: Pastel & Lavender (Soft Friendly Mode) */
+
+.theme-default {
+  --background: #faf5ff; /* Soft Lavender/Pink background */
+  --foreground: #3b0764; /* Deep violet text */
+  --text-muted: #6b21a8; /* Warm purple-toned body text */
+  --accent: #8b5cf6; /* Soft purple accent */
+  --accent-light: #f3e8ff; /* Soft lavender highlights */
+  --accent-gradient: linear-gradient(135deg, #a78bfa, #f472b6); /* Dreamy pink-violet gradient */
+  --card: #ffffff; /* Card background */
+  --border: #f3e8ff; /* Soft borders */
+  --shadow-color: rgba(139, 92, 246, 0.08); /* Lavender-tinted glow shadow */
+  --font-display: var(--font-quicksand), sans-serif;
+  --font-body: var(--font-nunito), sans-serif;
+  --radius: 24px; /* Highly rounded corners */
+
+  background-color: var(--background) !important;
+  color: var(--foreground) !important;
+  font-family: var(--font-body) !important;
+}
+
+/* Headings typography adjustments */
+.theme-default h1,
+.theme-default h2,
+.theme-default h3,
+.theme-default h4,
+.theme-default h5,
+.theme-default h6,
+.theme-default .logo,
+.theme-default .font-display {
+  font-family: var(--font-display) !important;
+  color: var(--foreground) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.5px !important;
+}
+
+.theme-default h1 {
+  font-size: 3.125rem !important; /* 50px */
+  line-height: 1.2 !important;
+}
+
+.theme-default h2 {
+  font-size: 1.875rem !important; /* 30px */
+  margin-bottom: 0.75rem !important;
+}
+
+.theme-default h3 {
+  font-size: 1.375rem !important; /* 22px */
+  margin-bottom: 0.5rem !important;
+}
+
+/* Body & paragraph styling */
+.theme-default p,
+.theme-default div.paragraph,
+.theme-default .richText p {
+  font-family: var(--font-body) !important;
+  color: var(--text-muted) !important;
+  font-size: 1rem !important;
+  line-height: 1.6 !important;
+}
+
+/* Links & hovers */
+.theme-default a {
+  color: var(--accent);
+  transition: all 0.25s ease;
+  text-decoration: none;
+}
+
+.theme-default a:hover {
+  color: #db2777; /* Deeper pink highlight */
+}
+
+/* Sticky Header styling */
+.theme-default header {
+  background-color: rgba(250, 245, 255, 0.8) !important;
+  backdrop-filter: blur(12px) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.theme-default header nav a,
+.theme-default header nav a.nav-link {
+  font-family: var(--font-display) !important;
+  font-weight: 700 !important;
+  font-size: 0.875rem !important;
+  color: var(--accent) !important;
+  background-color: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  padding: 10px 22px !important;
+  border-radius: 20px !important;
+  box-shadow: 0 4px 10px var(--shadow-color) !important;
+  transition: all 0.25s ease !important;
+}
+
+.theme-default header nav a:hover,
+.theme-default header nav a.nav-link:hover {
+  background: var(--accent) !important;
+  color: #ffffff !important;
+  border-color: var(--accent) !important;
+  transform: translateY(-1px);
+}
+
+/* Custom CSS Logo modification for Design 9 */
+.theme-default header span {
+  font-family: var(--font-display) !important;
+  color: var(--foreground) !important;
+  font-size: 1.5rem !important; /* 24px */
+  font-weight: 700 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.theme-default header svg {
+  display: none !important; /* Hide default icon */
+}
+
+.theme-default header span::before {
+  content: "" !important;
+  display: inline-block !important;
+  width: 14px !important;
+  height: 14px !important;
+  background: var(--accent-gradient) !important;
+  border-radius: 50% !important;
+}
+
+/* Content block column cards */
+.theme-default .grid > div.lg\:col-span-6,
+.theme-default .grid > div.lg\:col-span-4,
+.theme-default .grid > div.lg\:col-span-8 {
+  background-color: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius) !important;
+  padding: 2.25rem !important; /* 36px padding */
+  box-shadow: 0 8px 20px var(--shadow-color) !important;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.theme-default .grid > div.lg\:col-span-6:hover,
+.theme-default .grid > div.lg\:col-span-4:hover,
+.theme-default .grid > div.lg\:col-span-8:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 0 15px 30px rgba(139, 92, 246, 0.12) !important;
+}
+
+/* Feature icons styling */
+.theme-default .grid > div .mb-4.w-12.h-12,
+.theme-default .grid > div [class*="w-12 h-12"] {
+  background-color: var(--accent-light) !important;
+  border-radius: 50% !important;
+  color: var(--accent) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Call To Action Block (Action Card) & Form Container */
+.theme-default div.border.border-border:not(img) {
+  background-color: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius) !important;
+  padding: 2.25rem !important; /* 36px padding */
+  box-shadow: 0 10px 25px var(--shadow-color) !important;
+  display: flex !important;
+}
+
+/* Forms styling & inputs */
+.theme-default input,
+.theme-default textarea,
+.theme-default select {
+  background-color: var(--background) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 14px !important;
+  padding: 12px 16px !important;
+  color: var(--foreground) !important;
+  font-family: var(--font-body) !important;
+  transition: all 0.25s ease !important;
+  width: 100% !important;
+}
+
+.theme-default input:focus,
+.theme-default textarea:focus,
+.theme-default select:focus {
+  outline: none !important;
+  border-color: var(--accent) !important;
+  background-color: #ffffff !important;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15) !important;
+}
+
+.theme-default label {
+  font-family: var(--font-display) !important;
+  font-weight: 700 !important;
+  color: var(--foreground) !important;
+  font-size: 0.875rem !important;
+  margin-bottom: 6px !important;
+}
+
+/* Submit Buttons & Primary CTAs */
+.theme-default button[type="submit"],
+.theme-default a.bg-primary,
+.theme-default a[class*="bg-primary"],
+.theme-default .btn[class*="primary"],
+.theme-default button.bg-primary {
+  background: var(--accent-gradient) !important;
+  color: #ffffff !important;
+  font-family: var(--font-display) !important;
+  font-weight: 700 !important;
+  font-size: 1rem !important;
+  padding: 12px 28px !important;
+  border-radius: 24px !important;
+  border: none !important;
+  cursor: pointer !important;
+  box-shadow: 0 4px 15px rgba(167, 139, 250, 0.35) !important;
+  transition: all 0.25s ease !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.theme-default button[type="submit"]:hover,
+.theme-default a.bg-primary:hover,
+.theme-default a[class*="bg-primary"]:hover,
+.theme-default .btn[class*="primary"]:hover,
+.theme-default button.bg-primary:hover {
+  box-shadow: 0 6px 20px rgba(167, 139, 250, 0.5) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Footer overrides */
+.theme-default footer {
+  border-top: 1px solid var(--border) !important;
+  padding: 40px 0 !important;
+  color: var(--text-muted) !important;
+  font-size: 0.875rem !important;
+}
+
+.theme-default footer a {
+  color: var(--text-muted) !important;
+  font-family: var(--font-display) !important;
+  font-weight: 700 !important;
+  transition: color 0.2s ease !important;
+}
+
+.theme-default footer a:hover {
+  color: var(--accent) !important;
+}

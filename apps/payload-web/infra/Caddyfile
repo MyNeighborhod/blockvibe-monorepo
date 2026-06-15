@@ -1,0 +1,12 @@
+# Automatic HTTPS via Let's Encrypt (HTTP-01 challenge).
+info.blockvibe.org, nog.blockvibe.org, beaverdale.blockvibe.org, oakwood.blockvibe.org, woodland-dsm.blockvibe.org, twin-suns.blockvibe.org {
+	# Serve uploaded media directly from the EBS volume (bypasses Next.js standalone).
+	handle /media/* {
+		root * /var/www/blockvibe
+		file_server
+	}
+
+	handle {
+		reverse_proxy 127.0.0.1:3000
+	}
+}

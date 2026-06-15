@@ -1,0 +1,31 @@
+services:
+  payload:
+    image: blockvibe-app:latest
+    restart: always
+    ports:
+      - "127.0.0.1:3000:3000" # Bind only to localhost (Caddy proxies public traffic on 80/443)
+    volumes:
+      - /var/www/blockvibe/media:/app/public/media
+    depends_on:
+      - db
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgres://${DB_USER:-postgres}:${DB_PASSWORD:-localhost}@db:5432/${DB_NAME:-blockvibe-multitenant}
+
+  db:
+    image: postgres:16-alpine
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${DB_USER:-postgres}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-localhost}
+      - POSTGRES_DB=${DB_NAME:-blockvibe-multitenant}
+    ports:
+      - "127.0.0.1:5432:5432" # Bind only to localhost for security
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: always
+
+volumes:
+  pgdata:

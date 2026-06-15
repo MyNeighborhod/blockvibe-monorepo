@@ -1,0 +1,28 @@
+{
+  "name": "blockvibe-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "pnpm@10.5.0",
+  "license": "MIT",
+  "engines": {
+    "node": "^18.20.2 || >=20.9.0",
+    "pnpm": "^9 || ^10"
+  },
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "lint:fix": "turbo lint:fix",
+    "clean": "turbo clean"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.4"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "sharp",
+      "esbuild",
+      "unrs-resolver"
+    ]
+  }
+}

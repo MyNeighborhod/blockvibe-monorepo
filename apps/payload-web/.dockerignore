@@ -1,0 +1,14 @@
+.git
+.next
+node_modules
+infra/id_rsa
+infra/terraform.tfstate*
+infra/.terraform
+.env
+.env.*
+!.env.example
+dbsnapshots
+*.tar.gz
+.cursor
+playwright-report
+test-results

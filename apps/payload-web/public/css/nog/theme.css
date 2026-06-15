@@ -1,0 +1,189 @@
+/* North Of Grand Theme Custom Overrides */
+.theme-nog {
+  font-family: var(--font-gentium), serif;
+  color: #2a2a2a;
+}
+
+/* NOG header is taller; hero sits flush (header floats over it when data-theme="dark") */
+body[data-tenant-chrome="nog"] .high-impact-hero {
+  margin-top: 0;
+}
+
+.theme-nog p,
+.theme-nog div.paragraph {
+  font-family: var(--font-gentium), serif !important;
+  color: #7b8c89 !important;
+  font-size: 1.125rem !important; /* 18px */
+  line-height: 1.88 !important; /* ~34px */
+}
+
+.theme-nog strong,
+.theme-nog b {
+  color: #2a2a2a !important;
+}
+
+.theme-nog h1,
+.theme-nog h2,
+.theme-nog h3,
+.theme-nog h4,
+.theme-nog .hero h1 {
+  font-family: var(--font-playfair), serif !important;
+  color: #42514c;
+  font-weight: 600 !important;
+}
+
+.theme-nog h1 {
+  font-size: 3.75rem !important; /* 60px */
+}
+
+.theme-nog h2 {
+  font-size: 2.125rem !important; /* 34px */
+  margin-top: 1.5rem !important;
+  margin-bottom: 1rem !important;
+}
+
+.theme-nog h3 {
+  font-size: 1.5rem !important;
+  margin-top: 1.25rem !important;
+  margin-bottom: 0.75rem !important;
+}
+
+.theme-nog a {
+  /* color: #0a3840; */
+  text-decoration: underline;
+  transition: color 0.2s ease;
+}
+
+.theme-nog a:hover {
+  color: #47773e;
+}
+
+.theme-nog header nav a,
+.theme-nog header nav a.nav-link {
+  font-family: var(--font-montserrat), sans-serif !important;
+  font-size: 0.6875rem !important; /* 11px */
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+  text-decoration: none !important;
+  color: #2a2a2a !important;
+  padding: 0.5rem 1rem !important;
+  font-weight: 400 !important;
+}
+
+.theme-nog header nav a:hover,
+.theme-nog header nav a.nav-link:hover {
+  color: #76b3b8 !important;
+}
+
+/* Styled horizontal lines */
+.theme-nog hr.styled-hr {
+  border: 0;
+  height: 1px;
+  background-image: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0),
+    rgba(123, 140, 137, 0.4),
+    rgba(0, 0, 0, 0)
+  );
+  margin: 2.5rem 0;
+}
+
+/* High-impact hero and header-over-hero use data-theme="dark" — keep light text */
+.theme-nog [data-theme="dark"] h1,
+.theme-nog [data-theme="dark"] h2,
+.theme-nog [data-theme="dark"] h3,
+.theme-nog [data-theme="dark"] h4,
+.theme-nog [data-theme="dark"] p,
+.theme-nog [data-theme="dark"] .richText p,
+.theme-nog [data-theme="dark"] strong,
+.theme-nog [data-theme="dark"] b {
+  color: #ffffff !important;
+}
+
+.theme-nog [data-theme="dark"] a:not([class*="bg-primary"]):not([class*="bg-background"]) {
+  color: #ffffff !important;
+}
+
+.text-primary-foreground a {
+  color: #ffffff;
+}
+
+.theme-nog [data-theme="dark"] a[class*="outline"] {
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.75) !important;
+  background-color: transparent !important;
+}
+
+.theme-nog [data-theme="dark"] a[class*="outline"]:hover {
+  color: #42514c !important;
+  background-color: #ffffff !important;
+}
+
+[data-theme="dark"] .theme-nog header nav a,
+[data-theme="dark"] .theme-nog header nav a.nav-link {
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .theme-nog header nav a:hover,
+[data-theme="dark"] .theme-nog header nav a.nav-link:hover {
+  color: #76b3b8 !important;
+}
+
+[data-theme="dark"] .theme-nog header nav svg {
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .theme-nog header .border-t,
+[data-theme="dark"] .theme-nog header .border-b {
+  border-color: rgba(255, 255, 255, 0.35) !important;
+}
+
+[data-theme="dark"] .theme-nog header > div > a.font-serif {
+  color: #ffffff !important;
+  text-decoration: none !important;
+}
+
+/* Dark mode styles for interactive content cards on NOG tenant */
+[data-theme="dark"] .theme-nog div.bg-white {
+  background-color: var(--card);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .theme-nog div.bg-white h3 {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .theme-nog div.bg-white label {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .theme-nog div.bg-white p {
+  color: #d4d4d8 !important;
+}
+
+[data-theme="dark"] .theme-nog div.bg-white p.text-gray-400,
+[data-theme="dark"] .theme-nog div.bg-white label.text-gray-500 {
+  color: #a1a1aa !important;
+}
+
+[data-theme="dark"] .theme-nog div.bg-white input,
+[data-theme="dark"] .theme-nog div.bg-white textarea {
+  background-color: #09090b;
+  color: #ffffff;
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .theme-nog div.bg-white input::placeholder,
+[data-theme="dark"] .theme-nog div.bg-white textarea::placeholder {
+  color: #71717a;
+}
+
+[data-theme="dark"] .theme-nog div.bg-white a.bg-teal-50 {
+  background-color: rgba(20, 184, 166, 0.1);
+  color: #5eead4 !important;
+}
+
+[data-theme="dark"] .theme-nog div.bg-white .bg-teal-50 {
+  background-color: rgba(20, 184, 166, 0.05);
+  border-color: rgba(20, 184, 166, 0.2);
+}

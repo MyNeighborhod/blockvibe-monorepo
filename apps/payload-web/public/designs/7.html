@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BlockVibe - Cyberpunk Monospace Theme</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,700;1,300&display=swap" rel="stylesheet">
+  
+  <style>
+    /* Global Styles & Design Tokens */
+    :root {
+      --bg-color: #000000;
+      --text-color: #22c55e;
+      --text-muted: rgba(34, 197, 94, 0.75);
+      --accent-color: #eab308;
+      --card-bg: #000000;
+      --card-border: rgba(34, 197, 94, 0.35);
+      --card-glow: rgba(34, 197, 94, 0.15);
+      --input-bg: #000000;
+      --font-display: 'JetBrains Mono', monospace;
+      --font-body: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: var(--font-body);
+      line-height: 1.6;
+      overflow-x: hidden;
+      padding-bottom: 60px;
+    }
+
+    /* Layout Wrapper */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Navigation */
+    header {
+      padding: 20px 0;
+      border-bottom: 1px dashed var(--text-color);
+      background-color: var(--bg-color);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-flex {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-color);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .logo-prefix {
+      color: var(--accent-color);
+    }
+    .nav-btn {
+      border: 1px solid var(--text-color);
+      color: var(--text-color);
+      padding: 8px 16px;
+      font-size: 13px;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .nav-btn:hover {
+      background: var(--text-color);
+      color: var(--bg-color);
+      box-shadow: 0 0 10px var(--card-glow);
+    }
+
+    /* Hero Section */
+    .hero {
+      padding: 80px 0 48px;
+      text-align: left;
+    }
+    .term-line {
+      color: var(--accent-color);
+      margin-bottom: 12px;
+      font-weight: 700;
+    }
+    h1 {
+      font-family: var(--font-display);
+      font-size: 40px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      text-transform: uppercase;
+      text-shadow: 0 0 5px rgba(34, 197, 94, 0.4);
+    }
+    .hero p {
+      font-size: 15px;
+      color: var(--text-muted);
+      max-width: 800px;
+      margin-bottom: 32px;
+    }
+
+    /* Action Card */
+    .action-card {
+      border: 1px solid var(--text-color);
+      padding: 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      text-align: left;
+      margin-bottom: 64px;
+      box-shadow: 0 0 12px var(--card-glow);
+    }
+    .action-info h3 {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: var(--accent-color);
+    }
+    .action-info p {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+    .primary-btn {
+      background: var(--text-color);
+      color: var(--bg-color);
+      font-family: var(--font-display);
+      font-weight: 700;
+      padding: 12px 24px;
+      text-decoration: none;
+      border: 1px solid var(--text-color);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+    .primary-btn:hover {
+      background: var(--bg-color);
+      color: var(--text-color);
+      box-shadow: 0 0 15px var(--card-glow);
+    }
+
+    /* Features Grid */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+      margin-bottom: 80px;
+    }
+    .feature-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      padding: 32px;
+      transition: all 0.2s ease;
+    }
+    .feature-card:hover {
+      border-color: var(--text-color);
+      box-shadow: 0 0 15px var(--card-glow);
+      transform: translateY(-2px);
+    }
+    .feature-icon {
+      font-size: 18px;
+      margin-bottom: 16px;
+      color: var(--accent-color);
+    }
+    .feature-card h4 {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+    .feature-card p {
+      color: var(--text-muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* Form Section */
+    .form-section {
+      background: var(--card-bg);
+      border: 1px solid var(--text-color);
+      padding: 48px;
+      max-width: 800px;
+      margin: 0 auto 80px;
+      box-shadow: 0 0 20px var(--card-glow);
+    }
+    .form-title {
+      font-family: var(--font-display);
+      font-size: 26px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+    .form-subtitle {
+      text-align: center;
+      color: var(--text-muted);
+      margin-bottom: 32px;
+      font-size: 14px;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .form-group.full-width {
+      grid-column: span 2;
+    }
+    label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent-color);
+    }
+    input {
+      background: var(--input-bg);
+      border: 1px solid var(--card-border);
+      padding: 12px 16px;
+      color: var(--text-color);
+      font-family: var(--font-body);
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    input:focus {
+      outline: none;
+      border-color: var(--text-color);
+      box-shadow: 0 0 8px var(--card-glow);
+    }
+    .captcha-box {
+      border: 1px dashed var(--text-color);
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      grid-column: span 2;
+      margin: 8px 0;
+    }
+    .captcha-question {
+      font-family: var(--font-display);
+      font-weight: 700;
+      color: var(--accent-color);
+    }
+    .form-submit-btn {
+      width: 100%;
+      grid-column: span 2;
+      padding: 14px;
+      border: 1px solid var(--text-color);
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 16px;
+      background: var(--text-color);
+      color: var(--bg-color);
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: all 0.2s;
+    }
+    .form-submit-btn:hover {
+      background: var(--bg-color);
+      color: var(--text-color);
+      box-shadow: 0 0 15px var(--card-glow);
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px dashed var(--text-color);
+      padding: 40px 0;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    /* ==========================================================================
+       DESIGN DOC FLOATING SIDEBAR
+       ========================================================================== */
+    .design-doc-trigger {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 56px;
+      height: 56px;
+      background: var(--bg-color);
+      color: var(--text-color);
+      border: 1px solid var(--text-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 1000;
+      box-shadow: 0 0 10px var(--card-glow);
+      transition: all 0.2s ease;
+    }
+    .design-doc-trigger:hover {
+      box-shadow: 0 0 20px var(--text-color);
+      background: var(--text-color);
+      color: var(--bg-color);
+    }
+    .design-sidebar {
+      position: fixed;
+      top: 0;
+      right: -400px;
+      width: 400px;
+      height: 100%;
+      background: var(--bg-color);
+      border-left: 1px solid var(--text-color);
+      box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+      z-index: 1001;
+      padding: 40px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      transition: right 0.3s ease;
+      overflow-y: auto;
+    }
+    .design-sidebar.open {
+      right: 0;
+    }
+    .sidebar-close {
+      align-self: flex-end;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 24px;
+      transition: color 0.2s;
+    }
+    .sidebar-close:hover {
+      color: var(--text-color);
+    }
+    .sidebar-title {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-color);
+      margin-bottom: 4px;
+    }
+    .sidebar-section {
+      border-top: 1px dashed var(--text-color);
+      padding-top: 20px;
+    }
+    .sidebar-section h5 {
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--accent-color);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+    .sidebar-section p, .sidebar-section li {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    .sidebar-section ul {
+      list-style-type: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .palette-box {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .palette-color {
+      flex: 1;
+      height: 32px;
+      border: 1px solid var(--text-color);
+    }
+    .portal-link {
+      margin-top: auto;
+      display: block;
+      text-align: center;
+      background: none;
+      border: 1px solid var(--text-color);
+      color: var(--text-color);
+      padding: 12px;
+      text-decoration: none;
+      font-family: var(--font-display);
+      font-weight: 700;
+      transition: all 0.2s;
+      font-size: 13px;
+    }
+    .portal-link:hover {
+      background: var(--text-color);
+      color: var(--bg-color);
+    }
+    .backdrop-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      display: none;
+    }
+    .backdrop-overlay.open {
+      display: block;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      h1 { font-size: 30px; }
+      .features-grid { grid-template-columns: 1fr; }
+      .action-card { flex-direction: column; gap: 24px; text-align: center; }
+      .form-grid { grid-template-columns: 1fr; }
+      .form-group.full-width, .captcha-box, .form-submit-btn { grid-column: span 1; }
+      .design-sidebar { width: 100%; right: -100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="container nav-flex">
+      <a href="#" class="logo">
+        <span class="logo-prefix">usr@blockvibe:</span>~$
+      </a>
+      <a href="http://nog.localhost:3000" class="nav-btn">./visit_showcase</a>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero container">
+    <div class="term-line">blockvibe --init --platform</div>
+    <h1>One platform for your neighborhood</h1>
+    <p>BlockVibe provides neighborhood associations with the digital tools they need to connect residents, build community trust, run democratic polls, and secure support.</p>
+  </section>
+
+  <!-- Content Containers -->
+  <main class="container">
+    
+    <!-- Action Card -->
+    <div class="action-card">
+      <div class="action-info">
+        <h3>[SYSTEM_STATUS: ACTION_REQUIRED]</h3>
+        <p>Explore our showcase site modeled for the North of Grand neighborhood in Des Moines, Iowa.</p>
+      </div>
+      <a href="http://nog.localhost:3000" class="primary-btn">./run_nog_site</a>
+    </div>
+
+    <!-- Features Grid -->
+    <section class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">[01_SITE_BUILDER]</div>
+        <h4>Modern Site Builder</h4>
+        <p>Launch a clean public website for your association with custom themes, static pages, contact forms, and layouts.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">[02_CRM_DIRECTORY]</div>
+        <h4>Resident CRM & Directory</h4>
+        <p>Maintain a secure registry of neighbors, track registered members vs mailing contacts, and manage roles in one workspace.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">[03_SES_EMAIL]</div>
+        <h4>Email Broadcaster</h4>
+        <p>Compose and send announcements directly to your verified neighborhood contact list using AWS SES.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">[04_BALLOT_VOTE]</div>
+        <h4>Democratic Voting</h4>
+        <p>Run secure board elections, budget approvals, and community opinion polls with one ballot per member rules.</p>
+      </div>
+    </section>
+
+    <!-- Space Request Form -->
+    <section class="form-section">
+      <h2 class="form-title">register_new_neighborhood.sh</h2>
+      <p class="form-subtitle">Submit a request to set up a digital workspace for your neighborhood association.</p>
+      
+      <form id="spaceRequestForm" onsubmit="handleFormSubmit(event)">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="appName">Your Name</label>
+            <input type="text" id="appName" required placeholder="e.g. John Doe">
+          </div>
+          <div class="form-group">
+            <label for="appEmail">Email Address</label>
+            <input type="email" id="appEmail" required placeholder="e.g. john@example.com">
+          </div>
+          <div class="form-group">
+            <label for="neighborhoodName">Neighborhood Name</label>
+            <input type="text" id="neighborhoodName" required placeholder="e.g. North of Grand">
+          </div>
+          <div class="form-group">
+            <label for="city">City</label>
+            <input type="text" id="city" required placeholder="e.g. Des Moines">
+          </div>
+          
+          <div class="captcha-box">
+            <div>
+              <span class="captcha-question">Solve Challenge: What is 7 + 6?</span>
+            </div>
+            <input type="number" id="captchaAnswer" required placeholder="Answer" style="width: 120px;">
+          </div>
+
+          <button type="submit" class="form-submit-btn">./submit_request</button>
+        </div>
+      </form>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <p>&copy; 2026 BlockVibe. All rights reserved. [v1.0.0-release]</p>
+    </div>
+  </footer>
+
+  <!-- ==========================================================================
+       DESIGN DOC OVERLAY & SIDEBAR INTERACTION
+       ========================================================================== -->
+  <div class="backdrop-overlay" id="backdropOverlay" onclick="toggleSidebar()"></div>
+  
+  <button class="design-doc-trigger" onclick="toggleSidebar()" title="View Design Approach">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+  </button>
+
+  <div class="design-sidebar" id="designSidebar">
+    <button class="sidebar-close" onclick="toggleSidebar()">&times;</button>
+    
+    <div>
+      <h3 class="sidebar-title">Design 7: Cyberpunk Monospace</h3>
+      <p style="font-size: 13px; color: var(--accent-color); font-family: var(--font-display); font-weight: 700; text-transform: uppercase;">Retro Tech Mode</p>
+    </div>
+
+    <div class="sidebar-section">
+      <h5>Theme Concept</h5>
+      <p>A digital terminal design modeled after tech collectives, makerspaces, or sovereign hacker networks. Focuses on code layouts, terminal lines, and neon accents.</p>
+    </div>
+
+    <div class="sidebar-section">
+      <h5>Typography</h5>
+      <ul style="margin-top: 8px;">
+        <li><strong>Headers & Body:</strong> JetBrains Mono (Sleek, legible developer monospace font)</li>
+      </ul>
+    </div>
+
+    <div class="sidebar-section">
+      <h5>Color Palette</h5>
+      <div class="palette-box">
+        <div class="palette-color" style="background-color: #000000;" title="Background: #000000"></div>
+        <div class="palette-color" style="background-color: #22c55e;" title="Accent Green: #22c55e"></div>
+        <div class="palette-color" style="background-color: #eab308;" title="Accent Amber: #eab308"></div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <h5>Key Visual Techniques</h5>
+      <p style="margin-top: 8px;">Square corners (0px border-radius), dotted divider lines, green box glows, command prompt prefixes, and monospace structures.</p>
+    </div>
+
+    <a href="/designs/index.html" class="portal-link">./back_to_designs_portal</a>
+  </div>
+
+  <script>
+    function toggleSidebar() {
+      const sidebar = document.getElementById('designSidebar');
+      const overlay = document.getElementById('backdropOverlay');
+      sidebar.classList.toggle('open');
+      overlay.classList.toggle('open');
+    }
+
+    function handleFormSubmit(event) {
+      event.preventDefault();
+      const captchaAnswer = document.getElementById('captchaAnswer').value;
+      if (parseInt(captchaAnswer) === 13) {
+        alert('Space request submitted successfully! (Challenge verified)');
+        document.getElementById('spaceRequestForm').reset();
+      } else {
+        alert('Incorrect challenge solution. Please try again.');
+      }
+    }
+  </script>
+</body>
+</html>
