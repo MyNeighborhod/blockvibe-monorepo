@@ -173,3 +173,81 @@ resource "cloudflare_record" "tenants" {
   ttl      = 3600
   proxied  = false # Let's Encrypt / Caddy handles TLS directly
 }
+
+# --- AWS SES Configuration ---
+
+# We use the domain name of the zone (e.g., blockvibe.org) for SES
+locals {
+  ses_domain = var.cloudflare_zone_id == "" ? "blockvibe.org" : join(".", slice(split(".", var.domain_name), 1, length(split(".", var.domain_name))))
+}
+
+resource "aws_ses_domain_identity" "ses_domain" {
+  domain = local.ses_domain
+}
+
+resource "aws_ses_domain_dkim" "ses_dkim" {
+  domain = aws_ses_domain_identity.ses_domain.domain
+}
+
+# Cloudflare CNAME Records for SES DKIM Verification
+resource "cloudflare_record" "ses_dkim_record" {
+  count   = var.cloudflare_zone_id == "" ? 0 : 3
+  zone_id = var.cloudflare_zone_id
+  name    = "${aws_ses_domain_dkim.ses_dkim.dkim_tokens[count.index]}._domainkey"
+  value   = "${aws_ses_domain_dkim.ses_dkim.dkim_tokens[count.index]}.dkim.amazonses.com"
+  type    = "CNAME"
+  ttl     = 600
+  proxied = false
+}
+
+# Custom MAIL FROM domain configuration for better SPF alignment
+resource "aws_ses_domain_mail_from" "ses_mail_from" {
+  domain           = aws_ses_domain_identity.ses_domain.domain
+  mail_from_domain = "mail.${aws_ses_domain_identity.ses_domain.domain}"
+}
+
+# Cloudflare SPF Record for custom MAIL FROM domain
+resource "cloudflare_record" "ses_spf_mail_from" {
+  count   = var.cloudflare_zone_id == "" ? 0 : 1
+  zone_id = var.cloudflare_zone_id
+  name    = "mail"
+  value   = "v=spf1 include:amazonses.com ~all"
+  type    = "TXT"
+  ttl     = 3600
+}
+
+# Cloudflare MX Record for custom MAIL FROM domain (required by SES to receive bounce notifications)
+resource "cloudflare_record" "ses_mx_mail_from" {
+  count    = var.cloudflare_zone_id == "" ? 0 : 1
+  zone_id  = var.cloudflare_zone_id
+  name     = "mail"
+  value    = "feedback-smtp.${var.aws_region}.amazonses.com"
+  type     = "MX"
+  priority = 10
+  ttl      = 3600
+}
+
+# --- IAM Credentials for SES SMTP ---
+resource "aws_iam_user" "ses_user" {
+  name = "${var.instance_name}-ses-smtp-user"
+}
+
+resource "aws_iam_user_policy" "ses_policy" {
+  name = "${var.instance_name}-ses-send-policy"
+  user = aws_iam_user.ses_user.name
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["ses:SendRawEmail"]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_access_key" "ses_key" {
+  user = aws_iam_user.ses_user.name
+}

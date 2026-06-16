@@ -12,3 +12,15 @@ output "domain_url" {
   description = "Configured URL of the web server"
   value       = "https://${var.domain_name}"
 }
+
+output "ses_smtp_username" {
+  description = "Access key ID for SES SMTP"
+  value       = aws_iam_access_key.ses_key.id
+  sensitive   = false
+}
+
+output "ses_smtp_password" {
+  description = "SMTP password generated from the secret access key (v4)"
+  value       = aws_iam_access_key.ses_key.ses_smtp_password_v4
+  sensitive   = true
+}

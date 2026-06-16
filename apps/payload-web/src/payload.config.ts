@@ -16,6 +16,7 @@ import { defaultLexical } from "@/fields/defaultLexical"
 import { getServerSideURL } from "./utilities/getURL"
 import { Tenants } from "./collections/Tenants"
 import { Invites } from "./collections/Invites"
+import { TenantEmailQuotas } from "./collections/TenantEmailQuotas"
 import { nodemailerAdapter } from "@payloadcms/email-nodemailer"
 
 const filename = fileURLToPath(import.meta.url)
@@ -80,7 +81,7 @@ export default buildConfig({
         : undefined,
     },
   }),
-  collections: [Pages, Posts, Media, Categories, Users, Tenants, Header, Footer, Invites],
+  collections: [Pages, Posts, Media, Categories, Users, Tenants, Header, Footer, Invites, TenantEmailQuotas],
   cors: [getServerSideURL()].filter(Boolean),
   globals: [],
   plugins,

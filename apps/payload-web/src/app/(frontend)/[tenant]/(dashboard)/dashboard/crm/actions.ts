@@ -9,6 +9,48 @@ export async function sendInviteAction(name: string, email: string, tenantId: st
   try {
     const payload = await getPayload({ config: configPromise })
 
+    // Resolve or initialize the tenant's email quota
+    const quotas = await payload.find({
+      collection: "tenant-email-quotas",
+      where: {
+        tenant: { equals: tenantId },
+      },
+      limit: 1,
+    })
+
+    let quota = quotas.docs[0]
+    if (!quota) {
+      quota = await payload.create({
+        collection: "tenant-email-quotas",
+        data: {
+          tenant: typeof tenantId === "string" ? parseInt(tenantId, 10) : tenantId,
+          monthlyEmailLimit: 500,
+          emailsSentThisMonth: 0,
+          lastEmailResetMonth: new Date().toISOString().slice(0, 7),
+        },
+      })
+    }
+
+    const currentMonth = new Date().toISOString().slice(0, 7) // "YYYY-MM"
+    let sent = quota.emailsSentThisMonth ?? 0
+    const limit = quota.monthlyEmailLimit ?? 500
+
+    if (quota.lastEmailResetMonth !== currentMonth) {
+      sent = 0
+      quota = await payload.update({
+        collection: "tenant-email-quotas",
+        id: quota.id,
+        data: {
+          emailsSentThisMonth: 0,
+          lastEmailResetMonth: currentMonth,
+        },
+      })
+    }
+
+    if (sent >= limit) {
+      throw new Error(`This neighborhood has reached its monthly email limit (${sent}/${limit}). Please contact a superadmin to increase the limit.`)
+    }
+
     // Check if user already exists
     const existingUsers = await payload.find({
       collection: "users",
@@ -72,6 +114,15 @@ export async function sendInviteAction(name: string, email: string, tenantId: st
           <p style="color: #64748b; font-size: 12px;">If the button above does not work, copy and paste this link into your browser:<br/><a href="${inviteUrl}">${inviteUrl}</a></p>
         </div>
       `,
+      })
+
+      // Increment tenant sent count in the quota record
+      await payload.update({
+        collection: "tenant-email-quotas",
+        id: quota.id,
+        data: {
+          emailsSentThisMonth: sent + 1,
+        },
       })
     } catch (emailError) {
       payload.logger.warn(

@@ -76,6 +76,7 @@ export interface Config {
     header: Header;
     footer: Footer;
     invites: Invite;
+    'tenant-email-quotas': TenantEmailQuota;
     redirects: Redirect;
     forms: Form;
     'form-submissions': FormSubmission;
@@ -102,6 +103,7 @@ export interface Config {
     header: HeaderSelect<false> | HeaderSelect<true>;
     footer: FooterSelect<false> | FooterSelect<true>;
     invites: InvitesSelect<false> | InvitesSelect<true>;
+    'tenant-email-quotas': TenantEmailQuotasSelect<false> | TenantEmailQuotasSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     forms: FormsSelect<false> | FormsSelect<true>;
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
@@ -969,6 +971,31 @@ export interface Invite {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tenant-email-quotas".
+ */
+export interface TenantEmailQuota {
+  id: number;
+  /**
+   * The tenant associated with this email quota.
+   */
+  tenant: number | Tenant;
+  /**
+   * Monthly limit of emails this tenant can send (Super Admin only).
+   */
+  monthlyEmailLimit: number;
+  /**
+   * Number of emails sent by this tenant during the current calendar month.
+   */
+  emailsSentThisMonth: number;
+  /**
+   * Tracks the last reset month (YYYY-MM) for self-healing counter reset.
+   */
+  lastEmailResetMonth?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "redirects".
  */
 export interface Redirect {
@@ -1193,6 +1220,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'invites';
         value: number | Invite;
+      } | null)
+    | ({
+        relationTo: 'tenant-email-quotas';
+        value: number | TenantEmailQuota;
       } | null)
     | ({
         relationTo: 'redirects';
@@ -1689,6 +1720,18 @@ export interface InvitesSelect<T extends boolean = true> {
   name?: T;
   token?: T;
   status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tenant-email-quotas_select".
+ */
+export interface TenantEmailQuotasSelect<T extends boolean = true> {
+  tenant?: T;
+  monthlyEmailLimit?: T;
+  emailsSentThisMonth?: T;
+  lastEmailResetMonth?: T;
   updatedAt?: T;
   createdAt?: T;
 }

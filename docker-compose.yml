@@ -14,3 +14,11 @@ services:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
+
+  # SMTP Mail Catcher
+  mailpit:
+    image: axllent/mailpit:v1.15
+    restart: always
+    ports:
+      - "1025:1025" # SMTP port
+      - "8025:8025" # Web UI port
