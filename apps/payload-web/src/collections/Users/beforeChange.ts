@@ -28,46 +28,48 @@ export const usersBeforeChangeHook: CollectionBeforeChangeHook = async ({
     }
   }
 
-  // 2. Anonymous / Self-registration (no logged-in user)
+  // 2. Anonymous / Self-registration (no logged-in user) — create only.
+  // Updates without a session (e.g. unsubscribe/resubscribe) must not reset status.
   if (!user) {
-    // Force staging defaults
-    data.role = "contributor"
-    data.status = "pending"
+    if (operation === "create") {
+      data.role = "contributor"
+      data.status = "pending"
 
-    // Detect tenant from request context (host or referer)
-    const host = req.headers?.get?.("host") || ""
-    const referer = req.headers?.get?.("referer") || ""
-    let slug = ""
+      // Detect tenant from request context (host or referer)
+      const host = req.headers?.get?.("host") || ""
+      const referer = req.headers?.get?.("referer") || ""
+      let slug = ""
 
-    if (host.includes(".localhost")) {
-      slug = host.split(".")[0]
-    } else if (host.includes(".blockvibe.org")) {
-      slug = host.replace(".blockvibe.org", "").split(":")[0]
-    } else if (referer) {
-      try {
-        const refUrl = new URL(referer)
-        const refHost = refUrl.hostname
-        if (refHost.includes(".localhost")) {
-          slug = refHost.split(".")[0]
-        } else if (refHost.includes(".blockvibe.org")) {
-          slug = refHost.replace(".blockvibe.org", "").split(":")[0]
+      if (host.includes(".localhost")) {
+        slug = host.split(".")[0]
+      } else if (host.includes(".blockvibe.org")) {
+        slug = host.replace(".blockvibe.org", "").split(":")[0]
+      } else if (referer) {
+        try {
+          const refUrl = new URL(referer)
+          const refHost = refUrl.hostname
+          if (refHost.includes(".localhost")) {
+            slug = refHost.split(".")[0]
+          } else if (refHost.includes(".blockvibe.org")) {
+            slug = refHost.replace(".blockvibe.org", "").split(":")[0]
+          }
+        } catch (e) {
+          // url parse failure
         }
-      } catch (e) {
-        // url parse failure
       }
-    }
 
-    if (slug && slug !== "default" && slug !== "localhost") {
-      const tenantsResult = await payload.find({
-        collection: "tenants",
-        where: {
-          slug: { equals: slug },
-        },
-        limit: 1,
-      })
+      if (slug && slug !== "default" && slug !== "localhost") {
+        const tenantsResult = await payload.find({
+          collection: "tenants",
+          where: {
+            slug: { equals: slug },
+          },
+          limit: 1,
+        })
 
-      if (tenantsResult.docs.length > 0) {
-        data.tenants = [{ tenant: tenantsResult.docs[0].id }]
+        if (tenantsResult.docs.length > 0) {
+          data.tenants = [{ tenant: tenantsResult.docs[0].id }]
+        }
       }
     }
     return data
