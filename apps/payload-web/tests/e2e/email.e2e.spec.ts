@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test"
 import "dotenv/config"
 import { getTenantURL } from "../helpers/tenantUrl"
+import { expectResidentListed } from "../helpers/emailBroadcaster"
 
 test.describe("Email Broadcaster Campaign E2E Flow", () => {
   let nogBaseURL: string
@@ -44,8 +45,8 @@ test.describe("Email Broadcaster Campaign E2E Flow", () => {
 
     // 4. Select ONLY eugen8@gmail.com
     const targetEmail = "eugen8@gmail.com"
+    await expectResidentListed(adminPage, targetEmail)
     const checkbox = adminPage.locator(`input[id="resident-checkbox-${targetEmail}"]`)
-    await expect(checkbox).toBeVisible()
     
     // Ensure it is checked
     if (!(await checkbox.isChecked())) {

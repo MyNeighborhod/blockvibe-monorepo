@@ -49,7 +49,10 @@ export default async function DashboardLayout({ children, params }: Args) {
   }
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-background">
+    <div
+      data-dashboard
+      className="flex h-screen w-screen overflow-hidden bg-background font-sans"
+    >
       <DashboardSidebar user={user} tenantSlug={tenantSlug} />
       <div className="flex flex-col flex-1 overflow-hidden">
         <DashboardNavbar user={user} tenant={tenant} />

@@ -22,7 +22,7 @@ export default async function VotesDashboardStub({ params }: Args) {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-2">
-        <h1 className="font-serif text-3xl font-bold tracking-tight text-foreground">
+        <h1 className="font-sans text-3xl font-bold tracking-tight text-foreground">
           Voting & Polls
         </h1>
         <p className="text-muted-foreground">
@@ -32,7 +32,7 @@ export default async function VotesDashboardStub({ params }: Args) {
 
       <Card className="backdrop-blur-md bg-card/60 border border-border/40">
         <CardHeader>
-          <CardTitle className="font-serif">Active Ballots</CardTitle>
+          <CardTitle className="font-sans">Active Ballots</CardTitle>
           <CardDescription>Step 9: Polls (Create & Vote)</CardDescription>
         </CardHeader>
         <CardContent className="py-12 flex flex-col items-center justify-center text-center">

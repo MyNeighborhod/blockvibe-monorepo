@@ -81,7 +81,7 @@ export function BroadcastForm({ residents, tenantId }: BroadcastFormProps) {
         {/* Left column: Recipient Selection */}
         <Card className="md:col-span-1 backdrop-blur-md bg-card/60 border border-border/40">
           <CardHeader>
-            <CardTitle className="font-serif text-lg">Select Residents</CardTitle>
+            <CardTitle className="font-sans text-lg">Select Residents</CardTitle>
             <CardDescription>Choose which community residents will receive this broadcast.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -137,7 +137,7 @@ export function BroadcastForm({ residents, tenantId }: BroadcastFormProps) {
         {/* Right column: Subject & Message Composer */}
         <Card className="md:col-span-2 backdrop-blur-md bg-card/60 border border-border/40">
           <CardHeader>
-            <CardTitle className="font-serif text-lg">Compose Announcement</CardTitle>
+            <CardTitle className="font-sans text-lg">Compose Announcement</CardTitle>
             <CardDescription>Write the subject and message body for the email campaign.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">

@@ -41,6 +41,7 @@ export default async function EmailDashboard({ params }: Args) {
         not_equals: true,
       },
     },
+    sort: "name",
     limit: 100,
   })
 
@@ -54,7 +55,7 @@ export default async function EmailDashboard({ params }: Args) {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-2">
-        <h1 className="font-serif text-3xl font-bold tracking-tight text-foreground">
+        <h1 className="font-sans text-3xl font-bold tracking-tight text-foreground">
           Email Broadcaster
         </h1>
         <p className="text-muted-foreground">

@@ -155,10 +155,10 @@ export function DashboardSidebar({ user, tenantSlug: _tenantSlug }: DashboardSid
     <aside className="w-64 border-r border-border bg-card/60 backdrop-blur-md flex flex-col h-full select-none">
       {/* Brand Header */}
       <div className="h-16 flex items-center px-6 border-b border-border gap-2">
-        <span className="h-7 w-7 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold font-serif text-sm shadow-sm">
+        <span className="h-7 w-7 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold font-sans text-sm shadow-sm">
           B
         </span>
-        <span className="font-serif font-semibold text-lg tracking-tight text-foreground">
+        <span className="font-sans font-semibold text-lg tracking-tight text-foreground">
           Blockvibe
         </span>
       </div>

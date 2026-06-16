@@ -3,6 +3,7 @@ import "dotenv/config"
 import crypto from "crypto"
 import { getTenantURL } from "../helpers/tenantUrl"
 import { getPayloadSecretForE2E } from "../helpers/payloadSecret"
+import { expectResidentListed, expectResidentNotListed } from "../helpers/emailBroadcaster"
 
 const JOHN_EMAIL = "neighbor_john@nog.blockvibe.org"
 
@@ -53,7 +54,6 @@ test.describe("Unsubscribe & Opt-out E2E Flow", () => {
     const setupPage = await context.newPage()
     const adminPage = await context.newPage()
     const token = buildSubscriptionToken(JOHN_EMAIL)
-    const johnCheckbox = adminPage.locator(`input[id="resident-checkbox-${JOHN_EMAIL}"]`)
 
     // 1. Ensure John is subscribed (idempotent via public resubscribe route)
     await ensureUserSubscribed(setupPage, JOHN_EMAIL)
@@ -61,7 +61,7 @@ test.describe("Unsubscribe & Opt-out E2E Flow", () => {
     // 2. Pre-condition: John appears in the Email Broadcaster resident list
     await loginNogAdmin(adminPage)
     await openEmailBroadcaster(adminPage)
-    await expect(johnCheckbox).toBeVisible()
+    await expectResidentListed(adminPage, JOHN_EMAIL)
 
     // 3. Resident unsubscribes via secure link
     const unsubscribePage = await context.newPage()
@@ -75,9 +75,9 @@ test.describe("Unsubscribe & Opt-out E2E Flow", () => {
     await expect(unsubscribePage.locator("a:has-text('Resubscribe to Emails')")).toBeVisible()
 
     // 4. Post-condition: John is removed from Email Broadcaster
-    await adminPage.reload()
+    await adminPage.reload({ waitUntil: "networkidle" })
     await expect(adminPage.locator("h1:has-text('Email Broadcaster')")).toBeVisible()
-    await expect(johnCheckbox).not.toBeVisible()
+    await expectResidentNotListed(adminPage, JOHN_EMAIL)
 
     // 5. Resident resubscribes via public link (also reachable from unsubscribe success screen)
     const resubscribePage = await context.newPage()
@@ -90,9 +90,9 @@ test.describe("Unsubscribe & Opt-out E2E Flow", () => {
     ).toBeVisible()
 
     // 6. Post-condition: John reappears in Email Broadcaster
-    await adminPage.reload()
+    await adminPage.reload({ waitUntil: "networkidle" })
     await expect(adminPage.locator("h1:has-text('Email Broadcaster')")).toBeVisible()
-    await expect(johnCheckbox).toBeVisible()
+    await expectResidentListed(adminPage, JOHN_EMAIL)
 
     await context.close()
   })

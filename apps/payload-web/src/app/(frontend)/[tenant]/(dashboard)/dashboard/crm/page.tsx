@@ -33,7 +33,7 @@ export default async function CRMDashboard({ params }: Args) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-2">
-          <h1 className="font-serif text-3xl font-bold tracking-tight text-foreground">
+          <h1 className="font-sans text-3xl font-bold tracking-tight text-foreground">
             Resident Directory
           </h1>
           <p className="text-muted-foreground">
@@ -45,7 +45,7 @@ export default async function CRMDashboard({ params }: Args) {
 
       <Card className="backdrop-blur-md bg-card/60 border border-border/40">
         <CardHeader>
-          <CardTitle className="font-serif">Directory List</CardTitle>
+          <CardTitle className="font-sans">Directory List</CardTitle>
           <CardDescription>Step 2: Contacts Collection & Directory List</CardDescription>
         </CardHeader>
         <CardContent className="py-12 flex flex-col items-center justify-center text-center">

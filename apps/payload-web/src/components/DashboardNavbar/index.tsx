@@ -48,7 +48,7 @@ export function DashboardNavbar({ user, tenant }: DashboardNavbarProps) {
     <header className="h-16 border-b border-border bg-card/45 backdrop-blur-md flex items-center justify-between px-6 select-none relative z-25">
       {/* Left side: Tenant Identity */}
       <div className="flex items-center gap-3">
-        <h2 className="font-serif text-lg font-semibold text-foreground tracking-tight">
+        <h2 className="font-sans text-lg font-semibold text-foreground tracking-tight">
           {tenant.name || "Neighborhood Portal"}
         </h2>
         <span className="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20">

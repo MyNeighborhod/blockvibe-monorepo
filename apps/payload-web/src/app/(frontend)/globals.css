@@ -222,3 +222,12 @@ html[data-theme="dark"],
 html[data-theme="light"] {
   opacity: initial;
 }
+
+/* Admin dashboard: always use Geist Sans, not tenant marketing serifs */
+[data-dashboard],
+.theme-nog [data-dashboard],
+.theme-default [data-dashboard],
+.theme-nog [data-dashboard] :is(h1, h2, h3, h4, h5, h6),
+.theme-default [data-dashboard] :is(h1, h2, h3, h4, h5, h6) {
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif !important;
+}

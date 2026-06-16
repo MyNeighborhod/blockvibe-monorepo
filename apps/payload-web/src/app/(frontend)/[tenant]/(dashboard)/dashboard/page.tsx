@@ -28,7 +28,7 @@ export default async function DashboardPage({ params }: Args) {
     <div className="space-y-8 animate-fade-in">
       {/* Welcome Hero */}
       <div className="flex flex-col gap-2">
-        <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight text-foreground">
+        <h1 className="font-sans text-3xl md:text-4xl font-bold tracking-tight text-foreground">
           Hello, {user.name || user.email}
         </h1>
         <p className="text-muted-foreground">
@@ -163,7 +163,7 @@ export default async function DashboardPage({ params }: Args) {
         {/* Quick Actions Panel */}
         <Card className="backdrop-blur-md bg-card/60 border border-border/40">
           <CardHeader>
-            <CardTitle className="font-serif">Quick Actions</CardTitle>
+            <CardTitle className="font-sans">Quick Actions</CardTitle>
             <CardDescription>Get started with common neighborhood management tasks</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-3">
@@ -243,7 +243,7 @@ export default async function DashboardPage({ params }: Args) {
         {/* Milestone Progress Board */}
         <Card className="backdrop-blur-md bg-card/60 border border-border/40">
           <CardHeader>
-            <CardTitle className="font-serif">Milestone 1 Progress</CardTitle>
+            <CardTitle className="font-sans">Milestone 1 Progress</CardTitle>
             <CardDescription>Current features configuration state</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">

@@ -10,6 +10,7 @@ export async function unsubscribeAction(email: string, token: string) {
     await payload.update({
       collection: "users",
       id: userRecord.id,
+      overrideAccess: true,
       data: {
         unsubscribed: true,
       },

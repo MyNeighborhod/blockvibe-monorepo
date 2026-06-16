@@ -64,7 +64,7 @@ export function InviteModal({ tenantId }: InviteModalProps) {
               ✕
             </button>
             <CardHeader>
-              <CardTitle className="font-serif text-2xl">Invite Resident</CardTitle>
+              <CardTitle className="font-sans text-2xl">Invite Resident</CardTitle>
               <CardDescription>
                 Invite a neighborhood resident to join the community portal. They will receive an
                 email to choose a password.
