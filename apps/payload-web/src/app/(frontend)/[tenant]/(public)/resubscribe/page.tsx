@@ -12,7 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { unsubscribeAction } from "./actions"
+import { resubscribeAction } from "./actions"
 
 type PageProps = {
   params: Promise<{
@@ -20,7 +20,7 @@ type PageProps = {
   }>
 }
 
-export default function UnsubscribePage({ params }: PageProps) {
+export default function ResubscribePage({ params }: PageProps) {
   const { tenant } = use(params)
   const searchParams = useSearchParams()
   const email = searchParams.get("email")
@@ -31,19 +31,19 @@ export default function UnsubscribePage({ params }: PageProps) {
   const [success, setSuccess] = useState(false)
 
   useEffect(() => {
-    async function performUnsubscribe() {
+    async function performResubscribe() {
       if (!email || !token) {
-        setError("Invalid unsubscribe link. Missing email or token.")
+        setError("Invalid resubscribe link. Missing email or token.")
         setLoading(false)
         return
       }
 
       try {
-        const result = await unsubscribeAction(email, token)
+        const result = await resubscribeAction(email, token)
         if (result.success) {
           setSuccess(true)
         } else {
-          setError(result.error || "Failed to unsubscribe.")
+          setError(result.error || "Failed to resubscribe.")
         }
       } catch (err: any) {
         setError(err.message || "An unexpected error occurred.")
@@ -52,7 +52,7 @@ export default function UnsubscribePage({ params }: PageProps) {
       }
     }
 
-    performUnsubscribe()
+    performResubscribe()
   }, [email, token])
 
   return (
@@ -77,14 +77,14 @@ export default function UnsubscribePage({ params }: PageProps) {
             )}
           </div>
           <CardTitle className="text-3xl font-serif">
-            {loading ? "Processing Request" : success ? "Unsubscribed Successfully" : "Unable to Unsubscribe"}
+            {loading ? "Processing Request" : success ? "Resubscribed Successfully" : "Unable to Resubscribe"}
           </CardTitle>
           <CardDescription className="text-muted-foreground/80 mt-2">
             {loading
-              ? "We are processing your opt-out request..."
+              ? "We are restoring your email preferences..."
               : success
-              ? "You will no longer receive broadcast emails from this neighborhood."
-              : "We encountered an error processing your unsubscribe request."}
+              ? "You will receive broadcast emails from this neighborhood again."
+              : "We encountered an error processing your resubscribe request."}
           </CardDescription>
         </CardHeader>
 
@@ -96,7 +96,7 @@ export default function UnsubscribePage({ params }: PageProps) {
           )}
           {!loading && success && (
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Your email <strong className="text-foreground">{email}</strong> has been removed from our active announcement list.
+              Your email <strong className="text-foreground">{email}</strong> has been added back to our active announcement list.
             </p>
           )}
           {!loading && error && (
@@ -107,15 +107,6 @@ export default function UnsubscribePage({ params }: PageProps) {
         </CardContent>
 
         <CardFooter className="flex flex-col gap-2">
-          {!loading && success && email && token && (
-            <Button asChild variant="outline" className="w-full py-6">
-              <Link
-                href={`/resubscribe?email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}`}
-              >
-                Resubscribe to Emails
-              </Link>
-            </Button>
-          )}
           <Button asChild className="w-full py-6">
             <Link href={`/${tenant}`}>Go to Neighborhood Homepage</Link>
           </Button>

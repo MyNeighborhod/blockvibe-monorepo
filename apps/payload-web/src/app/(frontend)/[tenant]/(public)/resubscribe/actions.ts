@@ -2,7 +2,7 @@
 
 import { findUserByEmail, validateSubscriptionToken } from "@/utilities/subscriptionToken"
 
-export async function unsubscribeAction(email: string, token: string) {
+export async function resubscribeAction(email: string, token: string) {
   try {
     validateSubscriptionToken(email, token)
     const { payload, userRecord } = await findUserByEmail(email)
@@ -11,12 +11,12 @@ export async function unsubscribeAction(email: string, token: string) {
       collection: "users",
       id: userRecord.id,
       data: {
-        unsubscribed: true,
+        unsubscribed: false,
       },
     })
 
     return { success: true }
   } catch (err: any) {
-    return { success: false, error: err.message || "Failed to unsubscribe." }
+    return { success: false, error: err.message || "Failed to resubscribe." }
   }
 }
