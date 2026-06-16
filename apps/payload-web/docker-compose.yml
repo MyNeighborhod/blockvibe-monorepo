@@ -5,7 +5,7 @@ services:
     ports:
       - "127.0.0.1:3000:3000" # Bind only to localhost (Caddy proxies public traffic on 80/443)
     volumes:
-      - /var/www/blockvibe/media:/app/public/media
+      - /var/www/blockvibe/media:/app/apps/payload-web/public/media
     depends_on:
       - db
     env_file:

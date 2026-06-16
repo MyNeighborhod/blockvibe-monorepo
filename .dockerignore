@@ -1,0 +1,11 @@
+node_modules
+.next
+.git
+.turbo
+apps/*/node_modules
+apps/*/.next
+packages/*/node_modules
+packages/*/.next
+*.tar.gz
+playwright-report
+test-results

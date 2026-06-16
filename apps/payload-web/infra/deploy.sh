@@ -44,12 +44,12 @@ echo "Using SSH Key: $SSH_KEY"
 echo "--------------------------------------------------------"
 
 # 3. Build the application Docker container locally
-cd "$PROJECT_DIR"
+cd "$PROJECT_DIR/../.."
 echo "Building Docker image locally for target platform linux/amd64..."
 echo "(This compilation happens inside Docker on your localhost to prevent crashing the weak EC2 instance)"
 
 # Build for linux/amd64 to ensure compatibility with EC2, even if building on Apple Silicon macOS
-docker build --platform linux/amd64 -t blockvibe-app:latest .
+docker build --platform linux/amd64 -t blockvibe-app:latest -f apps/payload-web/Dockerfile .
 
 # 4. Save and compress Docker image
 echo "Saving and compressing Docker image (blockvibe-app:latest -> app.tar.gz)..."
@@ -70,7 +70,7 @@ echo "Uploading application files to EC2..."
 ssh -i "$SSH_KEY" ubuntu@$IP "sudo mkdir -p /var/www/blockvibe/media && sudo chown -R 1001:1001 /var/www/blockvibe/media"
 
 # Upload docker-compose.yml
-scp -i "$SSH_KEY" docker-compose.yml ubuntu@$IP:/home/ubuntu/app/docker-compose.yml
+scp -i "$SSH_KEY" "$PROJECT_DIR/docker-compose.yml" ubuntu@$IP:/home/ubuntu/app/docker-compose.yml
 
 # Upload Caddy reverse-proxy config (enables HTTPS)
 echo "Uploading Caddyfile..."
@@ -79,10 +79,10 @@ scp -i "$SSH_KEY" "$INFRA_DIR/Caddyfile" ubuntu@$IP:/tmp/Caddyfile
 # Upload environment file if present (default to .env.production, fallback to .env)
 if [ -f "$PROJECT_DIR/.env.production" ]; then
   echo "Uploading .env.production as remote .env..."
-  scp -i "$SSH_KEY" .env.production ubuntu@$IP:/home/ubuntu/app/.env
+  scp -i "$SSH_KEY" "$PROJECT_DIR/.env.production" ubuntu@$IP:/home/ubuntu/app/.env
 elif [ -f "$PROJECT_DIR/.env" ]; then
   echo "WARNING: .env.production not found. Uploading local .env as remote .env..."
-  scp -i "$SSH_KEY" .env ubuntu@$IP:/home/ubuntu/app/.env
+  scp -i "$SSH_KEY" "$PROJECT_DIR/.env" ubuntu@$IP:/home/ubuntu/app/.env
 else
   echo "WARNING: No .env file found. You will need to manually create /home/ubuntu/app/.env on the EC2 server."
 fi
@@ -90,7 +90,7 @@ fi
 # Sync uploaded media to the EBS-backed volume (docker-compose mounts over /app/public/media)
 if [ "$SKIP_MEDIA" -eq 0 ] && [ -d "$PROJECT_DIR/public/media" ]; then
   echo "Syncing media files to EC2 (public/media -> /var/www/blockvibe/media)..."
-  rsync -avz --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r \
+  rsync -avz --rsync-path="sudo rsync" --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r \
     -e "ssh -i $SSH_KEY -o StrictHostKeyChecking=no" \
     "$PROJECT_DIR/public/media/" \
     "ubuntu@$IP:/var/www/blockvibe/media/"

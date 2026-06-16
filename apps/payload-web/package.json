@@ -12,6 +12,9 @@
     "db:snapshot:local": "tsx src/scripts/snapshot_local_db.ts",
     "db:restore:local": "tsx src/scripts/restore_local_db.ts",
     "db:push:prod": "./infra/push-db-to-prod.sh",
+    "seed:default-platform": "tsx src/scripts/seed-default-platform.ts",
+    "seed:nog-users": "tsx src/scripts/seed-nog-users.ts",
+    "seed:prod-content": "./infra/seed-prod-content.sh",
     "generate:importmap": "cross-env NODE_OPTIONS=--no-deprecation payload generate:importmap",
     "generate:types": "cross-env NODE_OPTIONS=--no-deprecation payload generate:types",
     "ii": "cross-env NODE_OPTIONS=--no-deprecation pnpm --ignore-workspace install",
@@ -23,7 +26,9 @@
     "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
     "test": "pnpm run test:int && pnpm run test:e2e",
     "test:e2e": "cross-env NODE_OPTIONS=\"--no-deprecation --import=tsx/esm\" playwright test --config=playwright.config.ts",
-    "test:e2e:prod": "cross-env NODE_OPTIONS=\"--no-deprecation --import=tsx/esm\" PLAYWRIGHT_BASE_URL=https://production.example.com playwright test --config=playwright.config.ts",
+    "test:e2e:ui": "cross-env NODE_OPTIONS=\"--no-deprecation --import=tsx/esm\" playwright test --config=playwright.config.ts --ui",
+    "test:e2e:prod": "cross-env NODE_OPTIONS=\"--no-deprecation --import=tsx/esm\" PLAYWRIGHT_BASE_URL=https://info.blockvibe.org playwright test --config=playwright.config.ts",
+    "test:e2e:prod:ui": "cross-env NODE_OPTIONS=\"--no-deprecation --import=tsx/esm\" PLAYWRIGHT_BASE_URL=https://info.blockvibe.org playwright test --config=playwright.config.ts --ui",
     "test:int": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.config.mts"
   },
   "dependencies": {
