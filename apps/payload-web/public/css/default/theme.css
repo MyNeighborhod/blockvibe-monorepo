@@ -110,8 +110,20 @@
   gap: 8px !important;
 }
 
-.theme-default header svg {
-  display: none !important; /* Hide default icon */
+.theme-default header > div > a > span svg {
+  display: none !important; /* Hide default BlockVibe logo icon only */
+}
+
+.theme-default header nav a.nav-search {
+  padding: 10px 14px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.theme-default header nav a.nav-search svg {
+  display: inline-block !important;
+  color: var(--accent) !important;
 }
 
 .theme-default header span::before {
