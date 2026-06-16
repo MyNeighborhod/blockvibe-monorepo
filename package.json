@@ -13,7 +13,9 @@
     "dev": "turbo dev",
     "lint": "turbo lint",
     "lint:fix": "turbo lint:fix",
-    "clean": "turbo clean"
+    "clean": "turbo clean",
+    "test:e2e:prod": "pnpm --filter payload-web test:e2e:prod",
+    "test:e2e:prod:ui": "pnpm --filter payload-web test:e2e:prod:ui"
   },
   "devDependencies": {
     "turbo": "^2.0.4"
