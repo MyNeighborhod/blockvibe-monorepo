@@ -227,6 +227,17 @@ resource "cloudflare_record" "ses_mx_mail_from" {
   ttl      = 3600
 }
 
+# Cloudflare DMARC Record for root domain
+resource "cloudflare_record" "ses_dmarc" {
+  count   = var.cloudflare_zone_id == "" ? 0 : 1
+  zone_id = var.cloudflare_zone_id
+  name    = "_dmarc"
+  value   = "v=DMARC1; p=none;"
+  type    = "TXT"
+  ttl     = 3600
+}
+
+
 # --- IAM Credentials for SES SMTP ---
 resource "aws_iam_user" "ses_user" {
   name = "${var.instance_name}-ses-smtp-user"
