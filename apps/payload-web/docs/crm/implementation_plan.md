@@ -90,59 +90,76 @@ src/
 
 ---
 
-## 5. Outbound Email & Anti-Spam Architecture
+## 5. Outbound Email, Opt-In, and Unsubscribe Architecture
 
-We will configure email delivery using **AWS SES** (or a developer-friendly service like **Resend**) via the Payload email config:
+To support the email workflows (newsletters, invites, and campaigns) across different tenants, the platform implements a **Dual-Delivery Pipeline** option while strictly maintaining opt-in and unsubscribe compliance regardless of the chosen delivery channel.
 
-### Config integration (`src/payload.config.ts`)
-```typescript
-import { nodemailerSendgrid } from '@payloadcms/email-sendgrid' // or custom SMTP for SES
+### Dual-Adapter Delivery Options
 
-export default buildConfig({
-  // ...
-  email: {
-    transportOptions: {
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT),
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    },
-    defaultFromAddress: 'noreply@mail.blockvibe.org',
-    defaultFromName: 'BlockVibe Alerts',
-  },
-})
-```
+1. **Option A: Global AWS SES SMTP (Platform Fallback)**
+   * **Scope:** Used by all tenants by default. Emails are sent from the verified system domain (e.g., `info@blockvibe.org` or `noreply@mail.blockvibe.org`) using the shared credentials configured in `src/payload.config.ts`.
+   * **Domain Verification:** Restricted to verified identities in the platform's AWS account.
 
-### Unsubscribe (Opt-Out) Flow
-* Every email campaign sent from the composer will append a customized HTML footer:
-  ```html
-  <p style="font-size: 12px; color: #666;">
-    You are receiving this because you are registered as a resident or business in the neighborhood.
-    <a href="https://{{tenant_domain}}/unsubscribe?email={{email_address}}&token={{opt_out_token}}">Unsubscribe</a>
-  </p>
-  ```
-* Clicking the link directs the user to `src/app/(frontend)/[tenant]/unsubscribe/page.tsx` which verifies the secure token (e.g. a hash of the email and the `PAYLOAD_SECRET`) and updates the `unsubscribed` field of the matching contact to `true`.
-* **Safety check in Server Action:** The bulk-sending script will explicitly check `unsubscribed != true` before invoking the email transport.
+2. **Option B: Tenant-Connected Gmail API via OAuth2 (Custom Mailer)**
+   * **Scope:** Enabled when a neighborhood association (tenant) connects their own Google Workspace or Gmail account via OAuth2 on the dashboard settings.
+   * **Mechanics:** Nodemailer dynamically initializes the transport configuration for the tenant using a securely stored `gmailRefreshToken` on the `Tenant` record, allowing them to send emails directly from their own address (e.g., `president@northofgrand.org`).
 
 ---
 
-## 6. Implementation Checklist
+### Permissive Opt-In Rules
 
-- [ ] **Step 1: Database Collection**
-  - Create `src/collections/Contacts.ts`.
-  - Wire it into [src/payload.config.ts](file:///Users/eugen/dev/blockvibe/experiments/04-payload-multitenant/src/payload.config.ts).
-  - Update `src/plugins/index.ts` to include `contacts: {}` in the `multiTenantPlugin` config.
-- [ ] **Step 2: SMTP Configuration**
-  - Add SMTP credentials to `.env`.
-  - Configure `email` transport in [src/payload.config.ts](file:///Users/eugen/dev/blockvibe/experiments/04-payload-multitenant/src/payload.config.ts).
-- [ ] **Step 3: Unsubscribe Route**
-  - Build public unsubscribe page at `src/app/(frontend)/[tenant]/unsubscribe/page.tsx`.
-- [ ] **Step 4: Frontend Layout & Sidebar Component**
-  - Build dashboard page layouts with sidebar navigation matching the wireframe style.
-- [ ] **Step 5: Directory & Search Features**
-  - Implement contacts listing table with pagination, type filtering, and search options.
-- [ ] **Step 6: Email Composer Panel**
-  - Build slide-out compose drawer.
-  - Implement bulk emailing Server Action with anti-spam check.
+To comply with anti-spam standards (like CAN-SPAM and bulk sender requirements), the platform enforces strict opt-in verification:
+* **Approved Resident Members:** Only registered neighbors with status `approved` are eligible to receive neighborhood broadcasts or newsletters.
+* **Pending Invites:** If an admin manually adds a resident or business contact, the record enters a `pending-invite` status. The system is restricted from sending any transactional notifications, community newsletters, or broadcasts to that address. Only a single, initial invitation email can be sent; further emails are blocked until the recipient actively accepts the invite to confirm their opt-in.
+* **Newsletter/Public Opt-In:** Newsletter signups on public landing pages must explicitly submit through the `forms` collection before receiving communications.
+
+---
+
+### Opt-Out (Unsubscribe) Execution & Compliance
+
+All outbound emails, whether sent via **AWS SES** or **Gmail API**, MUST enforce the unsubscribe mechanism:
+
+1. **One-Click Native Opt-Out (RFC 8058)**
+   * Every sent email includes `List-Unsubscribe` and `List-Unsubscribe-Post` SMTP headers. This allows mail clients (like Gmail or Yahoo) to display a native "Unsubscribe" button at the top of the interface.
+   * Native client clicks trigger a background POST to `/api/unsubscribe-oneclick` which marks the resident's record as `unsubscribed: true` without requiring web UI interactions.
+
+2. **Secure Footer Unsubscribe URL**
+   * Every email template appends a customized HTML footer:
+     ```html
+     <p style="font-size: 12px; color: #666; text-align: center;">
+       You are receiving this because you are registered as a resident or business in the neighborhood.
+       <a href="https://{{tenant_domain}}/unsubscribe?email={{email_address}}&token={{opt_out_token}}">Unsubscribe</a>
+     </p>
+     ```
+   * The `opt_out_token` is a cryptographic HMAC hash of the user's email and the `PAYLOAD_SECRET` to prevent URL tampering.
+   * Clicking the link directs the user to `src/app/(frontend)/[tenant]/unsubscribe/page.tsx` which verifies the token and sets the contact/user `unsubscribed` flag to `true`.
+
+3. **Database Suppression**
+   * Before any broadcast campaign is dispatched, the server-side campaign script (`sendBroadcastAction`) queries the resident list and filters out any contacts/users where `unsubscribed` is `true`.
+
+4. **Bounces and Complaints Suppression**
+   * **AWS SES:** SNS webhooks listen for bounce and spam complaints, triggering a POST callback that automatically marks the affected email as `unsubscribed` in the database.
+   * **Gmail OAuth:** Bounces arrive in the tenant's inbox (as standard "Mailer-Daemon" bounce alerts), and the platform can optionally monitor Gmail API callbacks to mark failed addresses as unsubscribed in the background.
+
+---
+
+## 6. Implementation Status & Checklist
+
+The limited CRM and Email Broadcaster system has been implemented directly on top of the native `Users` collection to act as the primary resident directory and email manager:
+
+- [x] **Step 1: Resident Directory & CRM Foundation**
+  - Utilized the `Users` collection which has built-in `isNeighbor`, `role`, and `tenants` fields.
+  - Seeding scripts (`seed-nog.ts` and `seed-nog-users.ts`) map neighborhood administrators and resident users to their respective tenant associations.
+- [x] **Step 2: SMTP Configuration (AWS SES / Mailpit)**
+  - Configured nodemailer transporter options in `src/payload.config.ts`.
+  - Corrected production SSL/TLS connection behavior: STARTTLS on SMTP port 587 requires `SMTP_SECURE=false`.
+- [x] **Step 3: Email Broadcaster Page & Campaign Composer**
+  - Implemented the page at [EmailDashboard](file:///Users/eugen/dev/blockvibe/blockvibe-monorepo/apps/payload-web/src/app/(frontend)/[tenant]/(dashboard)/dashboard/email/page.tsx).
+  - Built the interactive [BroadcastForm](file:///Users/eugen/dev/blockvibe/blockvibe-monorepo/apps/payload-web/src/app/(frontend)/[tenant]/(dashboard)/dashboard/email/BroadcastForm.tsx) allowing admins to select specific recipients via checkboxes (with a Select/Deselect All helper), compose the Subject and Message, and submit.
+- [x] **Step 4: Server Action & Quota Enforcement**
+  - Built the [sendBroadcastAction](file:///Users/eugen/dev/blockvibe/blockvibe-monorepo/apps/payload-web/src/app/(frontend)/[tenant]/(dashboard)/dashboard/email/actions.ts) server action.
+  - Validates inputs, initializes/retrieves tenant-email-quotas, ensures the monthly broadcast volume limit is not exceeded, and increments the count upon successful transmission.
+  - Propagates transmission failures to ensure E2E validation.
+- [x] **Step 5: End-to-End Test Suite Validation**
+  - Created the [email.e2e.spec.ts](file:///Users/eugen/dev/blockvibe/blockvibe-monorepo/apps/payload-web/tests/e2e/email.e2e.spec.ts) Playwright spec to verify the entire flow: logging in as NOG admin, navigating to the broadcaster, selecting only `eugen8@gmail.com`, composing a message, and verifying successful transmission.
+

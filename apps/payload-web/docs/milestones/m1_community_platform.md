@@ -189,12 +189,12 @@ Bridge auth users and CRM records.
 
 Outbound email before fundraising and voting need notifications.
 
-- SMTP / SES / Resend in `payload.config.ts`
-- Compose drawer: pick recipients (one, multi-select, all contacts, all users, all members)
-- Server action: respect `unsubscribed`, append footer with unsubscribe URL
-- Public `/[tenant]/unsubscribe` route
+- **Dual Transporters:** Support global SMTP / SES / Resend fallback in `payload.config.ts` (Option A) AND tenant-connected Gmail API via OAuth2 (Option B).
+- **Compose drawer:** Pick recipients (one, multi-select, all contacts, all users, all members).
+- **Server action:** Respect `unsubscribed` (suppression list), verify opt-in status, and append footer with secure unsubscribe URL.
+- **Unsubscribe compliance:** Support RFC 8058 1-click unsubscribe headers alongside the public `/[tenant]/unsubscribe` page route.
 
-**Done when:** admin can email one contact, a selection, or everyone (with opt-out honoured).
+**Done when:** Admin can email one contact, a selection, or everyone, with opt-out and opt-in rules honored uniformly across both delivery options.
 
 ---
 

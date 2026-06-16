@@ -478,6 +478,10 @@ export interface User {
    * The household this user belongs to.
    */
   household?: string | null;
+  /**
+   * Checked if the user opted out of neighborhood emails.
+   */
+  unsubscribed?: boolean | null;
   tenants?:
     | {
         tenant: number | Tenant;
@@ -1627,6 +1631,7 @@ export interface UsersSelect<T extends boolean = true> {
   status?: T;
   isNeighbor?: T;
   household?: T;
+  unsubscribed?: T;
   tenants?:
     | T
     | {

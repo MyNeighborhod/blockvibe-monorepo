@@ -41,7 +41,7 @@ test.describe("User Invite & Acceptance Staging Flow E2E (Failing TDD Spec)", ()
 
     // Fill in invite details
     const inviteeName = "Invited Resident"
-    const inviteeEmail = `invited_${Date.now()}@example.com`
+    const inviteeEmail = `invited_${Date.now()}@nog.blockvibe.org`
     await adminPage.fill("input[name='inviteName']", inviteeName)
     await adminPage.fill("input[name='inviteEmail']", inviteeEmail)
 

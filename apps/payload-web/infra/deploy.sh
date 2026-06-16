@@ -67,7 +67,7 @@ done
 # 5. Upload files to EC2
 echo "Uploading application files to EC2..."
 # Create deployment directory on remote
-ssh -i "$SSH_KEY" ubuntu@$IP "sudo mkdir -p /var/www/blockvibe/media && sudo chown -R 1001:1001 /var/www/blockvibe/media"
+ssh -i "$SSH_KEY" ubuntu@$IP "mkdir -p /home/ubuntu/app && sudo mkdir -p /var/www/blockvibe/media && sudo chown -R 1001:1001 /var/www/blockvibe/media"
 
 # Upload docker-compose.yml
 scp -i "$SSH_KEY" "$PROJECT_DIR/docker-compose.yml" ubuntu@$IP:/home/ubuntu/app/docker-compose.yml

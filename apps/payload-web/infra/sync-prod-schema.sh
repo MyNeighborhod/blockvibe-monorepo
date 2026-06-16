@@ -75,7 +75,7 @@ echo "✓ Schema-updated dump: $SCHEMA_DUMP ($(du -sh "$SCHEMA_DUMP" | cut -f1))
 echo "--------------------------------------------------------"
 echo "3. Pushing schema-updated database back to production"
 echo "--------------------------------------------------------"
-"$INFRA_DIR/push-db-to-prod.sh" $([ "$SKIP_CONFIRM" -eq 1 ] && echo --yes) "$SCHEMA_DUMP"
+"$INFRA_DIR/push-db-to-prod.sh" $([ "$SKIP_CONFIRM" -eq 1 ] && echo --yes) --skip-media "$SCHEMA_DUMP"
 
 echo "--------------------------------------------------------"
 echo "Production schema sync complete."

@@ -184,4 +184,48 @@ In addition to native client headers, every email footer carries a clear unsubsc
 ### Throttling and Volume Control
 To prevent reputation spikes on new neighborhood domains, email dispatch queues are naturally throttled. Sending begins at a low volume (approx. 100-200 emails per day) and scales up gradually as neighborhood membership organically grows.
 
+---
+
+## 6. Email Transport Adapters: Dual-Delivery Pipeline
+
+The platform supports a dual-delivery architecture to accommodate both global platform defaults and customized tenant configurations.
+
+```mermaid
+flowchart TD
+    Start[Send Broadcast / Campaign] --> CheckToken{Tenant has connected Gmail?}
+    
+    CheckToken -->|Yes| GmailTrans[Gmail API Transporter]
+    CheckToken -->|No| GlobalSMTP[Global AWS SES SMTP Transporter]
+    
+    GmailTrans --> SendGmail[Dispatch via tenant's connected Gmail OAuth2]
+    GlobalSMTP --> SendSES[Dispatch via global info@blockvibe.org verified SES SMTP]
+```
+
+### Option A: Global AWS SES SMTP (Platform Fallback)
+* **Configuration**: Shared credentials configured via `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` in the global environment.
+* **Delivery Scope**: All tenants that have not linked a custom email identity send using this shared pipeline.
+* **Domain Verification**: Dispatched using verified domains (e.g., `info@blockvibe.org` or `*@blockvibe.org`). Unverified domain destinations are rejected during the SES sandbox phase.
+
+### Option B: Tenant-Connected Gmail API via OAuth2 (Custom Mailer)
+* **Configuration**: Tenants authenticate their Google Workspace / Gmail account in the `/dashboard/settings` panel.
+* **Authentication**: The system requests the `https://www.googleapis.com/auth/gmail.send` scope and obtains a persistent offline `refresh_token` stored securely on the `Tenant` record.
+* **Nodemailer OAuth2 Integration**: Nodemailer dynamically initializes the transporter for the tenant using the stored refresh token, client ID, client secret, and authorized sending user address.
+
+### Dual-Adapter Unsubscribe & Compliance Integrity
+Regardless of which adapter delivers the mail, the platform enforces opt-in, unsubscribe, and bounce handling rules uniformly:
+
+#### 1. Opt-In Validation
+* All outgoing broadcasts query the `Users` database (CRM) and filter out recipients who do not have `status === 'approved'` or active membership in the target tenant.
+* Newsletter signups on public landing pages must explicitly submit through the `forms` collection before receiving communications.
+
+#### 2. Opt-Out (Unsubscribe) Execution
+* **List-Unsubscribe Headers**: Injected into Nodemailer's email payload before sending. This provides a native "Unsubscribe" action at the top of mail client interfaces (Gmail, Yahoo, Outlook) for both SES and custom Gmail API routes.
+* **Footer Unsubscribe URL**: A cryptographically secured link containing the secure HMAC token is appended to the bottom of all custom template HTML messages.
+* **Action Suppression**: Before any email is sent, the server-side campaign script queries the database to ensure the recipient's `unsubscribed` flag is `false`.
+
+#### 3. Bounces and Complaints Processing
+* **SES Default**: Amazon SNS webhooks catch bounces and complaints, sending a POST request to our application webhook, which automatically sets `unsubscribed: true` for that contact.
+* **Gmail Connected**: If a custom Gmail account is linked, bounces are delivered to the tenant's inbox (as standard "Mailer-Daemon" bounce alerts). Additionally, the application can monitor delivery status via Gmail API callbacks/webhooks (Pub/Sub notifications) to automatically mark failed addresses as unsubscribed in the background.
+
+
 

@@ -81,7 +81,7 @@ export async function sendInviteAction(name: string, email: string, tenantId: st
     const token = crypto.randomUUID()
 
     // Create Invite
-    await payload.create({
+    const inviteRecord = await payload.create({
       collection: "invites",
       data: {
         name,
@@ -124,11 +124,24 @@ export async function sendInviteAction(name: string, email: string, tenantId: st
           emailsSentThisMonth: sent + 1,
         },
       })
-    } catch (emailError) {
-      payload.logger.warn(
+    } catch (emailError: any) {
+      payload.logger.error(
         { err: emailError },
-        `Invite created for ${email} but email delivery failed`,
+        `Invite created for ${email} but email delivery failed. Deleting invite record ${inviteRecord.id}`
       )
+      // Delete invite record to allow retrying
+      try {
+        await payload.delete({
+          collection: "invites",
+          id: inviteRecord.id,
+        })
+      } catch (deleteError) {
+        payload.logger.error(
+          { err: deleteError },
+          `Failed to delete failed invite record ${inviteRecord.id}`
+        )
+      }
+      throw new Error(`Email delivery failed: ${emailError.message || emailError}`)
     }
 
     return { success: true }

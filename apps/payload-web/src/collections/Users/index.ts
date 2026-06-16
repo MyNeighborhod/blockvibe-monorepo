@@ -79,6 +79,14 @@ export const Users: CollectionConfig = {
         description: "The household this user belongs to.",
       },
     },
+    {
+      name: "unsubscribed",
+      type: "checkbox",
+      defaultValue: false,
+      admin: {
+        description: "Checked if the user opted out of neighborhood emails.",
+      },
+    },
   ],
   timestamps: true,
 }
