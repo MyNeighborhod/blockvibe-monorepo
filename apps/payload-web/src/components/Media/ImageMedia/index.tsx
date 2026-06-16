@@ -77,6 +77,11 @@ export const ImageMedia: React.FC<MediaProps> = (props) => {
 
   const loading = loadingFromProps || (!priority ? "lazy" : undefined)
 
+  // Production serves /media/* from Caddy on disk; the Next.js optimizer cannot fetch them
+  // from the app server, so bypass optimization for tenant-uploaded media paths.
+  const srcPath = typeof src === "string" ? src.split("?")[0] : src.src
+  const isLocalMedia = typeof srcPath === "string" && srcPath.startsWith("/media/")
+
   // NOTE: this is used by the browser to determine which image to download at different screen sizes
   const sizes = sizeFromProps
     ? sizeFromProps
@@ -98,6 +103,7 @@ export const ImageMedia: React.FC<MediaProps> = (props) => {
         loading={loading}
         sizes={sizes}
         src={src}
+        unoptimized={isLocalMedia}
         width={!fill ? width : undefined}
       />
     </picture>
