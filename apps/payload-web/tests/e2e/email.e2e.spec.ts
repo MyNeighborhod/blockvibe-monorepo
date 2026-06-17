@@ -78,11 +78,23 @@ test.describe("Email Broadcaster Campaign E2E Flow", () => {
 
     // 5. Compose the communication details
     await adminPage.fill("input[id='broadcast-subject']", "Important NOG Community Update")
-    // Target the new contentEditable RichTextEditor div
-    await adminPage.fill(
-      "[id='broadcast-message']",
-      "Hello, this is an official community announcement sent via the Email Broadcaster tool to verify our AWS SES delivery flow to residents."
-    )
+    
+    // Focus the editor and insert rich text with a small picture (20x20 blue square)
+    const editor = adminPage.locator("[id='broadcast-message']")
+    await editor.focus()
+    await adminPage.evaluate(() => {
+      const el = document.getElementById("broadcast-message")
+      if (el) {
+        el.innerHTML = `
+          <p>Hello, this is an <strong>official community announcement</strong> sent via the Email Broadcaster tool to verify our AWS SES delivery flow to residents.</p>
+          <p>Here is an embedded picture for verification:</p>
+          <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAAJElEQVR42mNk4PRgYGBgYGQkEzMwMDDyo8GjBowaOGjgoIEEAwAh6gASO+H1zQAAAABJRU5ErkJggg==" style="max-width: 100px; height: auto; border-radius: 8px; margin: 12px 0; display: block;" alt="Verification Badge" />
+          <p>Best regards,<br/>The Neighborhood Board</p>
+        `
+        // Dispatch input event to trigger React state updates
+        el.dispatchEvent(new Event("input", { bubbles: true }))
+      }
+    })
 
     // 6. Send communication
     await adminPage.click("button:has-text('Send Communication')")
@@ -104,7 +116,7 @@ test.describe("Email Broadcaster Campaign E2E Flow", () => {
       expect(broadcastsResult.docs.length).toBe(1)
       const broadcastDoc = broadcastsResult.docs[0]
       expect(broadcastDoc.subject).toBe("Important NOG Community Update")
-      expect(broadcastDoc.message).toContain("Hello, this is an official community announcement")
+      expect(broadcastDoc.message).toContain("Hello, this is an <strong>official community announcement</strong>")
       // Check that recipients JSON field contains our target email
       expect(JSON.stringify(broadcastDoc.recipients)).toContain("eugen8@gmail.com")
     }
