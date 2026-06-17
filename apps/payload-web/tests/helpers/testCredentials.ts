@@ -4,7 +4,9 @@ import dotenv from "dotenv"
 import { isRemoteTestEnv } from "./tenantUrl"
 
 function loadProdEnv(): Record<string, string> {
-  const prodEnvPath = path.resolve(process.cwd(), ".env.production")
+  const baseURL = process.env.PLAYWRIGHT_BASE_URL || "http://localhost:3000"
+  const envFile = baseURL.includes("staging") ? ".env.staging" : ".env.production"
+  const prodEnvPath = path.resolve(process.cwd(), envFile)
   if (!fs.existsSync(prodEnvPath)) {
     return {}
   }

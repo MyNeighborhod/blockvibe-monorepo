@@ -9,13 +9,24 @@ export function isRemoteTestEnv(): boolean {
 /**
  * Build a tenant-scoped base URL from the Playwright base URL.
  * - Local: http://localhost:3000 + nog → http://nog.localhost:3000
- * - Prod:  https://info.blockvibe.org + nog → https://nog.blockvibe.org
+ * - Prod:  https://blockvibe.org + nog → https://nog.blockvibe.org
+ * - Staging: https://staging.blockvibe.org + nog → https://nog.staging.blockvibe.org
  */
 export function getTenantURL(baseURL: string, slug: string): string {
   const url = new URL(baseURL)
 
   if (url.hostname === "localhost" || url.hostname === "127.0.0.1") {
     url.hostname = `${slug}.localhost`
+    return url.toString()
+  }
+
+  const stagingDomain = process.env.NEXT_PUBLIC_STAGING_DOMAIN || "staging.blockvibe.org"
+  if (url.hostname === stagingDomain) {
+    url.hostname = `${slug}.${stagingDomain}`
+    return url.toString()
+  }
+  if (url.hostname.endsWith(`.${stagingDomain}`)) {
+    url.hostname = `${slug}.${stagingDomain}`
     return url.toString()
   }
 
@@ -39,7 +50,7 @@ export function expectedNogExampleHost(baseURL: string): string {
   if (url.hostname === "localhost" || url.hostname === "127.0.0.1") {
     return "nog.localhost"
   }
-  const stagingDomain = process.env.NEXT_PUBLIC_STAGING_DOMAIN || "staging.blockvibe.com"
+  const stagingDomain = process.env.NEXT_PUBLIC_STAGING_DOMAIN || "staging.blockvibe.org"
   if (url.hostname.endsWith(stagingDomain)) {
     return `nog.${stagingDomain}`
   }

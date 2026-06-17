@@ -40,21 +40,54 @@ Typical release: **deploy** → (schema sync if needed) → **e2e**. Content-onl
 
 ## 1. Architectural overview
 
+Both **Production** and **Staging** environments run on the same AWS EC2 instance. They are kept completely isolated on the network, filesystem, and database levels using Docker networks, volume mappings, and distinct host ports.
+
+### Staging vs. Production Isolation
+
+| Parameter / Resource | Production | Staging |
+| :--- | :--- | :--- |
+| **Host Directory** | `/home/ubuntu/app` | `/home/ubuntu/app-staging` |
+| **Compose File** | `docker-compose.yml` (copied as `docker-compose.yml`) | `docker-compose.staging.yml` (copied as `docker-compose.yml`) |
+| **Environment File** | `.env.production` (uploaded as `.env`) | `.env.staging` (uploaded as `.env`) |
+| **Web Service Port** | Maps container port `3000` to host `127.0.0.1:3000` | Maps container port `3000` to host `127.0.0.1:3001` |
+| **Postgres Port** | Maps container port `5432` to host `127.0.0.1:5432` | Maps container port `5432` to host `127.0.0.1:5433` |
+| **Docker Network** | `app_default` (Internal resolution via `db:5432`) | `app-staging_default` (Internal resolution via `db-staging:5432`) |
+| **Database Name** | `blockvibe-multitenant` | `blockvibe-staging` |
+| **Postgres Volume** | `pgdata` | `pgdata-staging` |
+| **Media Directory** | `/var/www/blockvibe/media` | `/var/www/blockvibe/media-staging/media` |
+| **Domain Routing** | `blockvibe.org` / `*.blockvibe.org` | `staging.blockvibe.org` / `*.staging.blockvibe.org` |
+
+### How Docker & Caddy separate them
+
+1. **Docker Networks:** Each environment runs in its own network namespace. The production app connects to the database via `postgres://db:5432/...`, while the staging app connects via `postgres://db-staging:5432/...`. Since the networks are isolated, they cannot reach or see each other.
+2. **Host Port Bindings:** Both databases internally listen on port `5432` in their containers. They don't clash on the host EC2 instance because production binds its port `5432` to host `127.0.0.1:5432`, and staging binds its port `5432` to host `127.0.0.1:5433`.
+3. **Caddy Reverse Proxy:** Caddy listens on public ports `80` and `443` on the EC2 host. When a request comes in for `staging.blockvibe.org`, Caddy routes it to host port `3001` (staging). When a request comes in for `blockvibe.org`, Caddy routes it to host port `3000` (production).
+4. **Deploy Script Renaming:** To maintain standard Docker Compose behavior on the host:
+   * Production: `deploy.sh` uploads `.env.production` as `/home/ubuntu/app/.env` and runs from `/home/ubuntu/app`.
+   * Staging: `deploy.sh --staging` uploads `.env.staging` as `/home/ubuntu/app-staging/.env` and runs from `/home/ubuntu/app-staging`.
+
 ```mermaid
 graph TD
     subgraph Localhost ["Developer machine"]
-        A[docker build --platform linux/amd64] --> B[docker save → app.tar.gz]
-        C[rsync public/media] --> D[EC2 EBS]
+        A[docker build] --> B[docker save]
     end
 
-    subgraph AWS ["EC2 t3.micro"]
-        IP[Elastic IP] --> Caddy[Caddy :443 / :80]
-        Caddy -- "/media/*" --> Vol["/var/www/blockvibe/media"]
-        Caddy -- "everything else" --> Node[Next.js :3000]
-        Node --> Postgres[Postgres :5432]
+    subgraph AWS ["EC2 Instance"]
+        Caddy[Caddy :443 / :80]
+
+        subgraph Prod_Env ["Production Env"]
+            NodeProd[Next.js :3000] --> DBProd[Postgres :5432]
+        end
+
+        subgraph Staging_Env ["Staging Env"]
+            NodeStage[Next.js :3001] --> DBStage[Postgres :5432]
+        end
+
+        Caddy -- "blockvibe.org" --> NodeProd
+        Caddy -- "staging.blockvibe.org" --> NodeStage
     end
 
-    B -- SCP --> AWS
+    B -- SCP --o AWS
 ```
 
 ### Why we build locally

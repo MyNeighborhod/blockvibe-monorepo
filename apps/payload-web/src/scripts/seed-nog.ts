@@ -7,6 +7,7 @@ import dotenv from "dotenv"
 dotenv.config()
 
 import { getPayload } from "payload"
+import { getNogShowcaseUrl } from "./seed-helpers"
 
 // Helper to construct Lexical Rich Text JSON structure simply
 function lexicalRichText(children: any[]): any {
@@ -415,6 +416,19 @@ async function run() {
       payload.logger.error("Failed to delete default tenant pages: " + e.message)
       if (e.cause) payload.logger.error("Cause: " + e.cause.message)
     }
+  }
+
+  // Delete all form submissions to prevent foreign key violations during form deletion
+  payload.logger.info("Deleting all form submissions...")
+  try {
+    await payload.delete({
+      collection: "form-submissions",
+      where: { id: { exists: true } },
+    })
+    payload.logger.info("Deleted all form submissions.")
+  } catch (e: any) {
+    payload.logger.error("Failed to delete form submissions: " + e.message)
+    if (e.cause) payload.logger.error("Cause: " + e.cause.message)
   }
 
   payload.logger.info("Deleting existing Space Request Forms...")
@@ -1128,7 +1142,7 @@ async function run() {
               link: {
                 type: "custom",
                 label: "Visit Site",
-                url: "http://nog.localhost:3000",
+                url: getNogShowcaseUrl(),
                 appearance: "default",
               },
             },
@@ -1326,7 +1340,7 @@ async function run() {
             link: {
               type: "custom",
               label: "Showcase Site",
-              url: "http://nog.localhost:3000",
+              url: getNogShowcaseUrl(),
             },
           },
         ],

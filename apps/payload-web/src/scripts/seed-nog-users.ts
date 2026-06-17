@@ -102,5 +102,8 @@ async function run() {
 
 run().catch((err) => {
   console.error("Error seeding NOG users:", err)
+  if (err && typeof err === "object" && "data" in err) {
+    console.error("Validation details:", JSON.stringify((err as any).data, null, 2))
+  }
   process.exit(1)
 })

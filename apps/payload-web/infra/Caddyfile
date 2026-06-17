@@ -17,7 +17,7 @@ info.blockvibe.org {
 }
 
 # Staging Environment
-staging.blockvibe.com, nog.staging.blockvibe.com, beaverdale.staging.blockvibe.com, oakwood.staging.blockvibe.com, woodland-dsm.staging.blockvibe.com, twin-suns.staging.blockvibe.com {
+staging.blockvibe.org, nog.staging.blockvibe.org, beaverdale.staging.blockvibe.org, oakwood.staging.blockvibe.org, woodland-dsm.staging.blockvibe.org, twin-suns.staging.blockvibe.org {
 	# Serve uploaded staging media directly from the EBS volume (bypasses Next.js standalone).
 	handle /media/* {
 		root * /var/www/blockvibe/media-staging

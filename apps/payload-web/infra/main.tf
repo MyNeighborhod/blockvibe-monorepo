@@ -141,6 +141,27 @@ resource "aws_eip" "lb" {
 }
 
 # --- Cloudflare DNS Configuration ---
+# Create A records for the staging environment (staging.blockvibe.org and its subdomains)
+resource "cloudflare_record" "staging_apex" {
+  count   = var.cloudflare_zone_id == "" ? 0 : 1
+  zone_id = var.cloudflare_zone_id
+  name    = "staging"
+  value   = aws_eip.lb.public_ip
+  type    = "A"
+  ttl     = 3600
+  proxied = false # Let's Encrypt / Caddy handles TLS directly
+}
+
+resource "cloudflare_record" "staging_wildcard" {
+  count   = var.cloudflare_zone_id == "" ? 0 : 1
+  zone_id = var.cloudflare_zone_id
+  name    = "*.staging"
+  value   = aws_eip.lb.public_ip
+  type    = "A"
+  ttl     = 3600
+  proxied = false # Let's Encrypt / Caddy handles TLS directly
+}
+
 # Create an A record pointing the apex domain (e.g., blockvibe.org) to the EC2 Elastic IP
 resource "cloudflare_record" "apex" {
   count   = var.cloudflare_zone_id == "" ? 0 : 1

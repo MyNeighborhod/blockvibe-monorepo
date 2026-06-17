@@ -5,7 +5,7 @@ services:
     ports:
       - "127.0.0.1:3001:3000" # Bind host 3001 to container 3000 (proxied via Caddy)
     volumes:
-      - /var/www/blockvibe/media-staging:/app/apps/payload-web/public/media
+      - /var/www/blockvibe/media-staging/media:/app/apps/payload-web/public/media
     depends_on:
       - db-staging
     env_file:

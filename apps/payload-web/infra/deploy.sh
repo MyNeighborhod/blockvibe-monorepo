@@ -53,7 +53,7 @@ if [ "$STAGING" -eq 1 ]; then
   IMAGE_TAG="staging"
   ARCHIVE_NAME="app-staging.tar.gz"
   REMOTE_DIR="/home/ubuntu/app-staging"
-  REMOTE_MEDIA_DIR="/var/www/blockvibe/media-staging"
+  REMOTE_MEDIA_DIR="/var/www/blockvibe/media-staging/media"
   ENV_SOURCE=".env.staging"
   COMPOSE_SOURCE="docker-compose.staging.yml"
   ENV_LABEL="Staging"
@@ -154,7 +154,7 @@ ssh -i "$SSH_KEY" ubuntu@$IP "
 echo "--------------------------------------------------------"
 DOMAIN=$(cd "$INFRA_DIR" && terraform output -raw domain_url 2>/dev/null | sed -E 's|https?://||' || echo "$IP")
 if [ "$STAGING" -eq 1 ]; then
-  echo "Staging Deployment successful! Visit your app at: https://staging.blockvibe.com"
+  echo "Staging Deployment successful! Visit your app at: https://staging.blockvibe.org"
 else
   echo "Production Deployment successful! Visit your app at: https://$DOMAIN"
 fi

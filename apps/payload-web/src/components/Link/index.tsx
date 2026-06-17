@@ -53,7 +53,7 @@ export const CMSLink: React.FC<CMSLinkType> = (props) => {
 
   if (isMounted && rawHref && typeof window !== "undefined") {
     const platformDomain = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || "blockvibe.org"
-    const stagingDomain = process.env.NEXT_PUBLIC_STAGING_DOMAIN || "staging.blockvibe.com"
+    const stagingDomain = process.env.NEXT_PUBLIC_STAGING_DOMAIN || "staging.blockvibe.org"
 
     // Escape dots for regex
     const platformDomainEscaped = platformDomain.replace(/\./g, "\\.")

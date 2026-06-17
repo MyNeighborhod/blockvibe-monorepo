@@ -41,7 +41,7 @@ export const usersBeforeChangeHook: CollectionBeforeChangeHook = async ({
       let slug = ""
 
       const platformDomain = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || "blockvibe.org"
-      const stagingDomain = process.env.NEXT_PUBLIC_STAGING_DOMAIN || "staging.blockvibe.com"
+      const stagingDomain = process.env.NEXT_PUBLIC_STAGING_DOMAIN || "staging.blockvibe.org"
 
       if (host.includes(".localhost")) {
         slug = host.split(".")[0]

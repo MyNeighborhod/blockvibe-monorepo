@@ -41,6 +41,7 @@ variable "cloudflare_zone_id" {
   default     = ""
 }
 
+
 variable "domain_name" {
   description = "The platform root subdomain to point to the EC2 instance"
   type        = string

@@ -1,11 +1,11 @@
 const PLATFORM_DOMAIN = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || "blockvibe.org"
-const STAGING_DOMAIN = process.env.NEXT_PUBLIC_STAGING_DOMAIN || "staging.blockvibe.com"
+const STAGING_DOMAIN = process.env.NEXT_PUBLIC_STAGING_DOMAIN || "staging.blockvibe.org"
 
 /** Hostname → tenant slug used in routes and database lookups. */
 export function resolveTenantSlugFromHost(hostname: string): string {
   const host = hostname.split(":")[0]
 
-  // 1. Staging Domain: staging.blockvibe.com
+  // 1. Staging Domain: staging.blockvibe.org
   if (host === STAGING_DOMAIN) {
     return "default"
   }

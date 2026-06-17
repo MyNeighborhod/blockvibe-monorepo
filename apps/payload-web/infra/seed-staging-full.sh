@@ -1,20 +1,13 @@
 #!/bin/bash
 set -e
 
-# Seed production CMS content for info.blockvibe.org (default platform tenant)
-# and NOG neighbor users for nog.blockvibe.org e2e tests.
+# Seed all staging CMS content (NOG, Beaverdale, Twin Suns, and users)
+# for E2E testing on staging.blockvibe.org.
 #
-# Opens an SSH tunnel to the production Postgres port, runs seed scripts locally,
+# Opens an SSH tunnel to the staging Postgres port (5433), runs seed scripts locally,
 # then closes the tunnel.
 #
-# Usage: ./infra/seed-prod-content.sh [--staging]
-
-STAGING=0
-for arg in "$@"; do
-  case "$arg" in
-    --staging) STAGING=1 ;;
-  esac
-done
+# Usage: ./infra/seed-staging-full.sh
 
 INFRA_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 PROJECT_DIR="$( dirname "$INFRA_DIR" )"
@@ -32,21 +25,12 @@ if [ ! -f "$SSH_KEY" ]; then
   SSH_KEY="$INFRA_DIR/id_rsa"
 fi
 
-ENV_FILE="$PROJECT_DIR/.env.production"
-LOCAL_DB_PORT=15432
-REMOTE_DB_PORT=5432
-DB_NAME="blockvibe-multitenant"
-DEFAULT_SERVER_URL="https://blockvibe.org"
-ENV_LABEL="Production"
-
-if [ "$STAGING" -eq 1 ]; then
-  ENV_FILE="$PROJECT_DIR/.env.staging"
-  LOCAL_DB_PORT=15433
-  REMOTE_DB_PORT=5433
-  DB_NAME="blockvibe-staging"
-  DEFAULT_SERVER_URL="https://staging.blockvibe.org"
-  ENV_LABEL="Staging"
-fi
+ENV_FILE="$PROJECT_DIR/.env.staging"
+LOCAL_DB_PORT=15433
+REMOTE_DB_PORT=5433
+DB_NAME="blockvibe-staging"
+DEFAULT_SERVER_URL="https://staging.blockvibe.org"
+ENV_LABEL="Staging"
 
 if [ ! -f "$ENV_FILE" ]; then
   echo "Error: $ENV_FILE not found."
@@ -83,7 +67,7 @@ sleep 1
 
 cd "$PROJECT_DIR"
 
-# Load TENANT_NOG_* from local .env (must not clobber tunnel DATABASE_URL)
+# Load TENANT_* from local .env (must not clobber tunnel DATABASE_URL)
 set -a
 # shellcheck disable=SC1090
 source "$PROJECT_DIR/.env"
@@ -92,39 +76,44 @@ set +a
 export DATABASE_URL="postgres://postgres:${DB_PASSWORD}@127.0.0.1:${LOCAL_DB_PORT}/${DB_NAME}"
 export PAYLOAD_SECRET
 export NEXT_PUBLIC_SERVER_URL="${SERVER_URL:-$DEFAULT_SERVER_URL}"
-export NOG_SHOWCASE_URL="https://nog.blockvibe.org"
-if [ "$STAGING" -eq 1 ]; then
-  export NOG_SHOWCASE_URL="https://nog.staging.blockvibe.org"
-fi
+export NOG_SHOWCASE_URL="https://nog.staging.blockvibe.org"
 export NODE_ENV=development
 export NODE_OPTIONS=--no-deprecation
 
 echo "Using database: postgres://postgres:***@127.0.0.1:${LOCAL_DB_PORT}/${DB_NAME}"
 
 echo "--------------------------------------------------------"
-echo "1. Seeding default platform tenant (${NEXT_PUBLIC_SERVER_URL})"
+echo "1. Seeding NOG Tenant and Platform Pages"
 echo "--------------------------------------------------------"
-pnpm exec tsx src/scripts/seed-default-platform.ts
+pnpm exec tsx src/scripts/seed-nog.ts
 
 echo "--------------------------------------------------------"
-echo "2. Seeding NOG neighbor users (${NOG_SHOWCASE_URL})"
+echo "2. Seeding Beaverdale Tenant"
+echo "--------------------------------------------------------"
+pnpm exec tsx src/scripts/seed-beaverdale.ts
+
+echo "--------------------------------------------------------"
+echo "3. Seeding Twin Suns Tenant"
+echo "--------------------------------------------------------"
+pnpm exec tsx src/scripts/seed-twin-suns.ts
+
+echo "--------------------------------------------------------"
+echo "4. Seeding NOG users"
 echo "--------------------------------------------------------"
 pnpm exec tsx src/scripts/seed-nog-users.ts
 
 echo "--------------------------------------------------------"
-echo "3. Syncing superadmin password for admin e2e"
+echo "5. Seeding Twin Suns users"
+echo "--------------------------------------------------------"
+pnpm exec tsx src/scripts/seed-twin-suns-users.ts
+
+echo "--------------------------------------------------------"
+echo "6. Seeding superadmin password"
 echo "--------------------------------------------------------"
 export LOCAL_SUPERADMIN_USERNAME=$(grep -E '^LOCAL_SUPERADMIN_USERNAME=' "$ENV_FILE" | head -1 | cut -d= -f2- | tr -d '"' | tr -d "'")
 export LOCAL_SUPERADMIN_PASSWORD=$(grep -E '^LOCAL_SUPERADMIN_PASSWORD=' "$ENV_FILE" | head -1 | cut -d= -f2- | tr -d '"' | tr -d "'")
 pnpm exec tsx src/scripts/seed-superadmin-password.ts
 
 echo "--------------------------------------------------------"
-echo "4. Seeding Twin Suns users for dashboard e2e"
-echo "--------------------------------------------------------"
-pnpm exec tsx src/scripts/seed-twin-suns-users.ts
-
-echo "--------------------------------------------------------"
-echo "${ENV_LABEL} content seed complete."
-echo "  Platform: ${NEXT_PUBLIC_SERVER_URL}"
-echo "  Showcase: ${NOG_SHOWCASE_URL}"
+echo "${ENV_LABEL} full content seed complete."
 echo "--------------------------------------------------------"
