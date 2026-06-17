@@ -88,7 +88,7 @@ test.describe("Email Broadcaster Campaign E2E Flow", () => {
         el.innerHTML = `
           <p>Hello, this is an <strong>official community announcement</strong> sent via the Email Broadcaster tool to verify our AWS SES delivery flow to residents.</p>
           <p>Here is an embedded picture for verification:</p>
-          <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAAJElEQVR42mNk4PRgYGBgYGQkEzMwMDDyo8GjBowaOGjgoIEEAwAh6gASO+H1zQAAAABJRU5ErkJggg==" style="max-width: 100px; height: auto; border-radius: 8px; margin: 12px 0; display: block;" alt="Verification Badge" />
+          <img src="https://raw.githubusercontent.com/MyNeighborhod/blockvibe-monorepo/main/apps/payload-web/public/media/northofgrand-badge-color-blue.png" style="max-width: 100px; height: auto; border-radius: 8px; margin: 12px 0; display: block;" alt="Verification Badge" />
           <p>Best regards,<br/>The Neighborhood Board</p>
         `
         // Dispatch input event to trigger React state updates
