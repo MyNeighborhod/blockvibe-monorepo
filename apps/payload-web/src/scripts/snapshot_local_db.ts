@@ -39,8 +39,25 @@ console.log(`Target File: dbsnapshots/${filename}`)
 try {
   // Execute pg_dump command
   execSync(`pg_dump --dbname="${databaseUrl}" -f "${outputPath}"`, { stdio: "inherit" })
+
+  // Retrieve current Git commit info
+  let gitCommit = "unknown"
+  let gitSubject = ""
+  try {
+    gitCommit = execSync("git rev-parse HEAD", { encoding: "utf8" }).trim()
+    gitSubject = execSync('git log -1 --format="%s"', { encoding: "utf8" }).trim()
+  } catch (gitError) {
+    // Ignore git errors if run outside a git repository or git not available
+  }
+
+  // Prepend Git commit info as a comment at the top of the SQL file
+  const sqlContent = fs.readFileSync(outputPath, "utf8")
+  const commentedContent = `-- Git Commit: ${gitCommit} (${gitSubject})\n\n${sqlContent}`
+  fs.writeFileSync(outputPath, commentedContent, "utf8")
+
   console.log(`\n✅ Database snapshot successfully created at dbsnapshots/${filename}`)
 } catch (error: any) {
   console.error("\n❌ Failed to take database snapshot:", error.message)
   process.exit(1)
 }
+

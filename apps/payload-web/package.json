@@ -10,6 +10,7 @@
     "dev": "cross-env NODE_OPTIONS=--no-deprecation next dev",
     "dev:prod": "cross-env NODE_OPTIONS=--no-deprecation rm -rf .next && pnpm build && pnpm start",
     "db:snapshot:local": "tsx src/scripts/snapshot_local_db.ts",
+    "db:snapshot:prod": "./infra/snapshot-prod-db.sh",
     "db:restore:local": "tsx src/scripts/restore_local_db.ts",
     "db:push:prod": "./infra/push-db-to-prod.sh",
     "seed:default-platform": "tsx src/scripts/seed-default-platform.ts",
