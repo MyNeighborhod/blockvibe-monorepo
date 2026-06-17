@@ -21,12 +21,22 @@ interface RichTextEditorProps {
   value: string
   onChange: (value: string) => void
   placeholder?: string
+  uploadImage?: (file: File) => Promise<string>
+  onUploadError?: (message: string) => void
 }
 
-export function RichTextEditor({ id, value, onChange, placeholder }: RichTextEditorProps) {
+export function RichTextEditor({
+  id,
+  value,
+  onChange,
+  placeholder,
+  uploadImage,
+  onUploadError,
+}: RichTextEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isFocused, setIsFocused] = useState(false)
+  const [isUploadingImage, setIsUploadingImage] = useState(false)
 
   // Sync value prop to innerHTML, but only when it changes from outside
   useEffect(() => {
@@ -71,19 +81,40 @@ export function RichTextEditor({ id, value, onChange, placeholder }: RichTextEdi
     triggerChange()
   }
 
-  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files
-    if (files && files.length > 0) {
+  const readFileAsDataUrl = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
       const reader = new FileReader()
       reader.onload = (event) => {
         if (event.target?.result) {
-          insertImage(event.target.result as string)
+          resolve(event.target.result as string)
+        } else {
+          reject(new Error("Failed to read image file."))
         }
       }
-      reader.readAsDataURL(files[0])
+      reader.onerror = () => reject(new Error("Failed to read image file."))
+      reader.readAsDataURL(file)
+    })
+
+  const insertImageFromFile = async (file: File) => {
+    setIsUploadingImage(true)
+    try {
+      const src = uploadImage ? await uploadImage(file) : await readFileAsDataUrl(file)
+      insertImage(src)
+    } catch (err: any) {
+      const message = err?.message || "Failed to insert image."
+      onUploadError?.(message)
+    } finally {
+      setIsUploadingImage(false)
+    }
+  }
+
+  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (files && files.length > 0) {
+      void insertImageFromFile(files[0])
     }
     e.target.value = ""
-  };
+  }
 
   const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
     // Intercept image pastes (from clipboard screenshots/copies)
@@ -94,13 +125,7 @@ export function RichTextEditor({ id, value, onChange, placeholder }: RichTextEdi
         const file = items[i].getAsFile()
         if (file) {
           hasImage = true
-          const reader = new FileReader()
-          reader.onload = (event) => {
-            if (event.target?.result) {
-              insertImage(event.target.result as string)
-            }
-          }
-          reader.readAsDataURL(file)
+          void insertImageFromFile(file)
         }
       }
     }
@@ -123,13 +148,7 @@ export function RichTextEditor({ id, value, onChange, placeholder }: RichTextEdi
     if (files.length > 0) {
       for (let i = 0; i < files.length; i++) {
         if (files[i].type.indexOf("image") !== -1) {
-          const reader = new FileReader()
-          reader.onload = (event) => {
-            if (event.target?.result) {
-              insertImage(event.target.result as string)
-            }
-          }
-          reader.readAsDataURL(files[i])
+          void insertImageFromFile(files[i])
         }
       }
     }
@@ -267,7 +286,8 @@ export function RichTextEditor({ id, value, onChange, placeholder }: RichTextEdi
             handleImageUploadClick()
           }}
           title="Insert Image"
-          className="h-8 w-8 rounded flex items-center justify-center text-foreground hover:bg-muted-foreground/10 transition-colors"
+          disabled={isUploadingImage}
+          className="h-8 w-8 rounded flex items-center justify-center text-foreground hover:bg-muted-foreground/10 transition-colors disabled:opacity-50"
         >
           <ImageIcon className="h-4 w-4" />
         </button>

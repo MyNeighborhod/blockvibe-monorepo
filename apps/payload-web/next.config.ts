@@ -50,6 +50,11 @@ const nextConfig: NextConfig = {
   },
   reactStrictMode: true,
   redirects,
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "10mb",
+    },
+  },
   turbopack: {
     root: path.resolve(dirname, "../.."),
   },

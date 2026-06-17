@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
-import { sendBroadcastAction } from "./actions"
+import { sendBroadcastAction, uploadBroadcastImageAction } from "./actions"
 import { RichTextEditor } from "@/components/RichTextEditor"
 
 interface Resident {
@@ -27,6 +27,19 @@ export function BroadcastForm({ residents, tenantId }: BroadcastFormProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+
+  const handleUploadImage = async (file: File): Promise<string> => {
+    const formData = new FormData()
+    formData.append("file", file)
+    formData.append("tenantId", String(tenantId))
+
+    const res = await uploadBroadcastImageAction(formData)
+    if (!res.success) {
+      throw new Error(res.error || "Failed to upload image.")
+    }
+
+    return res.url
+  }
 
   const handleToggleEmail = (email: string) => {
     setSelectedEmails((prev) =>
@@ -159,6 +172,8 @@ export function BroadcastForm({ residents, tenantId }: BroadcastFormProps) {
                 value={message}
                 onChange={setMessage}
                 placeholder="Write your message here..."
+                uploadImage={handleUploadImage}
+                onUploadError={setError}
               />
             </div>
           </CardContent>

@@ -1,8 +1,35 @@
 # Infrastructure & Deployment
 
+## Routine production deploy (cheat sheet)
+
+Run from **`apps/payload-web`** (all paths below are relative to that directory).
+
+```bash
+# 1. Docker must be running (build happens on your Mac, not EC2)
+open -a Docker
+
+# 2. Ship code — use --skip-media when only app code changed (most deploys)
+./infra/deploy.sh --skip-media
+
+# 3. Smoke-test the feature you changed (examples)
+curl -sI https://nog.blockvibe.org/ | head -1
+pnpm test:e2e:prod   # optional full suite
+```
+
+**Notes:**
+
+- Deploy ships **your local working tree** (Docker build from disk). Commit/push to GitHub is separate — the server does not `git pull`.
+- `deploy.sh` uploads `.env.production` → server `.env` on every run. Edit secrets locally before deploying if they changed.
+- `deploy.sh` does **not** seed Postgres or run migrations. After schema changes, see [production-flows.md](../docs/deployment/production-flows.md).
+- New tenant subdomain? Add the hostname to `infra/Caddyfile`, then deploy.
+
+**Staging:** same flow with `./infra/deploy.sh --staging --skip-media` (uses `.env.staging`, `nog.staging.blockvibe.org`, etc.).
+
+---
+
 ## One-command deploy (day-to-day)
 
-From the project root, after initial setup is complete:
+From `apps/payload-web`, after initial setup is complete:
 
 ```bash
 ./infra/deploy.sh
@@ -10,14 +37,27 @@ From the project root, after initial setup is complete:
 
 This builds the Docker image **on your machine** (not on EC2), syncs media, uploads config, and restarts the server.
 
-| Flag / script                    | When to use                                                         |
-| -------------------------------- | ------------------------------------------------------------------- |
-| `./infra/deploy.sh`              | Full deploy: app + media + Caddy + env                              |
-| `./infra/deploy.sh --skip-media` | Code-only deploy (faster)                                           |
-| `./infra/sync-media.sh`          | Media-only sync, no rebuild                                         |
-| `./infra/push-db-to-prod.sh`     | **Replace production DB** with local (source of truth) + sync media |
-| `pnpm seed:prod-content`         | Seed prod **content only** (platform home + NOG users) via SSH tunnel |
-| `./infra/sync-prod-schema.sh`    | Pull prod DB → schema push locally → push back (no full content replace) |
+| Flag / script                         | When to use                                                         |
+| ------------------------------------- | ------------------------------------------------------------------- |
+| `./infra/deploy.sh`                   | Full deploy: app + media + Caddy + env                              |
+| `./infra/deploy.sh --skip-media`      | Code-only deploy (faster; typical for bug fixes and features)       |
+| `./infra/deploy.sh --staging`         | Full deploy to **staging** (`.env.staging`, port 3001)              |
+| `./infra/deploy.sh --staging --skip-media` | Code-only staging deploy                                       |
+| `./infra/sync-media.sh`               | Media-only sync, no rebuild                                         |
+| `./infra/push-db-to-prod.sh`          | **Replace production DB** with local (source of truth) + sync media |
+| `pnpm seed:prod-content`              | Seed prod **content only** (platform home + NOG users) via SSH tunnel |
+| `./infra/sync-prod-schema.sh`         | Pull prod DB → schema push locally → push back (no full content replace) |
+
+### What `deploy.sh` does
+
+1. Reads EC2 IP from `terraform output`
+2. `docker build --platform linux/amd64` locally (~2–3 min)
+3. Saves image as `app.tar.gz` and SCPs it to EC2
+4. Uploads `docker-compose.yml`, `.env.production` (or `.env.staging`), and `Caddyfile`
+5. Rsyncs `public/media/` to EBS (unless `--skip-media`)
+6. On EC2: `docker load`, `docker compose down && up -d`, reload Caddy
+
+**Requires:** Docker Desktop running, SSH key at `~/.ssh/blockvibe_id_rsa` or `infra/id_rsa`, and `terraform apply` completed once in `infra/`.
 
 ### Local DB → production (source of truth)
 
@@ -33,6 +73,8 @@ Use `--yes` to skip the confirmation prompt, `--skip-media` for database only.
 
 ## First-time setup (once per environment)
 
+Run from `apps/payload-web`:
+
 1. **Provision AWS** (Terraform):
 
    ```bash
@@ -40,6 +82,7 @@ Use `--yes` to skip the confirmation prompt, `--skip-media` for database only.
    cp terraform.tfvars.example terraform.tfvars   # edit with your values
    terraform init
    terraform apply
+   cd ..
    ```
 
 2. **Create production env**:
@@ -48,9 +91,10 @@ Use `--yes` to skip the confirmation prompt, `--skip-media` for database only.
    cp .env.production.example .env.production   # fill in secrets
    ```
 
-3. **Deploy**:
+3. **Start Docker and deploy**:
 
    ```bash
+   open -a Docker
    ./infra/deploy.sh
    ```
 
