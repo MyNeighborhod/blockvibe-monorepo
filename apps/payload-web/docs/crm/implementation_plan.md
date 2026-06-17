@@ -162,4 +162,95 @@ The limited CRM and Email Broadcaster system has been implemented directly on to
   - Propagates transmission failures to ensure E2E validation.
 - [x] **Step 5: End-to-End Test Suite Validation**
   - Created the [email.e2e.spec.ts](file:///Users/eugen/dev/blockvibe/blockvibe-monorepo/apps/payload-web/tests/e2e/email.e2e.spec.ts) Playwright spec to verify the entire flow: logging in as NOG admin, navigating to the broadcaster, selecting only `eugen8@gmail.com`, composing a message, and verifying successful transmission.
+- [x] **Step 6: Embedded images in broadcast emails**
+  - Images upload to tenant **Media** when inserted in the composer (not on Send), so outgoing HTML uses public HTTPS URLs that Gmail and other clients can load.
+  - See [§7 Email Broadcaster — embedded images](#7-email-broadcaster--embedded-images) below.
+
+---
+
+## 7. Email Broadcaster — embedded images
+
+Tenant admins embed photos in broadcast messages from **Email Broadcaster** (`/[tenant]/dashboard/email`). The composer uses a rich-text editor ([`RichTextEditor`](../../src/components/RichTextEditor.tsx)) with bold/lists/links and an **image** toolbar button (paste and drag-and-drop also work).
+
+### Why not inline base64?
+
+Earlier versions stored pasted images as `data:image/...;base64,...` inside the message HTML. That works in the browser composer but fails in real inboxes:
+
+- **Gmail blocks** inline base64 images (broken “Embedded image” placeholder).
+- Large base64 blobs made the **Send** server action huge and could fail Payload validation on the broadcast log (`The following field is invalid: Message`).
+
+### Admin workflow (current)
+
+1. Open **Email Broadcaster** as an admin (`superadmin`, `admin`).
+2. Select recipients (unsubscribed users are **excluded** from the list and filtered again at send time).
+3. Write subject and body text.
+4. Insert an image via the toolbar, paste, or drag-and-drop.
+5. Wait briefly while the image uploads (file goes to the server immediately).
+6. Click **Send Communication**.
+
+The composer preview and the delivered email both show the same hosted image.
+
+### Technical flow
+
+```mermaid
+sequenceDiagram
+  participant Admin as Admin browser
+  participant Editor as RichTextEditor
+  participant Upload as uploadBroadcastImageAction
+  participant Media as Payload Media + disk
+  participant Send as sendBroadcastAction
+  participant Inbox as Recipient mail client
+
+  Admin->>Editor: Insert image (file / paste / drop)
+  Editor->>Upload: FormData(file, tenantId)
+  Upload->>Media: payload.create(media) → public/media/{tenant}/
+  Media-->>Upload: https://{host}/media/{tenant}/broadcast-….jpg
+  Upload-->>Editor: Public URL in img src
+
+  Admin->>Send: Send Communication (small HTML)
+  Send->>Send: resolveBroadcastImagesInHtml (safety net for any leftover base64)
+  Send->>Send: Filter unsubscribed recipients
+  Send->>Inbox: payload.sendEmail(html with img URL)
+  Inbox->>Media: GET /media/{tenant}/broadcast-….jpg
+```
+
+### Key code paths
+
+| Piece | File |
+| ----- | ---- |
+| Composer + upload hook | [`BroadcastForm.tsx`](../../src/app/(frontend)/[tenant]/(dashboard)/dashboard/email/BroadcastForm.tsx) |
+| Image upload server action | [`uploadBroadcastImageAction`](../../src/app/(frontend)/[tenant]/(dashboard)/dashboard/email/actions.ts) |
+| Send + unsubscribe footer | [`sendBroadcastAction`](../../src/app/(frontend)/[tenant]/(dashboard)/dashboard/email/actions.ts) |
+| Media create + URL builder | [`resolveBroadcastImages.ts`](../../src/utilities/resolveBroadcastImages.ts) |
+| Rich text UI | [`RichTextEditor.tsx`](../../src/components/RichTextEditor.tsx) |
+
+### Storage and URLs
+
+1. **`uploadBroadcastImageAction`** validates: logged-in user, image MIME type, max **5 MB**.
+2. **`uploadBroadcastImageFile`** creates a **Media** record scoped to the tenant and writes the file under `public/media/{tenant-slug}/` with a name like `broadcast-{timestamp}-{random}.jpg`.
+3. The editor receives an absolute URL, e.g. `https://nog.blockvibe.org/media/nog/broadcast-1739….jpg`.
+4. On **production**, Caddy serves `/media/*` from the EBS volume (`/var/www/blockvibe/media`). Broadcast images uploaded in prod live there — they are **not** baked into the Docker image (code-only deploys with `--skip-media` are fine).
+
+### Safety net on send
+
+`sendBroadcastAction` still runs **`resolveBroadcastImagesInHtml`** before emailing. If any legacy `data:image/...;base64` remains in the HTML, it is uploaded and replaced with a hosted URL at send time. Normal flow uploads at insert time so the send payload stays small.
+
+### Broadcast log
+
+Successful sends are recorded in the **`broadcasts`** collection with the resolved HTML (hosted image URLs). Log write failures are caught so email delivery is not rolled back if only the audit record fails.
+
+### Limits and troubleshooting
+
+| Topic | Behavior |
+| ----- | -------- |
+| Max image size | 5 MB per file at upload |
+| Supported types | PNG, JPEG, GIF, WebP |
+| Unsubscribed residents | Omitted from picker and blocked in `sendBroadcastAction` |
+| Broken image in Gmail after deploy | Hard-refresh broadcaster, compose a **new** message (old drafts may still contain base64) |
+| Image missing on server | Ensure Caddy serves `/media/*`; broadcast uploads go to EBS, not the Docker image |
+
+### Related docs
+
+- [Deployment — media strategy](../deployment/readme.md#6-media-strategy)
+- [infra/README.md — routine deploy](../../infra/README.md#routine-production-deploy-cheat-sheet)
 

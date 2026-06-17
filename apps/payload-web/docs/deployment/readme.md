@@ -212,6 +212,7 @@ Payload stores **metadata in Postgres** and **files on disk** at `public/media/{
 | **Deploy script** | `rsync`s local `public/media/` on each deploy |
 | **Caddy** | Serves `/media/*` directly from disk |
 | **Admin uploads** | On production go to EBS; survive restarts |
+| **Email Broadcaster embeds** | Uploaded via `uploadBroadcastImageAction` into `media/{tenant}/broadcast-*`; same EBS path; code-only deploys (`--skip-media`) do not remove them |
 
 Pull production uploads back to local:
 

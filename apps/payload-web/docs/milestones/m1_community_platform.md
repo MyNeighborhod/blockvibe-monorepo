@@ -191,6 +191,7 @@ Outbound email before fundraising and voting need notifications.
 
 - **Dual Transporters:** Support global SMTP / SES / Resend fallback in `payload.config.ts` (Option A) AND tenant-connected Gmail API via OAuth2 (Option B).
 - **Compose drawer:** Pick recipients (one, multi-select, all contacts, all users, all members).
+- **Embedded images:** Upload to tenant Media on insert; email HTML uses public `/media/{tenant}/` URLs (see [crm/implementation_plan.md §7](../crm/implementation_plan.md#7-email-broadcaster--embedded-images)).
 - **Server action:** Respect `unsubscribed` (suppression list), verify opt-in status, and append footer with secure unsubscribe URL.
 - **Unsubscribe compliance:** Support RFC 8058 1-click unsubscribe headers alongside the public `/[tenant]/unsubscribe` page route.
 
@@ -316,7 +317,7 @@ Scene-by-scene demo script for the default tenant presentation site and accompan
 | Demo / video script | [m1_presentation.md](./m1_presentation.md) |
 | Roles and approval | [how_roles_work.md](../how_roles_work.md) |
 | Voting tech selection (hybrid poll-forms) | [voting/tech_selection.md](./voting/tech_selection.md) |
-| CRM dashboard wireframe & email architecture | [crm/implementation_plan.md](../crm/implementation_plan.md) |
+| CRM dashboard wireframe & email architecture | [crm/implementation_plan.md](../crm/implementation_plan.md) (incl. [§7 embedded images](../crm/implementation_plan.md#7-email-broadcaster--embedded-images)) |
 | Deployment | [deployment/readme.md](../deployment/readme.md) |
 
 ---

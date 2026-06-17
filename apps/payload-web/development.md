@@ -125,6 +125,8 @@ The `media` collection ([src/collections/Media.ts](file:///Users/eugen/dev/block
 - **`afterRead`**: Intercepts requests and overrides the returned `url` property on the document and its sub-sizes to use the new subdirectory path (e.g. `/media/nog/logo.png`), allowing Next.js to serve them statically.
 - **`beforeDelete`**: Automatically cleans up and unlinks all files from their respective subfolders when a media record is deleted.
 
+**Email Broadcaster images:** When a tenant admin embeds a photo in **Email Broadcaster**, the file is created in the `media` collection under that tenant (filenames like `broadcast-*.jpg`) and served at `https://{tenant-host}/media/{tenant-slug}/...`. Details: [docs/crm/implementation_plan.md §7](docs/crm/implementation_plan.md#7-email-broadcaster--embedded-images).
+
 ### Production Storage (S3 / R2)
 
 In production, file uploads should be directed to a cloud storage bucket.
