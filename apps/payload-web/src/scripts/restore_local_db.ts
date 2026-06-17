@@ -13,8 +13,11 @@ if (!databaseUrl) {
   process.exit(1)
 }
 
-const snapshotDir = path.join(process.cwd(), "dbsnapshots")
-if (!fs.existsSync(snapshotDir)) {
+const dbsnapshotsDir = path.join(process.cwd(), "dbsnapshots")
+const localDir = path.join(dbsnapshotsDir, "local")
+const prodDir = path.join(dbsnapshotsDir, "prod")
+
+if (!fs.existsSync(dbsnapshotsDir)) {
   console.error("Error: dbsnapshots directory does not exist.")
   process.exit(1)
 }
@@ -30,49 +33,63 @@ if (requestedFile) {
   // Check if it's a direct path
   if (fs.existsSync(requestedFile)) {
     snapshotPath = path.resolve(requestedFile)
-    selectedSnapshot = path.basename(snapshotPath)
+    selectedSnapshot = path.relative(dbsnapshotsDir, snapshotPath)
   } else {
-    // Check inside dbsnapshots directory
-    const directPathInDir = path.join(snapshotDir, requestedFile)
-    if (fs.existsSync(directPathInDir)) {
-      snapshotPath = directPathInDir
-      selectedSnapshot = requestedFile
+    // Check inside local directory first
+    const pathInLocal = path.join(localDir, requestedFile)
+    const pathInProd = path.join(prodDir, requestedFile)
+    if (fs.existsSync(pathInLocal)) {
+      snapshotPath = pathInLocal
+      selectedSnapshot = `local/${requestedFile}`
+    } else if (fs.existsSync(pathInProd)) {
+      snapshotPath = pathInProd
+      selectedSnapshot = `prod/${requestedFile}`
     } else {
-      // Try finding files containing this query string
-      const allFiles = fs
-        .readdirSync(snapshotDir)
-        .filter((file) => file.startsWith("snapshot_") && file.endsWith(".sql"))
-      const matches = allFiles.filter((file) => file.includes(requestedFile))
+      // Find files recursively across both folders
+      const allFiles: { name: string; path: string }[] = []
+      if (fs.existsSync(localDir)) {
+        fs.readdirSync(localDir)
+          .filter((file) => file.startsWith("snapshot_") && file.endsWith(".sql"))
+          .forEach((file) => allFiles.push({ name: `local/${file}`, path: path.join(localDir, file) }))
+      }
+      if (fs.existsSync(prodDir)) {
+        fs.readdirSync(prodDir)
+          .filter((file) => file.startsWith("snapshot_") && file.endsWith(".sql"))
+          .forEach((file) => allFiles.push({ name: `prod/${file}`, path: path.join(prodDir, file) }))
+      }
+
+      const matches = allFiles.filter((file) => file.name.includes(requestedFile))
       if (matches.length === 1) {
-        snapshotPath = path.join(snapshotDir, matches[0])
-        selectedSnapshot = matches[0]
+        snapshotPath = matches[0].path
+        selectedSnapshot = matches[0].name
       } else if (matches.length > 1) {
         console.error(`Error: Multiple snapshots matched the query "${requestedFile}":`)
-        matches.forEach((m) => console.error(`  - ${m}`))
+        matches.forEach((m) => console.error(`  - ${m.name}`))
         process.exit(1)
       } else {
         console.error(`Error: Could not find snapshot matching "${requestedFile}".`)
         console.error("Available snapshots:")
-        const sortedFiles = allFiles.sort((a, b) => b.localeCompare(a))
-        sortedFiles.forEach((f) => console.error(`  - ${f}`))
+        const sortedFiles = allFiles.sort((a, b) => b.name.localeCompare(a.name))
+        sortedFiles.forEach((f) => console.error(`  - ${f.name}`))
         process.exit(1)
       }
     }
   }
 } else {
-  // Default: Get the latest snapshot file
-  const files = fs
-    .readdirSync(snapshotDir)
-    .filter((file) => file.startsWith("snapshot_") && file.endsWith(".sql"))
-    .sort((a, b) => b.localeCompare(a)) // Sort descending to get the latest first
+  // Default: Get the latest snapshot file from the local directory
+  const localFiles = fs.existsSync(localDir)
+    ? fs.readdirSync(localDir)
+        .filter((file) => file.startsWith("snapshot_") && file.endsWith(".sql"))
+        .sort((a, b) => b.localeCompare(a))
+    : []
 
-  if (files.length === 0) {
-    console.error("Error: No snapshot files found in dbsnapshots directory.")
+  if (localFiles.length === 0) {
+    console.error("Error: No snapshot files found in dbsnapshots/local directory.")
     process.exit(1)
   }
 
-  selectedSnapshot = files[0]
-  snapshotPath = path.join(snapshotDir, selectedSnapshot)
+  selectedSnapshot = `local/${localFiles[0]}`
+  snapshotPath = path.join(localDir, localFiles[0])
 }
 
 console.log(`Restoring database from ${requestedFile ? "specified" : "latest"} snapshot...`)

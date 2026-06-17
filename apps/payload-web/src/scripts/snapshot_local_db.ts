@@ -13,8 +13,8 @@ if (!databaseUrl) {
   process.exit(1)
 }
 
-// Ensure dbsnapshots directory exists
-const snapshotDir = path.join(process.cwd(), "dbsnapshots")
+// Ensure dbsnapshots/local directory exists
+const snapshotDir = path.join(process.cwd(), "dbsnapshots", "local")
 if (!fs.existsSync(snapshotDir)) {
   fs.mkdirSync(snapshotDir, { recursive: true })
 }
@@ -34,7 +34,7 @@ const outputPath = path.join(snapshotDir, filename)
 
 console.log("Taking database snapshot...")
 console.log(`Source DB: ${databaseUrl.replace(/:[^:@\n]+@/, ":****@")}`) // Mask credentials
-console.log(`Target File: dbsnapshots/${filename}`)
+console.log(`Target File: dbsnapshots/local/${filename}`)
 
 try {
   // Execute pg_dump command
@@ -55,7 +55,7 @@ try {
   const commentedContent = `-- Git Commit: ${gitCommit} (${gitSubject})\n\n${sqlContent}`
   fs.writeFileSync(outputPath, commentedContent, "utf8")
 
-  console.log(`\n✅ Database snapshot successfully created at dbsnapshots/${filename}`)
+  console.log(`\n✅ Database snapshot successfully created at dbsnapshots/local/${filename}`)
 } catch (error: any) {
   console.error("\n❌ Failed to take database snapshot:", error.message)
   process.exit(1)

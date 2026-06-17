@@ -35,15 +35,15 @@ for cmd in pg_dump scp ssh; do
   fi
 done
 
-SNAPSHOT_DIR="$PROJECT_DIR/dbsnapshots"
+SNAPSHOT_DIR="$PROJECT_DIR/dbsnapshots/prod"
 mkdir -p "$SNAPSHOT_DIR"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-LOCAL_PATH="$SNAPSHOT_DIR/snapshot_prod_${TIMESTAMP}.sql"
+LOCAL_PATH="$SNAPSHOT_DIR/snapshot_${TIMESTAMP}.sql"
 REMOTE_PATH="/home/ubuntu/snapshot_prod_${TIMESTAMP}.sql"
 
 echo "--------------------------------------------------------"
 echo "Target: ubuntu@$IP (production)"
-echo "Local Path: dbsnapshots/snapshot_prod_${TIMESTAMP}.sql"
+echo "Local Path: dbsnapshots/prod/snapshot_${TIMESTAMP}.sql"
 echo "--------------------------------------------------------"
 
 echo "Taking snapshot on production EC2..."

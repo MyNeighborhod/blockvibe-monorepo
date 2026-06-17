@@ -179,7 +179,7 @@ if [ "$SKIP_MEDIA" -eq 0 ] && [ -d "$PROJECT_DIR/public/media" ]; then
   echo "Syncing local media to production..."
   ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "ubuntu@$IP" \
     "sudo mkdir -p /var/www/blockvibe/media && sudo chown -R 1001:1001 /var/www/blockvibe/media"
-  rsync -avz --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r \
+  rsync -avz --rsync-path="sudo rsync" --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r \
     -e "ssh -i $SSH_KEY -o StrictHostKeyChecking=no" \
     "$PROJECT_DIR/public/media/" \
     "ubuntu@$IP:/var/www/blockvibe/media/"
