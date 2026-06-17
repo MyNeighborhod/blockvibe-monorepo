@@ -77,6 +77,7 @@ export interface Config {
     footer: Footer;
     invites: Invite;
     'tenant-email-quotas': TenantEmailQuota;
+    broadcasts: Broadcast;
     redirects: Redirect;
     forms: Form;
     'form-submissions': FormSubmission;
@@ -104,6 +105,7 @@ export interface Config {
     footer: FooterSelect<false> | FooterSelect<true>;
     invites: InvitesSelect<false> | InvitesSelect<true>;
     'tenant-email-quotas': TenantEmailQuotasSelect<false> | TenantEmailQuotasSelect<true>;
+    broadcasts: BroadcastsSelect<false> | BroadcastsSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     forms: FormsSelect<false> | FormsSelect<true>;
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
@@ -1000,6 +1002,37 @@ export interface TenantEmailQuota {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "broadcasts".
+ */
+export interface Broadcast {
+  id: number;
+  tenant?: (number | null) | Tenant;
+  subject: string;
+  /**
+   * The HTML content of the broadcast email.
+   */
+  message: string;
+  /**
+   * JSON array of resident email addresses who received this broadcast.
+   */
+  recipients:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * The user who drafted and sent this announcement.
+   */
+  sender: number | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "redirects".
  */
 export interface Redirect {
@@ -1228,6 +1261,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'tenant-email-quotas';
         value: number | TenantEmailQuota;
+      } | null)
+    | ({
+        relationTo: 'broadcasts';
+        value: number | Broadcast;
       } | null)
     | ({
         relationTo: 'redirects';
@@ -1737,6 +1774,19 @@ export interface TenantEmailQuotasSelect<T extends boolean = true> {
   monthlyEmailLimit?: T;
   emailsSentThisMonth?: T;
   lastEmailResetMonth?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "broadcasts_select".
+ */
+export interface BroadcastsSelect<T extends boolean = true> {
+  tenant?: T;
+  subject?: T;
+  message?: T;
+  recipients?: T;
+  sender?: T;
   updatedAt?: T;
   createdAt?: T;
 }

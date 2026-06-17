@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
 import { sendBroadcastAction } from "./actions"
+import { RichTextEditor } from "@/components/RichTextEditor"
 
 interface Resident {
   id: number
@@ -153,14 +154,11 @@ export function BroadcastForm({ residents, tenantId }: BroadcastFormProps) {
             </div>
             <div className="space-y-2">
               <Label htmlFor="broadcast-message">Message Content</Label>
-              <textarea
+              <RichTextEditor
                 id="broadcast-message"
-                placeholder="Write your message here..."
                 value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                required
-                rows={10}
-                className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                onChange={setMessage}
+                placeholder="Write your message here..."
               />
             </div>
           </CardContent>

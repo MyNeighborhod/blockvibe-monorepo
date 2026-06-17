@@ -4,6 +4,7 @@ import { getPayload } from "payload"
 import configPromise from "@payload-config"
 import { headers } from "next/headers"
 import crypto from "crypto"
+import { getMeUser } from "@/utilities/getMeUser"
 
 export async function sendBroadcastAction(
   recipientEmails: string[],
@@ -111,7 +112,7 @@ export async function sendBroadcastAction(
           html: `
             <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
               <h2 style="color: #0f172a; margin-bottom: 16px;">Community Announcement</h2>
-              <div style="color: #334155; font-size: 16px; line-height: 24px; white-space: pre-wrap;">${message}</div>
+              <div style="color: #334155; font-size: 16px; line-height: 24px;">${message}</div>
               <hr style="margin: 24px 0; border: 0; border-top: 1px solid #e2e8f0;" />
               <p style="color: #64748b; font-size: 12px; text-align: center;">
                 Sent via ${host} to registered residents of your neighborhood association.
@@ -139,6 +140,20 @@ export async function sendBroadcastAction(
       data: {
         emailsSentThisMonth: sent + activeEmails.length,
       },
+    })
+
+    // Save to the sent communications log (Broadcasts collection)
+    const { user: senderUser } = await getMeUser()
+    await payload.create({
+      collection: "broadcasts",
+      data: {
+        subject,
+        message, // HTML content
+        recipients: activeEmails, // JSON array of emails
+        sender: senderUser.id,
+        tenant: typeof tenantId === "string" ? parseInt(tenantId, 10) : tenantId,
+      },
+      user: senderUser,
     })
 
     return { success: true, count: activeEmails.length }

@@ -101,6 +101,7 @@ export const plugins: Plugin[] = [
       media: {},
       search: {},
       invites: {},
+      broadcasts: {},
       header: {
         isGlobal: true,
       },

@@ -1,7 +1,9 @@
 import { test, expect } from "@playwright/test"
 import "dotenv/config"
-import { getTenantURL } from "../helpers/tenantUrl"
+import { getTenantURL, isRemoteTestEnv } from "../helpers/tenantUrl"
 import { expectResidentListed } from "../helpers/emailBroadcaster"
+import { getPayload } from "payload"
+import config from "../../src/payload.config.js"
 
 test.describe("Email Broadcaster Campaign E2E Flow", () => {
   let nogBaseURL: string
@@ -13,6 +15,19 @@ test.describe("Email Broadcaster Campaign E2E Flow", () => {
   test("Admin can log in, select eugen8@gmail.com from resident list, and send broadcast communication", async ({
     browser,
   }) => {
+    const isLocal = !isRemoteTestEnv()
+
+    // 0. Local database cleanup before test runs
+    if (isLocal) {
+      const payload = await getPayload({ config })
+      await payload.delete({
+        collection: "broadcasts",
+        where: {
+          subject: { equals: "Important NOG Community Update" },
+        },
+      })
+    }
+
     const adminContext = await browser.newContext({ baseURL: nogBaseURL })
     const adminPage = await adminContext.newPage()
 
@@ -37,8 +52,6 @@ test.describe("Email Broadcaster Campaign E2E Flow", () => {
 
     // 3. Clear existing selections (Deselect All)
     const deselectButton = adminPage.locator("button:has-text('Deselect All')")
-    // If Deselect All is visible/present, click it. If only Select All is shown, no action needed or click it depending on state.
-    // Let's click 'Deselect All' if it's there.
     if (await deselectButton.isVisible()) {
       await deselectButton.click()
     }
@@ -65,8 +78,9 @@ test.describe("Email Broadcaster Campaign E2E Flow", () => {
 
     // 5. Compose the communication details
     await adminPage.fill("input[id='broadcast-subject']", "Important NOG Community Update")
+    // Target the new contentEditable RichTextEditor div
     await adminPage.fill(
-      "textarea[id='broadcast-message']",
+      "[id='broadcast-message']",
       "Hello, this is an official community announcement sent via the Email Broadcaster tool to verify our AWS SES delivery flow to residents."
     )
 
@@ -77,6 +91,23 @@ test.describe("Email Broadcaster Campaign E2E Flow", () => {
     await expect(
       adminPage.locator("text=/Communication sent successfully to 1 residents/i")
     ).toBeVisible()
+
+    // 8. Local database validation (check that broadcast was correctly logged)
+    if (isLocal) {
+      const payload = await getPayload({ config })
+      const broadcastsResult = await payload.find({
+        collection: "broadcasts",
+        where: {
+          subject: { equals: "Important NOG Community Update" },
+        },
+      })
+      expect(broadcastsResult.docs.length).toBe(1)
+      const broadcastDoc = broadcastsResult.docs[0]
+      expect(broadcastDoc.subject).toBe("Important NOG Community Update")
+      expect(broadcastDoc.message).toContain("Hello, this is an official community announcement")
+      // Check that recipients JSON field contains our target email
+      expect(JSON.stringify(broadcastDoc.recipients)).toContain("eugen8@gmail.com")
+    }
 
     await adminContext.close()
   })
