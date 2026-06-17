@@ -2,25 +2,33 @@ const PLATFORM_DOMAIN = "blockvibe.org"
 
 /** Hostname → tenant slug used in routes and database lookups. */
 export function resolveTenantSlugFromHost(hostname: string): string {
-  if (hostname === "localhost" || hostname === "127.0.0.1") {
+  const host = hostname.split(":")[0]
+
+  // Handle staging environment subdomains (e.g. nog-staging.blockvibe.org -> nog.blockvibe.org)
+  let normalizedHost = host
+  if (host.includes("-staging.")) {
+    normalizedHost = host.replace("-staging.", ".")
+  }
+
+  if (normalizedHost === "localhost" || normalizedHost === "127.0.0.1") {
     return "default"
   }
 
-  if (hostname.endsWith(".localhost")) {
-    const slug = hostname.split(".")[0]
+  if (normalizedHost.endsWith(".localhost")) {
+    const slug = normalizedHost.split(".")[0]
     return slug
   }
 
-  if (hostname === `info.${PLATFORM_DOMAIN}` || hostname === PLATFORM_DOMAIN) {
+  if (normalizedHost === `info.${PLATFORM_DOMAIN}` || normalizedHost === PLATFORM_DOMAIN) {
     return "default"
   }
 
-  if (hostname.endsWith(`.${PLATFORM_DOMAIN}`)) {
-    const slug = hostname.replace(`.${PLATFORM_DOMAIN}`, "")
+  if (normalizedHost.endsWith(`.${PLATFORM_DOMAIN}`)) {
+    const slug = normalizedHost.replace(`.${PLATFORM_DOMAIN}`, "")
     return slug
   }
 
-  return hostname
+  return normalizedHost
 }
 
 /** True for the default / North of Grand tenant (current slug or legacy `nog`). */
