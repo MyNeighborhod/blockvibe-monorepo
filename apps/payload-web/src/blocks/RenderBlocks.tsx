@@ -10,6 +10,7 @@ import { MediaBlock } from "@/blocks/MediaBlock/Component"
 import { IframeBlock } from "@/blocks/IframeBlock/Component"
 import { SlideshowBlock } from "@/blocks/SlideshowBlock/Component"
 import { FileListBlock } from "@/blocks/FileListBlock/Component"
+import { ContactBlock } from "@/blocks/ContactBlock/Component"
 
 const blockComponents = {
   archive: ArchiveBlock,
@@ -20,6 +21,7 @@ const blockComponents = {
   iframeBlock: IframeBlock,
   slideshowBlock: SlideshowBlock,
   fileListBlock: FileListBlock,
+  contactBlock: ContactBlock,
 }
 
 export const RenderBlocks: React.FC<{

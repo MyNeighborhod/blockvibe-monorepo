@@ -121,12 +121,62 @@ async function run() {
 
   payload.logger.info("Initializing Seeding for NOG (North Of Grand)...")
 
-  // Clean up existing NOG admin and neighbor users if they exist
+  // 1. Find existing NOG Tenant data first so we have the IDs
   const nogAdminEmail = process.env.TENANT_NOG_USERNAME || "admin@nog.blockvibe.org"
   const nogNeighborEmail =
     process.env.TENANT_NOG_NEIGHBOR_USERNAME || "neighbor_john@nog.blockvibe.org"
   const nogNeighborJohannaEmail =
     process.env.TENANT_NOG_NEIGHBOR_JOHANNA_USERNAME || "neighbor_johanna@nog.blockvibe.org"
+
+  const existingTenants = await payload.find({
+    collection: "tenants",
+    where: {
+      or: [{ slug: { equals: "nog" } }, { domain: { equals: "www.northofgranddsm.org" } }],
+    },
+    limit: 100,
+  })
+  const tenantIds = existingTenants.docs.map((t) => t.id)
+
+  // Find the users to delete to get their IDs
+  const usersToDelete = await payload.find({
+    collection: "users",
+    where: {
+      or: [
+        { email: { equals: nogAdminEmail } },
+        { email: { equals: nogNeighborEmail } },
+        { email: { equals: nogNeighborJohannaEmail } },
+      ],
+    },
+    limit: 10,
+  })
+  const userIdsToDelete = usersToDelete.docs.map((u) => u.id)
+
+  // Clean up Broadcasts referencing these tenants or sent by these users
+  if (tenantIds.length > 0 || userIdsToDelete.length > 0) {
+    console.log("Cleaning up broadcasts...")
+    await payload.delete({
+      collection: "broadcasts",
+      where: {
+        or: [
+          ...(tenantIds.length > 0 ? [{ tenant: { in: tenantIds } }] : []),
+          ...(userIdsToDelete.length > 0 ? [{ sender: { in: userIdsToDelete } }] : []),
+        ],
+      },
+    })
+  }
+
+  // Clean up tenant email quotas
+  if (tenantIds.length > 0) {
+    console.log("Cleaning up tenant email quotas...")
+    await payload.delete({
+      collection: "tenant-email-quotas",
+      where: {
+        tenant: { in: tenantIds },
+      },
+    })
+  }
+
+  // Clean up existing NOG admin and neighbor users
   await payload.delete({
     collection: "users",
     where: {
@@ -136,15 +186,6 @@ async function run() {
         { email: { equals: nogNeighborJohannaEmail } },
       ],
     },
-  })
-
-  // 1. Clean up existing NOG Tenant data
-  const existingTenants = await payload.find({
-    collection: "tenants",
-    where: {
-      or: [{ slug: { equals: "nog" } }, { domain: { equals: "www.northofgranddsm.org" } }],
-    },
-    limit: 100,
   })
 
   for (const tenant of existingTenants.docs) {
@@ -187,6 +228,18 @@ async function run() {
     console.log("Deleting invites...")
     await payload.delete({
       collection: "invites",
+      where: { tenant: { equals: tenant.id } },
+    })
+
+    console.log("Deleting tenant email quotas...")
+    await payload.delete({
+      collection: "tenant-email-quotas",
+      where: { tenant: { equals: tenant.id } },
+    })
+
+    console.log("Deleting broadcasts...")
+    await payload.delete({
+      collection: "broadcasts",
       where: { tenant: { equals: tenant.id } },
     })
 
@@ -935,63 +988,36 @@ async function run() {
           ],
         },
         {
-          blockName: "Mailing List signup Form",
-          blockType: "formBlock",
-          enableIntro: true,
-          introContent: lexicalRichText([
+          blockName: "Two-Column Contact Section",
+          blockType: "contactBlock",
+          newsletterForm: newsletterForm.id,
+          newsletterIntro: lexicalRichText([
             richHeading("Join our mailing list!", "h3"),
             richParagraph("*we do not sell or share your info"),
           ]),
-          form: newsletterForm.id,
-        },
-        {
-          blockName: "General Question Form",
-          blockType: "formBlock",
-          enableIntro: true,
-          introContent: lexicalRichText([richHeading("Have a question?", "h3")]),
-          form: contactForm.id,
-        },
-        {
-          blockName: "Map Embed",
-          blockType: "iframeBlock",
-          iframeUrl:
-            "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3000.0!2d-93.66485899999999!3d41.5903345!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x87ee99b7b7a1dfa1%3A0xe10839e55ad0ba78!2sNorth%20of%20Grand%2C%20Des%20Moines%2C%20IA!5e0!3m2!1sen!2sus!4v1717650000000!5m2!1sen!2sus",
-          height: 350,
-          title: "North Of Grand Des Moines Area Map",
-        },
-        {
-          blockName: "Social Links",
-          blockType: "content",
-          columns: [
-            {
-              type: "text",
-              size: "half",
-              richText: lexicalRichText([
-                richParagraph("Connect with us on Facebook for news and community discussion."),
-              ]),
-              enableLink: true,
-              link: {
-                type: "custom",
-                label: "Facebook Page",
-                url: "https://www.facebook.com/North.of.Grand.DSM/",
-                appearance: "default",
-              },
+          questionForm: contactForm.id,
+          questionIntro: lexicalRichText([richHeading("Have a question?", "h3")]),
+          showMap: true,
+          mapLatitude: 41.5903345,
+          mapLongitude: -93.66485899999999,
+          mapZoom: 14,
+          mapBoundaryGeoJSON: JSON.stringify({
+            type: "Feature",
+            geometry: {
+              type: "Polygon",
+              coordinates: [
+                [
+                  [-93.674, 41.593],
+                  [-93.660, 41.593],
+                  [-93.660, 41.584],
+                  [-93.674, 41.584],
+                  [-93.674, 41.593],
+                ],
+              ],
             },
-            {
-              type: "text",
-              size: "half",
-              richText: lexicalRichText([
-                richParagraph("Send an email directly to the association president."),
-              ]),
-              enableLink: true,
-              link: {
-                type: "custom",
-                label: "Email President",
-                url: "mailto:northofgrandpresident@gmail.com",
-                appearance: "default",
-              },
-            },
-          ],
+          }),
+          facebookUrl: "https://www.facebook.com/North.of.Grand.DSM/",
+          emailAddress: "northofgrandpresident@gmail.com",
         },
       ],
       meta: {

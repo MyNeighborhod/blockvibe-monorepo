@@ -17,6 +17,7 @@ import { getTenantBySlug } from "@/utilities/getGlobals"
 import { isNorthOfGrandTenant } from "@/utilities/resolveTenantSlug"
 
 import "../globals.css"
+import "leaflet/dist/leaflet.css"
 import { notFound } from "next/navigation"
 import { getServerSideURL } from "@/utilities/getURL"
 

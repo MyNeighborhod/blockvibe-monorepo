@@ -217,6 +217,7 @@ export interface Page {
     | IframeBlock
     | SlideshowBlock
     | FileListBlock
+    | ContactBlock
   )[];
   meta?: {
     title?: string | null;
@@ -895,6 +896,57 @@ export interface FileListBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ContactBlock".
+ */
+export interface ContactBlock {
+  newsletterForm: number | Form;
+  questionForm: number | Form;
+  newsletterIntro?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  questionIntro?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  showMap?: boolean | null;
+  mapLatitude: number;
+  mapLongitude: number;
+  mapZoom: number;
+  /**
+   * Paste a GeoJSON Feature or Polygon coordinate geometry to highlight the neighborhood boundary on the map.
+   */
+  mapBoundaryGeoJSON?: string | null;
+  facebookUrl?: string | null;
+  emailAddress?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'contactBlock';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "header".
  */
 export interface Header {
@@ -1368,6 +1420,7 @@ export interface PagesSelect<T extends boolean = true> {
         iframeBlock?: T | IframeBlockSelect<T>;
         slideshowBlock?: T | SlideshowBlockSelect<T>;
         fileListBlock?: T | FileListBlockSelect<T>;
+        contactBlock?: T | ContactBlockSelect<T>;
       };
   meta?:
     | T
@@ -1507,6 +1560,25 @@ export interface FileListBlockSelect<T extends boolean = true> {
         description?: T;
         id?: T;
       };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ContactBlock_select".
+ */
+export interface ContactBlockSelect<T extends boolean = true> {
+  newsletterForm?: T;
+  questionForm?: T;
+  newsletterIntro?: T;
+  questionIntro?: T;
+  showMap?: T;
+  mapLatitude?: T;
+  mapLongitude?: T;
+  mapZoom?: T;
+  mapBoundaryGeoJSON?: T;
+  facebookUrl?: T;
+  emailAddress?: T;
   id?: T;
   blockName?: T;
 }
