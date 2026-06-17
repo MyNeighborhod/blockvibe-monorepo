@@ -251,6 +251,7 @@ Successful sends are recorded in the **`broadcasts`** collection with the resolv
 
 ### Related docs
 
+- [Email service (queued Lambda, auth, cost)](../email-service/readme.md)
 - [Deployment — media strategy](../deployment/readme.md#6-media-strategy)
 - [infra/README.md — routine deploy](../../infra/README.md#routine-production-deploy-cheat-sheet)
 

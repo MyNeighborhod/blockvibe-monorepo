@@ -100,7 +100,7 @@ Run from `apps/payload-web`:
 
 4. Open `https://<your-domain>` (from `terraform output domain_url`).
 
-Full details: [docs/deployment/readme.md](../docs/deployment/readme.md) · **Day-to-day flows:** [production-flows.md](../docs/deployment/production-flows.md)
+Full details: [docs/deployment/readme.md](../docs/deployment/readme.md) · **Day-to-day flows:** [production-flows.md](../docs/deployment/production-flows.md) · **Email service (queued Lambda):** [docs/email-service/readme.md](../docs/email-service/readme.md)
 
 ## Files in this directory
 

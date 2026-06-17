@@ -3,9 +3,15 @@
 import { getPayload } from "payload"
 import configPromise from "@payload-config"
 import { headers } from "next/headers"
-import crypto from "crypto"
 import { getMeUser } from "@/utilities/getMeUser"
 import { resolveBroadcastImagesInHtml, uploadBroadcastImageFile } from "@/utilities/resolveBroadcastImages"
+import { getUserTenantIds } from "@/access/roles"
+import {
+  dispatchBroadcastCampaign,
+  getEmailEnqueueRole,
+  shouldUseEmailService,
+} from "@/utilities/emailServiceClient"
+import { sendBroadcastEmailsInline } from "@/utilities/sendBroadcastEmails"
 
 const MAX_BROADCAST_IMAGE_BYTES = 5 * 1024 * 1024
 
@@ -138,6 +144,16 @@ export async function sendBroadcastAction(
       throw new Error("You must be logged in to send a broadcast.")
     }
 
+    const enqueueRole = getEmailEnqueueRole(senderUser as { role?: string | null })
+    if (!enqueueRole) {
+      throw new Error("Only neighborhood admins may send broadcasts.")
+    }
+
+    const numericTenantId = typeof tenantId === "string" ? parseInt(tenantId, 10) : tenantId
+    if (enqueueRole === "admin" && !getUserTenantIds(senderUser).includes(numericTenantId)) {
+      throw new Error("You are not authorized to send broadcasts for this neighborhood.")
+    }
+
     const resolvedMessage = await resolveBroadcastImagesInHtml(message, {
       payload,
       tenantId,
@@ -161,44 +177,29 @@ export async function sendBroadcastAction(
       throw new Error("No active (subscribed) recipients found in the selection.")
     }
 
-    // Send emails
-    for (const email of activeEmails) {
-      try {
-        const token = crypto
-          .createHmac("sha256", process.env.PAYLOAD_SECRET || "fallback-secret")
-          .update(email)
-          .digest("hex")
-
-        const protocol = host.startsWith("localhost") ? "http" : "https"
-        const unsubscribeUrl = `${protocol}://${host}/${tenantSlug}/unsubscribe?email=${encodeURIComponent(
-          email
-        )}&token=${token}`
-
-        await payload.sendEmail({
-          to: email,
-          subject: subject,
-          html: `
-            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
-              <h2 style="color: #0f172a; margin-bottom: 16px;">Community Announcement</h2>
-              <div style="color: #334155; font-size: 16px; line-height: 24px;">${resolvedMessage}</div>
-              <hr style="margin: 24px 0; border: 0; border-top: 1px solid #e2e8f0;" />
-              <p style="color: #64748b; font-size: 12px; text-align: center;">
-                Sent via ${host} to registered residents of your neighborhood association.
-              </p>
-              <p style="color: #64748b; font-size: 11px; text-align: center; margin-top: 12px;">
-                If you no longer wish to receive these emails, you can 
-                <a href="${unsubscribeUrl}" style="color: #0284c7; text-decoration: underline;">unsubscribe here</a>.
-              </p>
-            </div>
-          `,
-        })
-      } catch (emailError: any) {
-        payload.logger.error(
-          { err: emailError },
-          `Broadcast email delivery failed for ${email}`
-        )
-        throw new Error(`Email delivery failed for ${email}: ${emailError.message || emailError}`)
-      }
+    if (shouldUseEmailService()) {
+      await dispatchBroadcastCampaign({
+        tenantId: numericTenantId,
+        senderUserId: senderUser.id,
+        role: enqueueRole,
+        tenantIds: getUserTenantIds(senderUser),
+        campaign: {
+          subject,
+          html: resolvedMessage,
+          recipientEmails: activeEmails,
+          host,
+          tenantSlug,
+        },
+      })
+    } else {
+      await sendBroadcastEmailsInline({
+        payload,
+        activeEmails,
+        subject,
+        resolvedMessage,
+        host,
+        tenantSlug,
+      })
     }
 
     // Update sent quota count
@@ -219,7 +220,7 @@ export async function sendBroadcastAction(
           message: resolvedMessage, // HTML content with hosted image URLs
           recipients: activeEmails, // JSON array of emails
           sender: senderUser.id,
-          tenant: typeof tenantId === "string" ? parseInt(tenantId, 10) : tenantId,
+          tenant: numericTenantId,
         },
         user: senderUser,
       })
