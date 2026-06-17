@@ -18,8 +18,9 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
   const mapInstanceRef = useRef<any>(null)
 
   useEffect(() => {
+    const container = mapContainerRef.current
     // Avoid running on server-side or if container is not ready
-    if (typeof window === "undefined" || !mapContainerRef.current) return
+    if (typeof window === "undefined" || !container) return
 
     // Import Leaflet dynamically on the client side
     import("leaflet").then((L) => {
@@ -38,7 +39,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       }
 
       // Create new Leaflet Map instance
-      const map = L.map(mapContainerRef.current).setView([latitude, longitude], zoom)
+      const map = L.map(container).setView([latitude, longitude], zoom)
       mapInstanceRef.current = map
 
       // Load OpenStreetMap tiles
