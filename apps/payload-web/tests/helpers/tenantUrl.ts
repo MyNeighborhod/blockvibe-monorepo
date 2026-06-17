@@ -1,4 +1,4 @@
-const PLATFORM_DOMAIN = "blockvibe.org"
+const PLATFORM_DOMAIN = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || "blockvibe.org"
 
 /** True when Playwright targets a remote (non-local) deployment. */
 export function isRemoteTestEnv(): boolean {
@@ -39,5 +39,9 @@ export function expectedNogExampleHost(baseURL: string): string {
   if (url.hostname === "localhost" || url.hostname === "127.0.0.1") {
     return "nog.localhost"
   }
-  return "nog.blockvibe.org"
+  const stagingDomain = process.env.NEXT_PUBLIC_STAGING_DOMAIN || "staging.blockvibe.com"
+  if (url.hostname.endsWith(stagingDomain)) {
+    return `nog.${stagingDomain}`
+  }
+  return `nog.${PLATFORM_DOMAIN}`
 }

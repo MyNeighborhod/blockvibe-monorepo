@@ -1,34 +1,38 @@
-const PLATFORM_DOMAIN = "blockvibe.org"
+const PLATFORM_DOMAIN = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || "blockvibe.org"
+const STAGING_DOMAIN = process.env.NEXT_PUBLIC_STAGING_DOMAIN || "staging.blockvibe.com"
 
 /** Hostname → tenant slug used in routes and database lookups. */
 export function resolveTenantSlugFromHost(hostname: string): string {
   const host = hostname.split(":")[0]
 
-  // Handle staging environment subdomains (e.g. nog-staging.blockvibe.org -> nog.blockvibe.org)
-  let normalizedHost = host
-  if (host.includes("-staging.")) {
-    normalizedHost = host.replace("-staging.", ".")
-  }
-
-  if (normalizedHost === "localhost" || normalizedHost === "127.0.0.1") {
+  // 1. Staging Domain: staging.blockvibe.com
+  if (host === STAGING_DOMAIN) {
     return "default"
   }
-
-  if (normalizedHost.endsWith(".localhost")) {
-    const slug = normalizedHost.split(".")[0]
+  if (host.endsWith(`.${STAGING_DOMAIN}`)) {
+    const slug = host.replace(`.${STAGING_DOMAIN}`, "")
     return slug
   }
 
-  if (normalizedHost === `info.${PLATFORM_DOMAIN}` || normalizedHost === PLATFORM_DOMAIN) {
+  // 2. Production Domain: blockvibe.org
+  if (host === PLATFORM_DOMAIN || host === `info.${PLATFORM_DOMAIN}`) {
     return "default"
   }
-
-  if (normalizedHost.endsWith(`.${PLATFORM_DOMAIN}`)) {
-    const slug = normalizedHost.replace(`.${PLATFORM_DOMAIN}`, "")
+  if (host.endsWith(`.${PLATFORM_DOMAIN}`)) {
+    const slug = host.replace(`.${PLATFORM_DOMAIN}`, "")
     return slug
   }
 
-  return normalizedHost
+  // 3. Local Dev fallback
+  if (host === "localhost" || host === "127.0.0.1") {
+    return "default"
+  }
+  if (host.endsWith(".localhost")) {
+    const slug = host.split(".")[0]
+    return slug
+  }
+
+  return host
 }
 
 /** True for the default / North of Grand tenant (current slug or legacy `nog`). */

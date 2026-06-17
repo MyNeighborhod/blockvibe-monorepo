@@ -1,0 +1,31 @@
+services:
+  payload-staging:
+    image: blockvibe-app:staging
+    restart: always
+    ports:
+      - "127.0.0.1:3001:3000" # Bind host 3001 to container 3000 (proxied via Caddy)
+    volumes:
+      - /var/www/blockvibe/media-staging:/app/apps/payload-web/public/media
+    depends_on:
+      - db-staging
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgres://${DB_USER:-postgres}:${DB_PASSWORD:-localhost}@db-staging:5432/${DB_NAME:-blockvibe-staging}
+
+  db-staging:
+    image: postgres:16-alpine
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${DB_USER:-postgres}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-localhost}
+      - POSTGRES_DB=${DB_NAME:-blockvibe-staging}
+    ports:
+      - "127.0.0.1:5433:5432" # Bind host 5433 to container 5432 (local access only)
+    volumes:
+      - pgdata-staging:/var/lib/postgresql/data
+    restart: always
+
+volumes:
+  pgdata-staging:

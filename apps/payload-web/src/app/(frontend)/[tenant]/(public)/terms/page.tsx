@@ -26,11 +26,15 @@ export default async function TermsOfServicePage({ params }: PageProps) {
   const host = headersList.get("host") || ""
   const hostname = host.split(":")[0]
 
+  const platformDomain = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || "blockvibe.org"
+  const stagingDomain = process.env.NEXT_PUBLIC_STAGING_DOMAIN || "staging.blockvibe.com"
+
   const isPlatformDomain =
     hostname === "localhost" ||
     hostname === "127.0.0.1" ||
-    hostname === "blockvibe.org" ||
-    hostname === "info.blockvibe.org"
+    hostname === platformDomain ||
+    hostname === `info.${platformDomain}` ||
+    hostname === stagingDomain
 
   if (tenant !== "default" || !isPlatformDomain) {
     notFound()

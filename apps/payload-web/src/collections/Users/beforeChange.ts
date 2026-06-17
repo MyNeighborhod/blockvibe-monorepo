@@ -40,18 +40,25 @@ export const usersBeforeChangeHook: CollectionBeforeChangeHook = async ({
       const referer = req.headers?.get?.("referer") || ""
       let slug = ""
 
+      const platformDomain = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || "blockvibe.org"
+      const stagingDomain = process.env.NEXT_PUBLIC_STAGING_DOMAIN || "staging.blockvibe.com"
+
       if (host.includes(".localhost")) {
         slug = host.split(".")[0]
-      } else if (host.includes(".blockvibe.org")) {
-        slug = host.replace(".blockvibe.org", "").split(":")[0]
+      } else if (host.includes(`.${platformDomain}`)) {
+        slug = host.replace(`.${platformDomain}`, "").split(":")[0]
+      } else if (host.includes(`.${stagingDomain}`)) {
+        slug = host.replace(`.${stagingDomain}`, "").split(":")[0]
       } else if (referer) {
         try {
           const refUrl = new URL(referer)
           const refHost = refUrl.hostname
           if (refHost.includes(".localhost")) {
             slug = refHost.split(".")[0]
-          } else if (refHost.includes(".blockvibe.org")) {
-            slug = refHost.replace(".blockvibe.org", "").split(":")[0]
+          } else if (refHost.includes(`.${platformDomain}`)) {
+            slug = refHost.replace(`.${platformDomain}`, "").split(":")[0]
+          } else if (refHost.includes(`.${stagingDomain}`)) {
+            slug = refHost.replace(`.${stagingDomain}`, "").split(":")[0]
           }
         } catch (e) {
           // url parse failure

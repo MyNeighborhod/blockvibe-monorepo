@@ -52,8 +52,18 @@ export const CMSLink: React.FC<CMSLinkType> = (props) => {
   let resolvedHref = rawHref || null
 
   if (isMounted && rawHref && typeof window !== "undefined") {
-    // Check if rawHref points to a tenant subdomain of localhost or blockvibe.org
-    const subdomainMatch = rawHref.match(/^(https?:\/\/)([^.]+)\.(localhost|blockvibe\.org)/)
+    const platformDomain = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || "blockvibe.org"
+    const stagingDomain = process.env.NEXT_PUBLIC_STAGING_DOMAIN || "staging.blockvibe.com"
+
+    // Escape dots for regex
+    const platformDomainEscaped = platformDomain.replace(/\./g, "\\.")
+    const stagingDomainEscaped = stagingDomain.replace(/\./g, "\\.")
+
+    // Match if rawHref points to a tenant subdomain of localhost, platform, or staging domains
+    const regexStr = `^(https?:\\/\\/)([^.]+)\\.(localhost|${platformDomainEscaped}|${stagingDomainEscaped})`
+    const regex = new RegExp(regexStr)
+    const subdomainMatch = rawHref.match(regex)
+
     if (subdomainMatch) {
       const protocol = window.location.protocol
       const currentHost = window.location.hostname
@@ -62,9 +72,13 @@ export const CMSLink: React.FC<CMSLinkType> = (props) => {
 
       if (currentHost === "localhost" || currentHost === "127.0.0.1") {
         resolvedHref = `${protocol}//${tenantSlug}.localhost:${currentPort || "3000"}`
+      } else if (currentHost.endsWith(stagingDomain)) {
+        resolvedHref = `${protocol}//${tenantSlug}.${stagingDomain}`
+      } else if (currentHost.endsWith(platformDomain)) {
+        resolvedHref = `${protocol}//${tenantSlug}.${platformDomain}`
       } else {
-        const domain = currentHost.endsWith("blockvibe.org") ? "blockvibe.org" : currentHost
-        resolvedHref = `${protocol}//${tenantSlug}.${domain}`
+        // Fallback for custom domains or default domains
+        resolvedHref = `${protocol}//${tenantSlug}.${platformDomain}`
       }
     }
   }

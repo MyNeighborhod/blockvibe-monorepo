@@ -1,5 +1,5 @@
 # Automatic HTTPS via Let's Encrypt (HTTP-01 challenge).
-info.blockvibe.org, nog.blockvibe.org, beaverdale.blockvibe.org, oakwood.blockvibe.org, woodland-dsm.blockvibe.org, twin-suns.blockvibe.org {
+blockvibe.org, nog.blockvibe.org, beaverdale.blockvibe.org, oakwood.blockvibe.org, woodland-dsm.blockvibe.org, twin-suns.blockvibe.org {
 	# Serve uploaded media directly from the EBS volume (bypasses Next.js standalone).
 	handle /media/* {
 		root * /var/www/blockvibe
@@ -8,5 +8,23 @@ info.blockvibe.org, nog.blockvibe.org, beaverdale.blockvibe.org, oakwood.blockvi
 
 	handle {
 		reverse_proxy 127.0.0.1:3000
+	}
+}
+
+# Redirect legacy info subdomain to apex domain
+info.blockvibe.org {
+	redir https://blockvibe.org{uri} permanent
+}
+
+# Staging Environment
+staging.blockvibe.com, nog.staging.blockvibe.com, beaverdale.staging.blockvibe.com, oakwood.staging.blockvibe.com, woodland-dsm.staging.blockvibe.com, twin-suns.staging.blockvibe.com {
+	# Serve uploaded staging media directly from the EBS volume (bypasses Next.js standalone).
+	handle /media/* {
+		root * /var/www/blockvibe/media-staging
+		file_server
+	}
+
+	handle {
+		reverse_proxy 127.0.0.1:3001
 	}
 }

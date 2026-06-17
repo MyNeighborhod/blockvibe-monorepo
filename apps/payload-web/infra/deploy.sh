@@ -1,13 +1,15 @@
 #!/bin/bash
 set -e
 
-# Usage: ./infra/deploy.sh [--skip-media]
+# Usage: ./infra/deploy.sh [--skip-media] [--staging]
 # Media files live on the EC2 EBS volume (not in the Docker image). Use --skip-media for
 # code-only deploys when public/media has not changed.
 SKIP_MEDIA=0
+STAGING=0
 for arg in "$@"; do
   case "$arg" in
     --skip-media) SKIP_MEDIA=1 ;;
+    --staging) STAGING=1 ;;
   esac
 done
 
@@ -38,23 +40,43 @@ if [ ! -f "$SSH_KEY" ]; then
   exit 1
 fi
 
+# 3. Define target parameters dynamically based on environment
+IMAGE_TAG="latest"
+ARCHIVE_NAME="app.tar.gz"
+REMOTE_DIR="/home/ubuntu/app"
+REMOTE_MEDIA_DIR="/var/www/blockvibe/media"
+ENV_SOURCE=".env.production"
+COMPOSE_SOURCE="docker-compose.yml"
+ENV_LABEL="Production"
+
+if [ "$STAGING" -eq 1 ]; then
+  IMAGE_TAG="staging"
+  ARCHIVE_NAME="app-staging.tar.gz"
+  REMOTE_DIR="/home/ubuntu/app-staging"
+  REMOTE_MEDIA_DIR="/var/www/blockvibe/media-staging"
+  ENV_SOURCE=".env.staging"
+  COMPOSE_SOURCE="docker-compose.staging.yml"
+  ENV_LABEL="Staging"
+fi
+
 echo "--------------------------------------------------------"
-echo "Deploying to: $IP"
+echo "Deploying to ($ENV_LABEL): $IP"
 echo "Using SSH Key: $SSH_KEY"
+echo "Staging Mode: $STAGING"
 echo "--------------------------------------------------------"
 
-# 3. Build the application Docker container locally
+# 4. Build the application Docker container locally
 cd "$PROJECT_DIR/../.."
-echo "Building Docker image locally for target platform linux/amd64..."
+echo "Building Docker image locally for target platform linux/amd64 (tag: $IMAGE_TAG)..."
 echo "(This compilation happens inside Docker on your localhost to prevent crashing the weak EC2 instance)"
 
 # Build for linux/amd64 to ensure compatibility with EC2, even if building on Apple Silicon macOS
-docker build --platform linux/amd64 -t blockvibe-app:latest -f apps/payload-web/Dockerfile .
+docker build --platform linux/amd64 -t blockvibe-app:$IMAGE_TAG -f apps/payload-web/Dockerfile .
 
-# 4. Save and compress Docker image
-echo "Saving and compressing Docker image (blockvibe-app:latest -> app.tar.gz)..."
-docker save blockvibe-app:latest | gzip > app.tar.gz
-echo "✓ Image compressed successfully. Size:" $(du -sh app.tar.gz | cut -f1)
+# 5. Save and compress Docker image
+echo "Saving and compressing Docker image (blockvibe-app:$IMAGE_TAG -> $ARCHIVE_NAME)..."
+docker save blockvibe-app:$IMAGE_TAG | gzip > $ARCHIVE_NAME
+echo "✓ Image compressed successfully. Size:" $(du -sh $ARCHIVE_NAME | cut -f1)
 
 # Preflight: tools required for deploy
 for cmd in docker rsync scp ssh; do
@@ -64,36 +86,36 @@ for cmd in docker rsync scp ssh; do
   fi
 done
 
-# 5. Upload files to EC2
+# 6. Upload files to EC2
 echo "Uploading application files to EC2..."
 # Create deployment directory on remote
-ssh -i "$SSH_KEY" ubuntu@$IP "mkdir -p /home/ubuntu/app && sudo mkdir -p /var/www/blockvibe/media && sudo chown -R 1001:1001 /var/www/blockvibe/media"
+ssh -i "$SSH_KEY" ubuntu@$IP "mkdir -p $REMOTE_DIR && sudo mkdir -p $REMOTE_MEDIA_DIR && sudo chown -R 1001:1001 $REMOTE_MEDIA_DIR"
 
-# Upload docker-compose.yml
-scp -i "$SSH_KEY" "$PROJECT_DIR/docker-compose.yml" ubuntu@$IP:/home/ubuntu/app/docker-compose.yml
+# Upload docker-compose config
+scp -i "$SSH_KEY" "$PROJECT_DIR/$COMPOSE_SOURCE" ubuntu@$IP:$REMOTE_DIR/docker-compose.yml
 
 # Upload Caddy reverse-proxy config (enables HTTPS)
 echo "Uploading Caddyfile..."
 scp -i "$SSH_KEY" "$INFRA_DIR/Caddyfile" ubuntu@$IP:/tmp/Caddyfile
 
-# Upload environment file if present (default to .env.production, fallback to .env)
-if [ -f "$PROJECT_DIR/.env.production" ]; then
-  echo "Uploading .env.production as remote .env..."
-  scp -i "$SSH_KEY" "$PROJECT_DIR/.env.production" ubuntu@$IP:/home/ubuntu/app/.env
+# Upload environment file if present
+if [ -f "$PROJECT_DIR/$ENV_SOURCE" ]; then
+  echo "Uploading $ENV_SOURCE as remote .env..."
+  scp -i "$SSH_KEY" "$PROJECT_DIR/$ENV_SOURCE" ubuntu@$IP:$REMOTE_DIR/.env
 elif [ -f "$PROJECT_DIR/.env" ]; then
-  echo "WARNING: .env.production not found. Uploading local .env as remote .env..."
-  scp -i "$SSH_KEY" "$PROJECT_DIR/.env" ubuntu@$IP:/home/ubuntu/app/.env
+  echo "WARNING: $ENV_SOURCE not found. Uploading local .env as remote .env..."
+  scp -i "$SSH_KEY" "$PROJECT_DIR/.env" ubuntu@$IP:$REMOTE_DIR/.env
 else
-  echo "WARNING: No .env file found. You will need to manually create /home/ubuntu/app/.env on the EC2 server."
+  echo "WARNING: No environment file found. You will need to manually create $REMOTE_DIR/.env on the EC2 server."
 fi
 
 # Sync uploaded media to the EBS-backed volume (docker-compose mounts over /app/public/media)
 if [ "$SKIP_MEDIA" -eq 0 ] && [ -d "$PROJECT_DIR/public/media" ]; then
-  echo "Syncing media files to EC2 (public/media -> /var/www/blockvibe/media)..."
+  echo "Syncing media files to EC2 (public/media -> $REMOTE_MEDIA_DIR)..."
   rsync -avz --rsync-path="sudo rsync" --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r \
     -e "ssh -i $SSH_KEY -o StrictHostKeyChecking=no" \
     "$PROJECT_DIR/public/media/" \
-    "ubuntu@$IP:/var/www/blockvibe/media/"
+    "ubuntu@$IP:$REMOTE_MEDIA_DIR/"
   echo "✓ Media sync complete."
 elif [ "$SKIP_MEDIA" -eq 1 ]; then
   echo "Skipping media sync (--skip-media)."
@@ -101,25 +123,25 @@ else
   echo "WARNING: No public/media directory found locally. Uploaded images will be missing on the server."
 fi
 
-# Upload the compressed image tarball (to /home/ubuntu/ to avoid mounting inside the compose volume context)
+# Upload the compressed image tarball
 echo "Uploading Docker image archive (this might take a minute)..."
-scp -i "$SSH_KEY" app.tar.gz ubuntu@$IP:/home/ubuntu/app.tar.gz
+scp -i "$SSH_KEY" $ARCHIVE_NAME ubuntu@$IP:/home/ubuntu/$ARCHIVE_NAME
 
 # Clean up local archive file
-rm app.tar.gz
+rm $ARCHIVE_NAME
 echo "✓ Local cleanup complete."
 
-# 6. Load image and boot containers on EC2
+# 7. Load image and boot containers on EC2
 echo "Loading image and restarting containers on the remote EC2 instance..."
 ssh -i "$SSH_KEY" ubuntu@$IP "
   echo 'Loading Docker image...' &&
-  sudo docker load -i /home/ubuntu/app.tar.gz &&
-  rm /home/ubuntu/app.tar.gz &&
+  sudo docker load -i /home/ubuntu/$ARCHIVE_NAME &&
+  rm /home/ubuntu/$ARCHIVE_NAME &&
   
-  sudo mkdir -p /var/www/blockvibe/media &&
-  sudo chown -R 1001:1001 /var/www/blockvibe/media &&
-  sudo chmod -R a+rX /var/www/blockvibe/media &&
-  cd /home/ubuntu/app &&
+  sudo mkdir -p $REMOTE_MEDIA_DIR &&
+  sudo chown -R 1001:1001 $REMOTE_MEDIA_DIR &&
+  sudo chmod -R a+rX $REMOTE_MEDIA_DIR &&
+  cd $REMOTE_DIR &&
   echo 'Starting containers via Docker Compose...' &&
   sudo docker compose down &&
   sudo docker compose up -d &&
@@ -130,6 +152,10 @@ ssh -i "$SSH_KEY" ubuntu@$IP "
 "
 
 echo "--------------------------------------------------------"
-DOMAIN=$(cd "$INFRA_DIR" && terraform output -raw domain_url 2>/dev/null | sed 's|http://||' || echo "$IP")
-echo "Deployment successful! Visit your app at: https://$DOMAIN"
+DOMAIN=$(cd "$INFRA_DIR" && terraform output -raw domain_url 2>/dev/null | sed -E 's|https?://||' || echo "$IP")
+if [ "$STAGING" -eq 1 ]; then
+  echo "Staging Deployment successful! Visit your app at: https://staging.blockvibe.com"
+else
+  echo "Production Deployment successful! Visit your app at: https://$DOMAIN"
+fi
 echo "--------------------------------------------------------"

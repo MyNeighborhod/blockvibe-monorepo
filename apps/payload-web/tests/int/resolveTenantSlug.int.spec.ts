@@ -23,6 +23,12 @@ describe("resolveTenantSlugFromHost", () => {
     expect(resolveTenantSlugFromHost("nog.blockvibe.org")).toBe("nog")
     expect(resolveTenantSlugFromHost("beaverdale.blockvibe.org")).toBe("beaverdale")
   })
+
+  it("maps staging platform hosts", () => {
+    expect(resolveTenantSlugFromHost("staging.blockvibe.com")).toBe("default")
+    expect(resolveTenantSlugFromHost("nog.staging.blockvibe.com")).toBe("nog")
+    expect(resolveTenantSlugFromHost("beaverdale.staging.blockvibe.com")).toBe("beaverdale")
+  })
 })
 
 describe("template chrome selection", () => {

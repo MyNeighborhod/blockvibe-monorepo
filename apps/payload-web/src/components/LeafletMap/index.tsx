@@ -23,10 +23,10 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
     if (typeof window === "undefined" || !container) return
 
     // Import Leaflet dynamically on the client side
-    import("leaflet").then((L) => {
+    import("leaflet").then((leaflet) => {
       // Fix leaflet marker icon paths for Next.js bundler
-      delete (L.Icon.Default.prototype as any)._getIconUrl
-      L.Icon.Default.mergeOptions({
+      delete (leaflet.Icon.Default.prototype as any)._getIconUrl
+      leaflet.Icon.Default.mergeOptions({
         iconRetinaUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
         iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
         shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
@@ -39,22 +39,22 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       }
 
       // Create new Leaflet Map instance
-      const map = L.map(container).setView([latitude, longitude], zoom)
+      const map = leaflet.map(container).setView([latitude, longitude], zoom)
       mapInstanceRef.current = map
 
       // Load OpenStreetMap tiles
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      leaflet.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       }).addTo(map)
 
       // Add a marker at the center
-      L.marker([latitude, longitude]).addTo(map)
+      leaflet.marker([latitude, longitude]).addTo(map)
 
       // Parse and add GeoJSON boundary layer if provided
       if (boundaryGeoJSON) {
         try {
           const parsedGeoJSON = JSON.parse(boundaryGeoJSON)
-          L.geoJSON(parsedGeoJSON, {
+          leaflet.geoJSON(parsedGeoJSON, {
             style: {
               color: "#ef4444", // Red border (matching Weebly contact style)
               dashArray: "5, 5", // Dashed lines
