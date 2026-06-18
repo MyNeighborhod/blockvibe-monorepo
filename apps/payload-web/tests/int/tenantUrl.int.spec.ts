@@ -1,7 +1,24 @@
 import { describe, expect, it } from "vitest"
-import { expectedNogExampleHost, getTenantURL, isRemoteTestEnv } from "../helpers/tenantUrl"
+import {
+  expectedNogExampleHost,
+  getPlatformServerURLFromHost,
+  getTenantURL,
+  isRemoteTestEnv,
+} from "../helpers/tenantUrl"
 
 describe("tenantUrl helpers", () => {
+  it("maps tenant hosts to platform apex for OAuth callbacks", () => {
+    expect(getPlatformServerURLFromHost("nog.staging.blockvibe.org")).toBe(
+      "https://staging.blockvibe.org"
+    )
+    expect(getPlatformServerURLFromHost("staging.blockvibe.org")).toBe("https://staging.blockvibe.org")
+    expect(getPlatformServerURLFromHost("nog.blockvibe.org")).toBe("https://blockvibe.org")
+    expect(getPlatformServerURLFromHost("blockvibe.org")).toBe("https://blockvibe.org")
+    expect(getPlatformServerURLFromHost("nog.localhost", "http:", "3000")).toBe(
+      "http://localhost:3000"
+    )
+  })
+
   it("maps localhost base URL to tenant subdomains", () => {
     expect(getTenantURL("http://localhost:3000", "nog")).toBe("http://nog.localhost:3000/")
   })

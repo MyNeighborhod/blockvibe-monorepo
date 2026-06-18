@@ -1,7 +1,7 @@
 import type { BroadcastDeliveryResult } from "@blockvibe/email-contracts"
 import { buildBroadcastEmailHtml } from "@blockvibe/email-contracts"
 import type { Payload } from "payload"
-import { refreshGoogleAccessToken, removeGmailSentLabel, sendGmailHtmlEmail } from "./gmailOAuth"
+import { refreshGoogleAccessToken, sendGmailHtmlEmail } from "./gmailOAuth"
 
 function emptyResult(): BroadcastDeliveryResult {
   return { sentCount: 0, failedCount: 0, failedEmails: [] }
@@ -77,7 +77,6 @@ export async function sendBroadcastEmailsViaGmail(params: {
   resolvedMessage: string
   host: string
   tenantSlug: string
-  skipGmailSentFolder?: boolean
 }): Promise<BroadcastDeliveryResult> {
   const {
     payload,
@@ -88,7 +87,6 @@ export async function sendBroadcastEmailsViaGmail(params: {
     resolvedMessage,
     host,
     tenantSlug,
-    skipGmailSentFolder = false,
   } = params
 
   const unsubscribeSecret = process.env.PAYLOAD_SECRET || "fallback-secret"
@@ -109,16 +107,13 @@ export async function sendBroadcastEmailsViaGmail(params: {
       email,
       result,
       send: async () => {
-        const messageId = await sendGmailHtmlEmail({
+        await sendGmailHtmlEmail({
           accessToken,
           from: gmailSenderEmail,
           to: email,
           subject,
           html,
         })
-        if (skipGmailSentFolder) {
-          await removeGmailSentLabel(accessToken, messageId)
-        }
       },
     })
   }

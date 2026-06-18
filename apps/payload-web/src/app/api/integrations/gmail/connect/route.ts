@@ -46,7 +46,7 @@ export async function GET(request: Request) {
       userId: user.id,
     })
 
-    const authorizeUrl = buildGoogleAuthorizeUrl(state)
+    const authorizeUrl = buildGoogleAuthorizeUrl(state, request)
     return NextResponse.redirect(authorizeUrl)
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to start Gmail OAuth."

@@ -78,22 +78,3 @@ export async function sendGmailHtmlEmail(params: {
   }
   return data.id
 }
-
-export async function removeGmailSentLabel(accessToken: string, messageId: string): Promise<void> {
-  const response = await fetch(
-    `https://gmail.googleapis.com/gmail/v1/users/me/messages/${messageId}/modify`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ removeLabelIds: ["SENT"] }),
-    }
-  )
-
-  const data = (await response.json()) as { error?: { message?: string } }
-  if (!response.ok) {
-    throw new Error(data.error?.message || "Failed to remove message from Gmail Sent folder.")
-  }
-}

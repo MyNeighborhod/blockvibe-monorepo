@@ -2,7 +2,6 @@ import type { CampaignJobMessage, BroadcastDeliveryResult } from "@blockvibe/ema
 import {
   buildBroadcastEmailHtml,
   refreshGoogleAccessToken,
-  removeGmailSentLabel,
   sendGmailHtmlEmail,
 } from "@blockvibe/email-contracts"
 import nodemailer from "nodemailer"
@@ -117,16 +116,13 @@ async function sendGmailCampaign(message: CampaignJobMessage): Promise<Broadcast
       email,
       result,
       send: async () => {
-        const messageId = await sendGmailHtmlEmail({
+        await sendGmailHtmlEmail({
           accessToken,
           from: gmail.senderEmail,
           to: email,
           subject: campaign.subject,
           html,
         })
-        if (gmail.skipSentFolder) {
-          await removeGmailSentLabel(accessToken, messageId)
-        }
       },
     })
 

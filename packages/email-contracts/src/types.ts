@@ -19,7 +19,6 @@ export type EmailEnqueueRole = "admin" | "superadmin"
 export interface GmailCampaignCredentials {
   refreshToken: string
   senderEmail: string
-  skipSentFolder?: boolean
 }
 
 /** Claims embedded in the short-lived signed enqueue token (minted by payload-web). */

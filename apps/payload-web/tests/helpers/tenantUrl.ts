@@ -1,4 +1,4 @@
-export { getTenantURL } from "@/utilities/tenantUrl"
+export { getPlatformServerURLFromHost, getTenantURL } from "@/utilities/tenantUrl"
 
 const PLATFORM_DOMAIN = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || "blockvibe.org"
 

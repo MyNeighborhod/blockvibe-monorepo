@@ -1,18 +1,17 @@
 import crypto from "crypto"
 import {
   refreshGoogleAccessToken as refreshTokenFromContracts,
-  removeGmailSentLabel as removeSentLabelFromContracts,
   sendGmailHtmlEmail as sendGmailFromContracts,
   type EmailDeliveryMethod,
 } from "@blockvibe/email-contracts"
 import { getServerSideURL } from "./getURL"
+import { getPlatformServerURLFromHost } from "./tenantUrl"
 
 export type { EmailDeliveryMethod }
 
 export const GMAIL_SEND_SCOPE = "https://www.googleapis.com/auth/gmail.send"
 export const GOOGLE_USERINFO_EMAIL_SCOPE = "https://www.googleapis.com/auth/userinfo.email"
-export const GMAIL_LABELS_SCOPE = "https://www.googleapis.com/auth/gmail.labels"
-export const GMAIL_OAUTH_SCOPES = `${GMAIL_SEND_SCOPE} ${GOOGLE_USERINFO_EMAIL_SCOPE} ${GMAIL_LABELS_SCOPE}`
+export const GMAIL_OAUTH_SCOPES = `${GMAIL_SEND_SCOPE} ${GOOGLE_USERINFO_EMAIL_SCOPE}`
 const OAUTH_STATE_TTL_SECONDS = 600
 
 export interface GmailOAuthState {
@@ -39,8 +38,17 @@ function signPayload(payloadB64: string): string {
   return crypto.createHmac("sha256", getStateSecret()).update(payloadB64).digest("base64url")
 }
 
-export function getGmailCallbackUrl(): string {
-  return `${getServerSideURL()}/api/integrations/gmail/callback`
+export function getGmailCallbackUrl(request?: Request): string {
+  if (request) {
+    const url = new URL(request.url)
+    const host = request.headers.get("host") || url.host
+    const [hostname, port] = host.split(":")
+    const protocol =
+      request.headers.get("x-forwarded-proto") === "http" ? "http:" : url.protocol || "https:"
+    const base = getPlatformServerURLFromHost(hostname, protocol, port)
+    return `${base.replace(/\/$/, "")}/api/integrations/gmail/callback`
+  }
+  return `${getServerSideURL().replace(/\/$/, "")}/api/integrations/gmail/callback`
 }
 
 export function getGoogleOAuthConfig(): { clientId: string; clientSecret: string } {
@@ -97,11 +105,12 @@ export function verifyGmailOAuthState(state: string): GmailOAuthState {
   return claims
 }
 
-export function buildGoogleAuthorizeUrl(state: string): string {
+export function buildGoogleAuthorizeUrl(state: string, request?: Request): string {
   const { clientId } = getGoogleOAuthConfig()
+  const redirectUri = getGmailCallbackUrl(request)
   const params = new URLSearchParams({
     client_id: clientId,
-    redirect_uri: getGmailCallbackUrl(),
+    redirect_uri: redirectUri,
     response_type: "code",
     scope: GMAIL_OAUTH_SCOPES,
     access_type: "offline",
@@ -119,7 +128,10 @@ export interface GoogleTokenResponse {
   scope?: string
 }
 
-export async function exchangeGoogleAuthCode(code: string): Promise<GoogleTokenResponse> {
+export async function exchangeGoogleAuthCode(
+  code: string,
+  request?: Request
+): Promise<GoogleTokenResponse> {
   const { clientId, clientSecret } = getGoogleOAuthConfig()
   const response = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
@@ -128,7 +140,7 @@ export async function exchangeGoogleAuthCode(code: string): Promise<GoogleTokenR
       code,
       client_id: clientId,
       client_secret: clientSecret,
-      redirect_uri: getGmailCallbackUrl(),
+      redirect_uri: getGmailCallbackUrl(request),
       grant_type: "authorization_code",
     }),
   })
@@ -166,10 +178,6 @@ export async function sendGmailHtmlEmail(params: {
   return sendGmailFromContracts(params)
 }
 
-export async function removeGmailSentLabel(accessToken: string, messageId: string): Promise<void> {
-  return removeSentLabelFromContracts(accessToken, messageId)
-}
-
 export function mapGoogleOAuthError(code: string | null | undefined): string {
   switch (code) {
     case "access_denied":
@@ -179,7 +187,7 @@ export function mapGoogleOAuthError(code: string | null | undefined): string {
     case "invalid_grant":
       return "Authorization expired or was already used. Try connecting again."
     case "missing_refresh_token":
-      return "Google did not return a refresh token. Disconnect any prior BlockVibe access in your Google Account, then connect again."
+      return "Google did not return a new refresh token. Disconnect BlockVibe in your Google Account permissions, then connect again — or use Reconnect if you already had Gmail linked."
     case "not_configured":
       return "Google OAuth is not configured on this server (missing GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET)."
     case "unauthorized":

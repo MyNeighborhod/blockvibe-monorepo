@@ -82,8 +82,7 @@ export async function sendBroadcastAction(
   subject: string,
   message: string,
   tenantId: string | number,
-  delivery: EmailDeliveryMethod = "ses",
-  skipGmailSentFolder = false
+  delivery: EmailDeliveryMethod = "ses"
 ) {
   try {
     if (!recipientEmails || recipientEmails.length === 0) {
@@ -240,7 +239,6 @@ export async function sendBroadcastAction(
             gmail: {
               refreshToken: emailAccount!.refreshToken,
               senderEmail: emailAccount!.senderEmail,
-              skipSentFolder: skipGmailSentFolder,
             },
           },
         })
@@ -254,7 +252,6 @@ export async function sendBroadcastAction(
           resolvedMessage,
           host,
           tenantSlug,
-          skipGmailSentFolder,
         })
         await finalizeBroadcastDeliveryLog(payload, broadcast.id, result)
       }

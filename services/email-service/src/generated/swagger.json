@@ -46,9 +46,6 @@
 					},
 					"senderEmail": {
 						"type": "string"
-					},
-					"skipSentFolder": {
-						"type": "boolean"
 					}
 				},
 				"required": [

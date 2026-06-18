@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
-import { Checkbox } from "@/components/ui/checkbox"
 import { sendBroadcastAction, uploadBroadcastImageAction } from "./actions"
 import { DEFAULT_BROADCAST_MESSAGE_HTML } from "./broadcastDefaults"
 import { RichTextEditor } from "@/components/RichTextEditor"
@@ -36,7 +35,6 @@ export function BroadcastForm({
   const [subject, setSubject] = useState("")
   const [message, setMessage] = useState(DEFAULT_BROADCAST_MESSAGE_HTML)
   const [delivery, setDelivery] = useState<EmailDeliveryMethod>(defaultDelivery)
-  const [skipGmailSentFolder, setSkipGmailSentFolder] = useState(false)
   const [selectedEmails, setSelectedEmails] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -81,8 +79,7 @@ export function BroadcastForm({
         subject,
         message,
         tenantId,
-        delivery,
-        skipGmailSentFolder
+        delivery
       )
       if (res.success) {
         const count = res.count
@@ -224,22 +221,6 @@ export function BroadcastForm({
                   to enable this option.
                 </p>
               )}
-              {delivery === "gmail" && gmailConnected && (
-                <div className="flex items-start gap-2 pt-1">
-                  <Checkbox
-                    id="skip-gmail-sent"
-                    checked={skipGmailSentFolder}
-                    onCheckedChange={(checked) => setSkipGmailSentFolder(checked === true)}
-                  />
-                  <Label htmlFor="skip-gmail-sent" className="text-sm font-normal leading-snug cursor-pointer">
-                    Don&apos;t save to Gmail Sent folder
-                    <span className="block text-xs text-muted-foreground font-normal mt-0.5">
-                      Recipients still receive the email. Reconnect Gmail in Settings if this fails after a scope
-                      update.
-                    </span>
-                  </Label>
-                </div>
-              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="broadcast-subject">Subject</Label>
@@ -253,14 +234,11 @@ export function BroadcastForm({
             </div>
             <div className="space-y-2">
               <Label htmlFor="broadcast-message">Message Content</Label>
-              <p className="text-xs text-muted-foreground">
-                The default heading is editable — delete or replace it if you prefer a different title.
-              </p>
               <RichTextEditor
                 id="broadcast-message"
                 value={message}
                 onChange={setMessage}
-                placeholder="Write your message below the heading..."
+                placeholder="Write your announcement..."
                 uploadImage={handleUploadImage}
                 onUploadError={setError}
               />

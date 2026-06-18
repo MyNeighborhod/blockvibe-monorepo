@@ -1,4 +1,5 @@
 import React from "react"
+import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 import { getMeUser } from "@/utilities/getMeUser"
 import { getTenantBySlug } from "@/utilities/getGlobals"
@@ -37,6 +38,14 @@ export default async function SettingsDashboardPage({ params, searchParams }: Ar
 
   const emailAccount = await getEmailAccountForTenant(tenant.id)
 
+  const headersList = await headers()
+  const host = headersList.get("host") || ""
+  const callbackRequest = host
+    ? new Request(`https://${host}/api/integrations/gmail/callback`, {
+        headers: { host, "x-forwarded-proto": headersList.get("x-forwarded-proto") || "https" },
+      })
+    : undefined
+
   let flash: { type: "success" | "error"; code?: string; detail?: string } | undefined
   if (query.gmail === "connected") {
     flash = { type: "success" }
@@ -64,7 +73,7 @@ export default async function SettingsDashboardPage({ params, searchParams }: Ar
         gmailConnectedAt={emailAccount?.connectedAt}
         emailDeliveryDefault={tenant.emailDeliveryDefault}
         isGoogleConfigured={isGoogleOAuthConfigured()}
-        callbackUrl={getGmailCallbackUrl()}
+        callbackUrl={getGmailCallbackUrl(callbackRequest)}
         flash={flash}
         showAdminGuide
       />

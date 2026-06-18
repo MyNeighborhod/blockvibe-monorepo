@@ -71,7 +71,16 @@ echo "Building Docker image locally for target platform linux/amd64 (tag: $IMAGE
 echo "(This compilation happens inside Docker on your localhost to prevent crashing the weak EC2 instance)"
 
 # Build for linux/amd64 to ensure compatibility with EC2, even if building on Apple Silicon macOS
-docker build --platform linux/amd64 --pull=false -t blockvibe-app:$IMAGE_TAG -f apps/payload-web/Dockerfile .
+BUILD_SERVER_URL=""
+if [ -f "$PROJECT_DIR/$ENV_SOURCE" ]; then
+  BUILD_SERVER_URL=$(grep -E '^NEXT_PUBLIC_SERVER_URL=' "$PROJECT_DIR/$ENV_SOURCE" | head -1 | cut -d= -f2- | tr -d '"' | tr -d "'")
+fi
+if [ -z "$BUILD_SERVER_URL" ]; then
+  echo "WARNING: NEXT_PUBLIC_SERVER_URL not found in $ENV_SOURCE; Docker build may bake wrong public URL."
+fi
+docker build --platform linux/amd64 --pull=false \
+  ${BUILD_SERVER_URL:+--build-arg NEXT_PUBLIC_SERVER_URL="$BUILD_SERVER_URL"} \
+  -t blockvibe-app:$IMAGE_TAG -f apps/payload-web/Dockerfile .
 
 # 5. Save and compress Docker image
 echo "Saving and compressing Docker image (blockvibe-app:$IMAGE_TAG -> $ARCHIVE_NAME)..."

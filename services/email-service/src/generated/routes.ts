@@ -35,7 +35,6 @@ const models: TsoaRoute.Models = {
         "properties": {
             "refreshToken": {"dataType":"string","required":true},
             "senderEmail": {"dataType":"string","required":true},
-            "skipSentFolder": {"dataType":"boolean"},
         },
         "additionalProperties": false,
     },
