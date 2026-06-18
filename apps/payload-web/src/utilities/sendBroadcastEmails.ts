@@ -1,7 +1,6 @@
-import nodemailer from "nodemailer"
 import type { Payload } from "payload"
 import { buildBroadcastEmailHtml } from "@blockvibe/email-contracts"
-import { getGoogleOAuthConfig } from "./gmailOAuth"
+import { refreshGoogleAccessToken, removeGmailSentLabel, sendGmailHtmlEmail } from "./gmailOAuth"
 
 export async function sendBroadcastEmailsInline(params: {
   payload: Payload
@@ -46,6 +45,7 @@ export async function sendBroadcastEmailsViaGmail(params: {
   resolvedMessage: string
   host: string
   tenantSlug: string
+  skipGmailSentFolder?: boolean
 }): Promise<void> {
   const {
     payload,
@@ -56,20 +56,11 @@ export async function sendBroadcastEmailsViaGmail(params: {
     resolvedMessage,
     host,
     tenantSlug,
+    skipGmailSentFolder = false,
   } = params
 
-  const { clientId, clientSecret } = getGoogleOAuthConfig()
   const unsubscribeSecret = process.env.PAYLOAD_SECRET || "fallback-secret"
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      type: "OAuth2",
-      user: gmailSenderEmail,
-      clientId,
-      clientSecret,
-      refreshToken: gmailRefreshToken,
-    },
-  })
+  const accessToken = await refreshGoogleAccessToken(gmailRefreshToken)
 
   for (const email of activeEmails) {
     const html = buildBroadcastEmailHtml({
@@ -81,12 +72,16 @@ export async function sendBroadcastEmailsViaGmail(params: {
     })
 
     try {
-      await transporter.sendMail({
+      const messageId = await sendGmailHtmlEmail({
+        accessToken,
         from: gmailSenderEmail,
         to: email,
         subject,
         html,
       })
+      if (skipGmailSentFolder) {
+        await removeGmailSentLabel(accessToken, messageId)
+      }
     } catch (emailError: unknown) {
       const message = emailError instanceof Error ? emailError.message : String(emailError)
       payload.logger.error({ err: emailError }, `Gmail broadcast failed for ${email}`)

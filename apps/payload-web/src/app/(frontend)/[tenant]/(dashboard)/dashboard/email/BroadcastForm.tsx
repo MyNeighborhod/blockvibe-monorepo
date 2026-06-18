@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
 import { sendBroadcastAction, uploadBroadcastImageAction } from "./actions"
 import { RichTextEditor } from "@/components/RichTextEditor"
 
@@ -34,6 +35,7 @@ export function BroadcastForm({
   const [subject, setSubject] = useState("")
   const [message, setMessage] = useState("")
   const [delivery, setDelivery] = useState<EmailDeliveryMethod>(defaultDelivery)
+  const [skipGmailSentFolder, setSkipGmailSentFolder] = useState(false)
   const [selectedEmails, setSelectedEmails] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -73,7 +75,14 @@ export function BroadcastForm({
     setSuccess(null)
 
     try {
-      const res = await sendBroadcastAction(selectedEmails, subject, message, tenantId, delivery)
+      const res = await sendBroadcastAction(
+        selectedEmails,
+        subject,
+        message,
+        tenantId,
+        delivery,
+        skipGmailSentFolder
+      )
       if (res.success) {
         setSuccess(
           `Communication sent successfully to ${res.count} residents via ${delivery === "gmail" ? "Gmail" : "SES"}!`
@@ -200,6 +209,22 @@ export function BroadcastForm({
                   </Link>{" "}
                   to enable this option.
                 </p>
+              )}
+              {delivery === "gmail" && gmailConnected && (
+                <div className="flex items-start gap-2 pt-1">
+                  <Checkbox
+                    id="skip-gmail-sent"
+                    checked={skipGmailSentFolder}
+                    onCheckedChange={(checked) => setSkipGmailSentFolder(checked === true)}
+                  />
+                  <Label htmlFor="skip-gmail-sent" className="text-sm font-normal leading-snug cursor-pointer">
+                    Don&apos;t save to Gmail Sent folder
+                    <span className="block text-xs text-muted-foreground font-normal mt-0.5">
+                      Recipients still receive the email. Reconnect Gmail in Settings if this fails after a scope
+                      update.
+                    </span>
+                  </Label>
+                </div>
               )}
             </div>
             <div className="space-y-2">

@@ -9,10 +9,11 @@ import {
 } from "@/utilities/gmailOAuth"
 import { upsertEmailAccountForTenant } from "@/utilities/emailSrvAccount"
 import { getServerSideURL } from "@/utilities/getURL"
+import { getTenantURL } from "@/utilities/tenantUrl"
 
 function settingsRedirect(tenantSlug: string, params: Record<string, string>) {
-  const base = getServerSideURL()
-  const url = new URL(`/${tenantSlug}/dashboard/settings`, base)
+  const tenantBase = getTenantURL(getServerSideURL(), tenantSlug)
+  const url = new URL("/dashboard/settings", tenantBase)
   for (const [key, value] of Object.entries(params)) {
     url.searchParams.set(key, value)
   }

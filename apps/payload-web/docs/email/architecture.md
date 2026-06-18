@@ -107,7 +107,7 @@ flowchart TD
 | ---- | ------ |
 | **From address** | Connected mailbox (e.g. `northofgrandpresident@gmail.com`) |
 | **Credentials** | Per-tenant `gmailRefreshToken` in Postgres; app-level `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` |
-| **Scope** | `https://www.googleapis.com/auth/gmail.send` |
+| **Scope** | `gmail.send` + `userinfo.email` + `gmail.labels` (send, read address, optional Sent-folder control) |
 | **When to use** | Admin chooses Neighborhood Gmail and tenant is connected |
 | **Limits** | **Per connected Google account** (~500/day personal Gmail, ~2,000/day Workspace) — independent per org |
 | **API cost** | Gmail API is free at BlockVibe volumes; see [Google quotas](https://developers.google.com/workspace/gmail/api/reference/quota) |
@@ -127,7 +127,7 @@ One Google Cloud project serves **all tenants**. Each neighborhood connects **th
 | 1 | New project | e.g. `BlockVibe-prod` |
 | 2 | APIs & Services → Library | Enable **Gmail API** |
 | 3 | Google Auth Platform → Branding / Audience | External app, support email, **Test users** (while in Testing) |
-| 4 | Google Auth Platform → **Data Access** | **Add or remove scopes** → `https://www.googleapis.com/auth/gmail.send` (sensitive) |
+| 4 | Google Auth Platform → **Data Access** | Add `gmail.send` (sensitive), `userinfo.email`, and `gmail.labels` (for optional “skip Sent folder”) |
 | 5 | Google Auth Platform → **Clients** | Web application OAuth client |
 
 Scopes are **not** configured on the Clients list page — use **Data Access**.
@@ -231,7 +231,7 @@ sequenceDiagram
 
 | Parameter | Value |
 | --------- | ----- |
-| `scope` | `https://www.googleapis.com/auth/gmail.send` |
+| `scope` | `gmail.send` `userinfo.email` |
 | `access_type` | `offline` (required for `refresh_token`) |
 | `prompt` | `consent` on first connect (ensures refresh token) |
 | `state` | HMAC-signed `tenantId` (CSRF) |

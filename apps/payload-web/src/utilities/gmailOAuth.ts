@@ -2,6 +2,9 @@ import crypto from "crypto"
 import { getServerSideURL } from "./getURL"
 
 export const GMAIL_SEND_SCOPE = "https://www.googleapis.com/auth/gmail.send"
+export const GOOGLE_USERINFO_EMAIL_SCOPE = "https://www.googleapis.com/auth/userinfo.email"
+export const GMAIL_LABELS_SCOPE = "https://www.googleapis.com/auth/gmail.labels"
+export const GMAIL_OAUTH_SCOPES = `${GMAIL_SEND_SCOPE} ${GOOGLE_USERINFO_EMAIL_SCOPE} ${GMAIL_LABELS_SCOPE}`
 const OAUTH_STATE_TTL_SECONDS = 600
 
 export type EmailDeliveryMethod = "ses" | "gmail"
@@ -94,7 +97,7 @@ export function buildGoogleAuthorizeUrl(state: string): string {
     client_id: clientId,
     redirect_uri: getGmailCallbackUrl(),
     response_type: "code",
-    scope: GMAIL_SEND_SCOPE,
+    scope: GMAIL_OAUTH_SCOPES,
     access_type: "offline",
     prompt: "consent",
     state,
@@ -141,6 +144,96 @@ export async function fetchGoogleAccountEmail(accessToken: string): Promise<stri
     throw new Error(data.error?.message || "Could not read Google account email.")
   }
   return data.email
+}
+
+export async function refreshGoogleAccessToken(refreshToken: string): Promise<string> {
+  const { clientId, clientSecret } = getGoogleOAuthConfig()
+  const response = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      refresh_token: refreshToken,
+      grant_type: "refresh_token",
+    }),
+  })
+
+  const data = (await response.json()) as GoogleTokenResponse & {
+    error?: string
+    error_description?: string
+  }
+  if (!response.ok || !data.access_token) {
+    throw new Error(data.error_description || data.error || "Failed to refresh Google access token.")
+  }
+  return data.access_token
+}
+
+function buildGmailRawMessage(params: {
+  from: string
+  to: string
+  subject: string
+  html: string
+}): string {
+  const message = [
+    `From: ${params.from}`,
+    `To: ${params.to}`,
+    `Subject: ${params.subject}`,
+    "MIME-Version: 1.0",
+    "Content-Type: text/html; charset=utf-8",
+    "",
+    params.html,
+  ].join("\r\n")
+
+  return Buffer.from(message)
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "")
+}
+
+export async function sendGmailHtmlEmail(params: {
+  accessToken: string
+  from: string
+  to: string
+  subject: string
+  html: string
+}): Promise<string> {
+  const response = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${params.accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      raw: buildGmailRawMessage(params),
+    }),
+  })
+
+  const data = (await response.json()) as { id?: string; error?: { message?: string } }
+  if (!response.ok || !data.id) {
+    throw new Error(data.error?.message || "Gmail API send failed.")
+  }
+  return data.id
+}
+
+export async function removeGmailSentLabel(accessToken: string, messageId: string): Promise<void> {
+  const response = await fetch(
+    `https://gmail.googleapis.com/gmail/v1/users/me/messages/${messageId}/modify`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ removeLabelIds: ["SENT"] }),
+    }
+  )
+
+  const data = (await response.json()) as { error?: { message?: string } }
+  if (!response.ok) {
+    throw new Error(data.error?.message || "Failed to remove message from Gmail Sent folder.")
+  }
 }
 
 export function mapGoogleOAuthError(code: string | null | undefined): string {

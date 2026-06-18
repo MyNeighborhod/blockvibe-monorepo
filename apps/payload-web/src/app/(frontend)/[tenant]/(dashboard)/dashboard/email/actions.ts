@@ -80,7 +80,8 @@ export async function sendBroadcastAction(
   subject: string,
   message: string,
   tenantId: string | number,
-  delivery: EmailDeliveryMethod = "ses"
+  delivery: EmailDeliveryMethod = "ses",
+  skipGmailSentFolder = false
 ) {
   try {
     if (!recipientEmails || recipientEmails.length === 0) {
@@ -199,6 +200,7 @@ export async function sendBroadcastAction(
         resolvedMessage,
         host,
         tenantSlug,
+        skipGmailSentFolder,
       })
     } else if (shouldUseEmailService()) {
       await dispatchBroadcastCampaign({
