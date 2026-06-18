@@ -17,7 +17,7 @@ Self-hosted deployment on a single AWS EC2 instance: Next.js + Payload + Postgre
 | **Seed prod content only** | `pnpm seed:prod-content` |
 | **Sync prod schema (no full replace)** | `./infra/sync-prod-schema.sh` |
 
-See also: [infra/README.md](../../infra/README.md) · [src/scripts/README.md](../../src/scripts/README.md) (seeding) · **[production-flows.md](production-flows.md)** (day-to-day prod workflows)
+See also: [infra/README.md](../../infra/README.md) · [src/scripts/README.md](../../src/scripts/README.md) (seeding) · **[production-flows.md](production-flows.md)** (day-to-day prod workflows) · **[email architecture](../email/architecture.md)** (SES + Gmail OAuth + Lambda worker)
 
 ---
 

@@ -32,7 +32,7 @@ async function run() {
     payload.logger.info(`Creating superadmin ${email}`)
     await payload.create({
       collection: "users",
-      context: { isSeeding: true },
+      overrideAccess: true,
       data: {
         name: "Super Admin",
         email,
@@ -46,11 +46,13 @@ async function run() {
     await payload.update({
       collection: "users",
       id: existing.docs[0].id,
-      context: { isSeeding: true },
+      overrideAccess: true,
       data: {
         password,
         role: "superadmin",
         status: "approved",
+        loginAttempts: 0,
+        lockUntil: null,
       },
     })
   }

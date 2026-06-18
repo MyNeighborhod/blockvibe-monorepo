@@ -1,12 +1,16 @@
 "use client"
 
 import React, { useState } from "react"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
 import { sendBroadcastAction, uploadBroadcastImageAction } from "./actions"
+import { DEFAULT_BROADCAST_MESSAGE_HTML } from "./broadcastDefaults"
 import { RichTextEditor } from "@/components/RichTextEditor"
+
+import type { EmailDeliveryMethod } from "@/utilities/gmailOAuth"
 
 interface Resident {
   id: number
@@ -18,11 +22,19 @@ interface Resident {
 interface BroadcastFormProps {
   residents: Resident[]
   tenantId: string | number
+  gmailConnected: boolean
+  defaultDelivery: EmailDeliveryMethod
 }
 
-export function BroadcastForm({ residents, tenantId }: BroadcastFormProps) {
+export function BroadcastForm({
+  residents,
+  tenantId,
+  gmailConnected,
+  defaultDelivery,
+}: BroadcastFormProps) {
   const [subject, setSubject] = useState("")
-  const [message, setMessage] = useState("")
+  const [message, setMessage] = useState(DEFAULT_BROADCAST_MESSAGE_HTML)
+  const [delivery, setDelivery] = useState<EmailDeliveryMethod>(defaultDelivery)
   const [selectedEmails, setSelectedEmails] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -62,12 +74,33 @@ export function BroadcastForm({ residents, tenantId }: BroadcastFormProps) {
     setSuccess(null)
 
     try {
-      const res = await sendBroadcastAction(selectedEmails, subject, message, tenantId)
+      const res = await sendBroadcastAction(
+        selectedEmails,
+        subject,
+        message,
+        tenantId,
+        delivery
+      )
       if (res.success) {
-        setSuccess(`Communication sent successfully to ${res.count} residents!`)
+        const count = res.count
+        if ("queued" in res && res.queued) {
+          setSuccess(
+            `Broadcast queued for ${count} recipient${count === 1 ? "" : "s"}. Check the delivery log for results.`
+          )
+        } else if ("failedCount" in res && res.failedCount && res.failedCount > 0) {
+          const sentCount = "sentCount" in res ? res.sentCount ?? count : count
+          setSuccess(
+            `Sent ${sentCount} of ${count}. ${res.failedCount} failed — see delivery log.`
+          )
+        } else {
+          setSuccess(
+            `Communication sent successfully to ${count} residents via ${delivery === "gmail" ? "Gmail" : "SES"}!`
+          )
+        }
         setSubject("")
-        setMessage("")
+        setMessage(DEFAULT_BROADCAST_MESSAGE_HTML)
         setSelectedEmails([])
+        window.location.reload()
       } else {
         setError(res.error || "Failed to send communication.")
       }
@@ -155,6 +188,40 @@ export function BroadcastForm({ residents, tenantId }: BroadcastFormProps) {
             <CardDescription>Write the subject and message body for the email campaign.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="space-y-2 pb-4 border-b border-border/40">
+              <Label>Send via</Label>
+              <div className="flex flex-col gap-2 sm:flex-row sm:gap-6">
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <input
+                    type="radio"
+                    name="delivery"
+                    checked={delivery === "ses"}
+                    onChange={() => setDelivery("ses")}
+                  />
+                  Platform (SES)
+                </label>
+                <label
+                  className={`flex items-center gap-2 text-sm ${gmailConnected ? "cursor-pointer" : "cursor-not-allowed opacity-60"}`}
+                >
+                  <input
+                    type="radio"
+                    name="delivery"
+                    checked={delivery === "gmail"}
+                    disabled={!gmailConnected}
+                    onChange={() => setDelivery("gmail")}
+                  />
+                  Neighborhood Gmail
+                </label>
+              </div>
+              {!gmailConnected && (
+                <p className="text-xs text-muted-foreground">
+                  <Link href="/dashboard/settings" className="text-primary hover:underline">
+                    Connect Gmail in Settings
+                  </Link>{" "}
+                  to enable this option.
+                </p>
+              )}
+            </div>
             <div className="space-y-2">
               <Label htmlFor="broadcast-subject">Subject</Label>
               <Input
@@ -171,7 +238,7 @@ export function BroadcastForm({ residents, tenantId }: BroadcastFormProps) {
                 id="broadcast-message"
                 value={message}
                 onChange={setMessage}
-                placeholder="Write your message here..."
+                placeholder="Write your announcement..."
                 uploadImage={handleUploadImage}
                 onUploadError={setError}
               />

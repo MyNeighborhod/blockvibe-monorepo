@@ -49,5 +49,17 @@ export const Tenants: CollectionConfig = {
         description: "Visual template layout for this tenant.",
       },
     },
+    {
+      name: "emailDeliveryDefault",
+      type: "select",
+      defaultValue: "ses",
+      options: [
+        { label: "Platform (SES)", value: "ses" },
+        { label: "Neighborhood Gmail", value: "gmail" },
+      ],
+      admin: {
+        description: "Default delivery channel for Email Broadcaster.",
+      },
+    },
   ],
 }

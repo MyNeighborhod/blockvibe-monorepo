@@ -4,7 +4,10 @@ import { getMeUser } from "@/utilities/getMeUser"
 import { getTenantBySlug } from "@/utilities/getGlobals"
 import { getPayload } from "payload"
 import configPromise from "@payload-config"
+import { getEmailAccountForTenant, isEmailAccountConnected } from "@/utilities/emailSrvAccount"
+import type { EmailDeliveryMethod } from "@/utilities/gmailOAuth"
 import { BroadcastForm } from "./BroadcastForm"
+import { BroadcastStatusLog } from "./BroadcastStatusLog"
 
 type Args = {
   params: Promise<{
@@ -52,6 +55,20 @@ export default async function EmailDashboard({ params }: Args) {
     role: doc.role,
   }))
 
+  const emailAccount = await getEmailAccountForTenant(tenant.id)
+
+  const broadcastsResult = await payload.find({
+    collection: "broadcasts",
+    where: {
+      tenant: {
+        equals: tenant.id,
+      },
+    },
+    sort: "-createdAt",
+    limit: 20,
+    depth: 0,
+  })
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-2">
@@ -63,7 +80,14 @@ export default async function EmailDashboard({ params }: Args) {
         </p>
       </div>
 
-      <BroadcastForm residents={residents} tenantId={tenant.id} />
+      <BroadcastForm
+        residents={residents}
+        tenantId={tenant.id}
+        gmailConnected={isEmailAccountConnected(emailAccount)}
+        defaultDelivery={(tenant.emailDeliveryDefault as EmailDeliveryMethod) || "ses"}
+      />
+
+      <BroadcastStatusLog broadcasts={broadcastsResult.docs} />
     </div>
   )
 }

@@ -3,9 +3,25 @@
 import { getPayload } from "payload"
 import configPromise from "@payload-config"
 import { headers } from "next/headers"
-import crypto from "crypto"
 import { getMeUser } from "@/utilities/getMeUser"
 import { resolveBroadcastImagesInHtml, uploadBroadcastImageFile } from "@/utilities/resolveBroadcastImages"
+import { getUserTenantIds } from "@/access/roles"
+import {
+  dispatchBroadcastCampaign,
+  getEmailEnqueueRole,
+  shouldUseEmailService,
+} from "@/utilities/emailServiceClient"
+import {
+  sendBroadcastEmailsInline,
+  sendBroadcastEmailsViaGmail,
+} from "@/utilities/sendBroadcastEmails"
+import type { EmailDeliveryMethod } from "@/utilities/gmailOAuth"
+import { mintBroadcastCompletionToken } from "@blockvibe/email-contracts"
+import { finalizeBroadcastDeliveryLog } from "@/utilities/broadcastDelivery"
+import {
+  getEmailAccountForTenant,
+  isEmailAccountConnected,
+} from "@/utilities/emailSrvAccount"
 
 const MAX_BROADCAST_IMAGE_BYTES = 5 * 1024 * 1024
 
@@ -65,7 +81,8 @@ export async function sendBroadcastAction(
   recipientEmails: string[],
   subject: string,
   message: string,
-  tenantId: string | number
+  tenantId: string | number,
+  delivery: EmailDeliveryMethod = "ses"
 ) {
   try {
     if (!recipientEmails || recipientEmails.length === 0) {
@@ -80,7 +97,6 @@ export async function sendBroadcastAction(
 
     const payload = await getPayload({ config: configPromise })
 
-    // Get tenant quota
     const quotas = await payload.find({
       collection: "tenant-email-quotas",
       where: {
@@ -102,7 +118,7 @@ export async function sendBroadcastAction(
       })
     }
 
-    const currentMonth = new Date().toISOString().slice(0, 7) // "YYYY-MM"
+    const currentMonth = new Date().toISOString().slice(0, 7)
     let sent = quota.emailsSentThisMonth ?? 0
     const limit = quota.monthlyEmailLimit ?? 500
 
@@ -132,10 +148,20 @@ export async function sendBroadcastAction(
       id: tenantId,
     })
     const tenantSlug = tenantResult.slug
+    const numericTenantId = typeof tenantId === "string" ? parseInt(tenantId, 10) : tenantId
 
     const { user: senderUser } = await getMeUser()
     if (!senderUser) {
       throw new Error("You must be logged in to send a broadcast.")
+    }
+
+    const enqueueRole = getEmailEnqueueRole(senderUser as { role?: string | null })
+    if (!enqueueRole) {
+      throw new Error("Only neighborhood admins may send broadcasts.")
+    }
+
+    if (enqueueRole === "admin" && !getUserTenantIds(senderUser).includes(numericTenantId)) {
+      throw new Error("You are not authorized to send broadcasts for this neighborhood.")
     }
 
     const resolvedMessage = await resolveBroadcastImagesInHtml(message, {
@@ -146,7 +172,6 @@ export async function sendBroadcastAction(
       user: senderUser,
     })
 
-    // Filter out recipientEmails that are unsubscribed
     const activeUsers = await payload.find({
       collection: "users",
       where: {
@@ -161,47 +186,100 @@ export async function sendBroadcastAction(
       throw new Error("No active (subscribed) recipients found in the selection.")
     }
 
-    // Send emails
-    for (const email of activeEmails) {
-      try {
-        const token = crypto
-          .createHmac("sha256", process.env.PAYLOAD_SECRET || "fallback-secret")
-          .update(email)
-          .digest("hex")
+    const useWorker = shouldUseEmailService()
 
-        const protocol = host.startsWith("localhost") ? "http" : "https"
-        const unsubscribeUrl = `${protocol}://${host}/${tenantSlug}/unsubscribe?email=${encodeURIComponent(
-          email
-        )}&token=${token}`
+    const broadcast = await payload.create({
+      collection: "broadcasts",
+      data: {
+        subject,
+        message: resolvedMessage,
+        recipients: activeEmails,
+        sender: senderUser.id,
+        tenant: numericTenantId,
+        delivery,
+        status: useWorker ? "queued" : "processing",
+        sentCount: 0,
+        failedCount: 0,
+        failedEmails: [],
+      },
+      user: senderUser,
+    })
 
-        await payload.sendEmail({
-          to: email,
-          subject: subject,
-          html: `
-            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
-              <h2 style="color: #0f172a; margin-bottom: 16px;">Community Announcement</h2>
-              <div style="color: #334155; font-size: 16px; line-height: 24px;">${resolvedMessage}</div>
-              <hr style="margin: 24px 0; border: 0; border-top: 1px solid #e2e8f0;" />
-              <p style="color: #64748b; font-size: 12px; text-align: center;">
-                Sent via ${host} to registered residents of your neighborhood association.
-              </p>
-              <p style="color: #64748b; font-size: 11px; text-align: center; margin-top: 12px;">
-                If you no longer wish to receive these emails, you can 
-                <a href="${unsubscribeUrl}" style="color: #0284c7; text-decoration: underline;">unsubscribe here</a>.
-              </p>
-            </div>
-          `,
-        })
-      } catch (emailError: any) {
-        payload.logger.error(
-          { err: emailError },
-          `Broadcast email delivery failed for ${email}`
-        )
-        throw new Error(`Email delivery failed for ${email}: ${emailError.message || emailError}`)
-      }
+    const signedCompletionToken = mintBroadcastCompletionToken({
+      broadcastId: broadcast.id,
+      tenantId: numericTenantId,
+    })
+
+    const campaignBase = {
+      subject,
+      html: resolvedMessage,
+      recipientEmails: activeEmails,
+      host,
+      tenantSlug,
+      broadcastId: broadcast.id,
     }
 
-    // Update sent quota count
+    if (delivery === "gmail") {
+      const emailAccount = await getEmailAccountForTenant(numericTenantId)
+      if (!isEmailAccountConnected(emailAccount)) {
+        throw new Error("Connect Gmail in Settings before sending via Neighborhood Gmail.")
+      }
+
+      if (useWorker) {
+        await dispatchBroadcastCampaign({
+          tenantId: numericTenantId,
+          senderUserId: senderUser.id,
+          role: enqueueRole,
+          tenantIds: getUserTenantIds(senderUser),
+          broadcastId: broadcast.id,
+          completionToken: signedCompletionToken,
+          campaign: {
+            ...campaignBase,
+            delivery: "gmail",
+            gmail: {
+              refreshToken: emailAccount!.refreshToken,
+              senderEmail: emailAccount!.senderEmail,
+            },
+          },
+        })
+      } else {
+        const result = await sendBroadcastEmailsViaGmail({
+          payload,
+          gmailRefreshToken: emailAccount!.refreshToken,
+          gmailSenderEmail: emailAccount!.senderEmail,
+          activeEmails,
+          subject,
+          resolvedMessage,
+          host,
+          tenantSlug,
+        })
+        await finalizeBroadcastDeliveryLog(payload, broadcast.id, result)
+      }
+    } else if (useWorker) {
+      await dispatchBroadcastCampaign({
+        tenantId: numericTenantId,
+        senderUserId: senderUser.id,
+        role: enqueueRole,
+        tenantIds: getUserTenantIds(senderUser),
+        broadcastId: broadcast.id,
+        completionToken: signedCompletionToken,
+        campaign: {
+          ...campaignBase,
+          delivery: "ses",
+        },
+      })
+    } else {
+      const result = await sendBroadcastEmailsInline({
+        payload,
+        activeEmails,
+        subject,
+        resolvedMessage,
+        host,
+        tenantSlug,
+      })
+      await finalizeBroadcastDeliveryLog(payload, broadcast.id, result)
+    }
+
     await payload.update({
       collection: "tenant-email-quotas",
       id: quota.id,
@@ -210,27 +288,28 @@ export async function sendBroadcastAction(
       },
     })
 
-    // Save to the sent communications log (Broadcasts collection)
-    try {
-      await payload.create({
-        collection: "broadcasts",
-        data: {
-          subject,
-          message: resolvedMessage, // HTML content with hosted image URLs
-          recipients: activeEmails, // JSON array of emails
-          sender: senderUser.id,
-          tenant: typeof tenantId === "string" ? parseInt(tenantId, 10) : tenantId,
-        },
-        user: senderUser,
-      })
-    } catch (logError: any) {
-      payload.logger.error(
-        { err: logError },
-        "Broadcast sent but failed to save communications log"
-      )
+    if (useWorker) {
+      return {
+        success: true,
+        count: activeEmails.length,
+        queued: true,
+        broadcastId: broadcast.id,
+      }
     }
 
-    return { success: true, count: activeEmails.length }
+    const updated = await payload.findByID({
+      collection: "broadcasts",
+      id: broadcast.id,
+      overrideAccess: true,
+    })
+
+    return {
+      success: true,
+      count: activeEmails.length,
+      sentCount: updated.sentCount ?? 0,
+      failedCount: updated.failedCount ?? 0,
+      broadcastId: broadcast.id,
+    }
   } catch (err: any) {
     return { success: false, error: err.message || "Failed to send communication." }
   }

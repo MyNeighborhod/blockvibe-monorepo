@@ -1,0 +1,49 @@
+# Cost-minimized production deploy (single Lambda, direct invoke from EC2).
+# No API Gateway, no SQS, no provisioned concurrency. Cold starts are acceptable.
+#
+# DEPRECATED: Use AWS CDK instead — see infra/README.md and ./infra/deploy.sh
+
+service: blockvibe-email
+
+frameworkVersion: "3"
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: us-east-1
+  memorySize: 256
+  timeout: 300
+  logRetentionInDays: 3
+  environment:
+    EMAIL_SERVICE_SIGNING_SECRET: ${env:EMAIL_SERVICE_SIGNING_SECRET}
+    PAYLOAD_SECRET: ${env:PAYLOAD_SECRET}
+    SMTP_HOST: ${env:SMTP_HOST}
+    SMTP_PORT: ${env:SMTP_PORT}
+    SMTP_SECURE: ${env:SMTP_SECURE}
+    SMTP_USER: ${env:SMTP_USER}
+    SMTP_PASS: ${env:SMTP_PASS}
+    SMTP_FROM_ADDRESS: ${env:SMTP_FROM_ADDRESS}
+    SMTP_FROM_NAME: ${env:SMTP_FROM_NAME}
+
+functions:
+  send:
+    handler: dist/invoke-handler.handler
+    description: Process email campaigns (direct invoke from payload-web EC2)
+    # No HTTP events — invoke with AWS SDK + EC2 instance IAM role only.
+
+package:
+  patterns:
+    - dist/invoke-handler.js
+    - dist/sendCampaignEmails.js
+    - dist/processCampaign.js
+    - dist/generated/**
+    - node_modules/**
+    - package.json
+    - "!src/**"
+    - "!dist/lambda.js"
+    - "!dist/server.js"
+    - "!dist/app.js"
+    - "!dist/worker.js"
+
+# Optional: attach IAM policy to EC2 instance role (see docs/email-service/readme.md):
+#   lambda:InvokeFunction on arn:aws:lambda:us-east-1:*:function:blockvibe-email-*

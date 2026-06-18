@@ -1,0 +1,169 @@
+{
+	"openapi": "3.0.0",
+	"components": {
+		"examples": {},
+		"headers": {},
+		"parameters": {},
+		"requestBodies": {},
+		"responses": {},
+		"schemas": {
+			"EnqueueCampaignResponse": {
+				"properties": {
+					"jobId": {
+						"type": "string"
+					},
+					"status": {
+						"type": "string",
+						"enum": [
+							"queued"
+						],
+						"nullable": false
+					},
+					"recipientCount": {
+						"type": "number",
+						"format": "double"
+					}
+				},
+				"required": [
+					"jobId",
+					"status",
+					"recipientCount"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"EmailDeliveryMethod": {
+				"type": "string",
+				"enum": [
+					"ses",
+					"gmail"
+				]
+			},
+			"GmailCampaignCredentials": {
+				"properties": {
+					"refreshToken": {
+						"type": "string"
+					},
+					"senderEmail": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"refreshToken",
+					"senderEmail"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"EnqueueCampaignBody": {
+				"properties": {
+					"subject": {
+						"type": "string"
+					},
+					"html": {
+						"type": "string"
+					},
+					"recipientEmails": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"host": {
+						"type": "string",
+						"description": "Request host used to build unsubscribe links, e.g. nog.blockvibe.org"
+					},
+					"tenantSlug": {
+						"type": "string"
+					},
+					"delivery": {
+						"$ref": "#/components/schemas/EmailDeliveryMethod",
+						"description": "Defaults to ses when omitted"
+					},
+					"gmail": {
+						"$ref": "#/components/schemas/GmailCampaignCredentials",
+						"description": "Required when delivery is gmail — passed in signed invoke payload (Lambda has no DB)."
+					},
+					"broadcastId": {
+						"type": "number",
+						"format": "double",
+						"description": "Payload broadcasts row id for delivery status updates"
+					},
+					"tenantId": {
+						"type": "number",
+						"format": "double",
+						"description": "Must match tenantId claim inside the Bearer enqueue token"
+					},
+					"completionToken": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"subject",
+					"html",
+					"recipientEmails",
+					"host",
+					"tenantSlug",
+					"tenantId"
+				],
+				"type": "object",
+				"additionalProperties": false
+			}
+		},
+		"securitySchemes": {
+			"enqueueToken": {
+				"type": "http",
+				"scheme": "bearer",
+				"description": "Short-lived HMAC-signed enqueue token minted by payload-web after admin role check"
+			}
+		}
+	},
+	"info": {
+		"title": "@blockvibe/email-service",
+		"version": "1.0.0",
+		"license": {
+			"name": "MIT"
+		},
+		"contact": {}
+	},
+	"paths": {
+		"/campaigns": {
+			"post": {
+				"operationId": "EnqueueCampaign",
+				"responses": {
+					"202": {
+						"description": "Accepted",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/EnqueueCampaignResponse"
+								}
+							}
+						}
+					}
+				},
+				"description": "Enqueue a tenant email broadcast for asynchronous delivery (SES or Gmail worker).\nCallable only from payload-web with a short-lived signed enqueue token.",
+				"tags": [
+					"Campaigns"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/EnqueueCampaignBody"
+							}
+						}
+					}
+				}
+			}
+		}
+	},
+	"servers": [
+		{
+			"url": "/"
+		}
+	]
+}

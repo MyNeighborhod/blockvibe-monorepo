@@ -35,6 +35,9 @@
     "test:int": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.config.mts"
   },
   "dependencies": {
+    "@aws-sdk/client-lambda": "^3.888.0",
+    "@blockvibe/email-contracts": "workspace:*",
+    "@blockvibe/email-srv": "workspace:*",
     "@payloadcms/admin-bar": "3.85.0",
     "@payloadcms/db-postgres": "3.85.0",
     "@payloadcms/email-nodemailer": "3.85.0",

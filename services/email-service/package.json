@@ -1,0 +1,35 @@
+{
+  "name": "@blockvibe/email-service",
+  "version": "1.0.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build": "pnpm run build:routes && tsc",
+    "build:routes": "tsoa spec-and-routes",
+    "build:lambda": "node scripts/bundle-lambda.mjs",
+    "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.js",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@aws-sdk/client-sqs": "^3.888.0",
+    "@blockvibe/email-contracts": "workspace:*",
+    "@codegenie/serverless-express": "^4.17.0",
+    "@tsoa/runtime": "^6.6.0",
+    "express": "^4.21.2",
+    "nodemailer": "^9.0.0",
+    "swagger-ui-express": "^5.0.1",
+    "tsoa": "^6.6.0"
+  },
+  "devDependencies": {
+    "@blockvibe/typescript-config": "workspace:*",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.10.2",
+    "@types/nodemailer": "^6.4.15",
+    "@types/swagger-ui-express": "^4.1.8",
+    "esbuild": "^0.25.0",
+    "tsx": "^4.21.0",
+    "typescript": "5.7.3"
+  }
+}

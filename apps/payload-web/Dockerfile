@@ -13,9 +13,11 @@ COPY . .
 RUN corepack enable pnpm && corepack prepare pnpm@10.5.0 --activate && pnpm i --frozen-lockfile
 
 # Disables Next.js telemetry, set build-time environment variables
-ENV NEXT_TELEMETRY_DISABLED 1
-ENV DATABASE_URL postgres://postgres:postgres@localhost:5432/placeholder
-ENV PAYLOAD_SECRET placeholder
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV DATABASE_URL=postgres://postgres:postgres@localhost:5432/placeholder
+ENV PAYLOAD_SECRET=placeholder
+ARG NEXT_PUBLIC_SERVER_URL
+ENV NEXT_PUBLIC_SERVER_URL=${NEXT_PUBLIC_SERVER_URL}
 
 # Build the payload-web application
 RUN pnpm --filter payload-web build
