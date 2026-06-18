@@ -76,6 +76,9 @@ test.describe("Email Broadcaster Campaign E2E Flow", () => {
       }
     }
 
+    // 4.5 Select Platform (SES) to ensure local SES/Mailpit delivery path is tested
+    await adminPage.locator('input[name="delivery"]').first().check()
+
     // 5. Compose the communication details
     await adminPage.fill("input[id='broadcast-subject']", "Important NOG Community Update")
     
@@ -99,9 +102,9 @@ test.describe("Email Broadcaster Campaign E2E Flow", () => {
     // 6. Send communication
     await adminPage.click("button:has-text('Send Communication')")
 
-    // 7. Assert success notification
+    // 7. Assert success notification (supports either inline SES or async worker)
     await expect(
-      adminPage.locator("text=/Communication sent successfully to 1 residents/i")
+      adminPage.locator("text=/Communication sent successfully to 1 residents|Broadcast queued for 1 recipient/i")
     ).toBeVisible()
 
     // 8. Local database validation (check that broadcast was correctly logged)

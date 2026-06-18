@@ -39,8 +39,9 @@ async function run() {
     process.env.TENANT_NOG_NEIGHBOR_JOHANNA_PASSWORD || "neighbor1234"
 
   payload.logger.info("Removing existing NOG admin and neighbor users (if any)...")
-  await payload.delete({
+  const existingUsers = await payload.find({
     collection: "users",
+    overrideAccess: true,
     where: {
       or: [
         { email: { equals: nogAdminEmail } },
@@ -50,9 +51,29 @@ async function run() {
     },
   })
 
+  for (const doc of existingUsers.docs) {
+    payload.logger.info(`Deleting existing user: ${doc.email} (ID: ${doc.id})`)
+    
+    // Delete associated broadcasts first to avoid foreign key NOT NULL constraint violation on sender_id
+    await payload.delete({
+      collection: "broadcasts",
+      overrideAccess: true,
+      where: {
+        sender: { equals: doc.id },
+      },
+    })
+
+    await payload.delete({
+      collection: "users",
+      id: doc.id,
+      overrideAccess: true,
+    })
+  }
+
   payload.logger.info(`Creating NOG admin: ${nogAdminEmail}`)
   await payload.create({
     collection: "users",
+    overrideAccess: true,
     context: { isSeeding: true },
     data: {
       name: "NOG Admin",
@@ -67,6 +88,7 @@ async function run() {
   payload.logger.info(`Creating John Neighbor: ${nogNeighborEmail}`)
   await payload.create({
     collection: "users",
+    overrideAccess: true,
     context: { isSeeding: true },
     data: {
       name: "John Neighbor",
@@ -83,6 +105,7 @@ async function run() {
   payload.logger.info(`Creating Johanna Neighbor: ${nogNeighborJohannaEmail}`)
   await payload.create({
     collection: "users",
+    overrideAccess: true,
     context: { isSeeding: true },
     data: {
       name: "Johanna Neighbor",

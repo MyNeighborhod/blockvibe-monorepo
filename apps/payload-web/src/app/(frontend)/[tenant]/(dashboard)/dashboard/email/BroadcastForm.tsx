@@ -2,6 +2,7 @@
 
 import React, { useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -32,6 +33,7 @@ export function BroadcastForm({
   gmailConnected,
   defaultDelivery,
 }: BroadcastFormProps) {
+  const router = useRouter()
   const [subject, setSubject] = useState("")
   const [message, setMessage] = useState(DEFAULT_BROADCAST_MESSAGE_HTML)
   const [delivery, setDelivery] = useState<EmailDeliveryMethod>(defaultDelivery)
@@ -100,7 +102,7 @@ export function BroadcastForm({
         setSubject("")
         setMessage(DEFAULT_BROADCAST_MESSAGE_HTML)
         setSelectedEmails([])
-        window.location.reload()
+        router.refresh()
       } else {
         setError(res.error || "Failed to send communication.")
       }
