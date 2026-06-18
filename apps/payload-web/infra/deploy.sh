@@ -71,7 +71,7 @@ echo "Building Docker image locally for target platform linux/amd64 (tag: $IMAGE
 echo "(This compilation happens inside Docker on your localhost to prevent crashing the weak EC2 instance)"
 
 # Build for linux/amd64 to ensure compatibility with EC2, even if building on Apple Silicon macOS
-docker build --platform linux/amd64 -t blockvibe-app:$IMAGE_TAG -f apps/payload-web/Dockerfile .
+docker build --platform linux/amd64 --pull=false -t blockvibe-app:$IMAGE_TAG -f apps/payload-web/Dockerfile .
 
 # 5. Save and compress Docker image
 echo "Saving and compressing Docker image (blockvibe-app:$IMAGE_TAG -> $ARCHIVE_NAME)..."

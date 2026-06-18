@@ -1,19 +1,21 @@
 #!/bin/bash
 set -e
 
-# Push local Postgres to production (replaces the remote database).
+# Push local Postgres to production or staging (replaces the remote database).
 #
 # Usage:
-#   ./infra/push-db-to-prod.sh              # prompt before overwrite
+#   ./infra/push-db-to-prod.sh              # prompt before overwrite (production)
 #   ./infra/push-db-to-prod.sh --yes        # skip confirmation
+#   ./infra/push-db-to-prod.sh --staging    # target staging instead of production
 #   ./infra/push-db-to-prod.sh --skip-media # DB only, no media rsync
-#   ./infra/push-db-to-prod.sh --no-backup  # skip prod backup (emergency only)
+#   ./infra/push-db-to-prod.sh --no-backup  # skip remote backup (emergency only)
 #
 # Requires: .env with DATABASE_URL (local), terraform applied, SSH access to EC2.
 
 SKIP_CONFIRM=0
 SKIP_MEDIA=0
 SKIP_BACKUP=0
+STAGING=0
 SNAPSHOT_ARG=""
 PROD_BACKUP_KEEP=7
 
@@ -22,6 +24,7 @@ for arg in "$@"; do
     --yes) SKIP_CONFIRM=1 ;;
     --skip-media) SKIP_MEDIA=1 ;;
     --no-backup) SKIP_BACKUP=1 ;;
+    --staging) STAGING=1 ;;
     --*) ;;
     *) SNAPSHOT_ARG="$arg" ;;
   esac
@@ -100,11 +103,25 @@ if [ ! -f "$SNAPSHOT_PATH" ]; then
   exit 1
 fi
 
+REMOTE_DIR="/home/ubuntu/app"
+REMOTE_MEDIA_DIR="/var/www/blockvibe/media"
+REMOTE_DB_SERVICE="db"
+REMOTE_PAYLOAD_SERVICE="payload"
+ENV_LABEL="production"
+
+if [ "$STAGING" -eq 1 ]; then
+  REMOTE_DIR="/home/ubuntu/app-staging"
+  REMOTE_MEDIA_DIR="/var/www/blockvibe/media-staging/media"
+  REMOTE_DB_SERVICE="db-staging"
+  REMOTE_PAYLOAD_SERVICE="payload-staging"
+  ENV_LABEL="staging"
+fi
+
 echo "--------------------------------------------------------"
-echo "Target: ubuntu@$IP (production)"
+echo "Target: ubuntu@$IP ($ENV_LABEL)"
 echo "Snapshot: $SNAPSHOT_PATH ($(du -sh "$SNAPSHOT_PATH" | cut -f1))"
 echo "--------------------------------------------------------"
-echo "WARNING: This REPLACES the entire production database."
+echo "WARNING: This REPLACES the entire $ENV_LABEL database."
 
 if [ "$SKIP_CONFIRM" -eq 0 ]; then
   read -r -p "Type 'yes' to continue: " CONFIRM
@@ -118,11 +135,13 @@ REMOTE_SNAPSHOT="/home/ubuntu/push-db-snapshot.sql"
 echo "Uploading snapshot..."
 scp -i "$SSH_KEY" -o StrictHostKeyChecking=no "$SNAPSHOT_PATH" "ubuntu@$IP:$REMOTE_SNAPSHOT"
 
-echo "Restoring on production (stopping app container)..."
+echo "Restoring on $ENV_LABEL (stopping app container)..."
 ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "ubuntu@$IP" \
-  SKIP_BACKUP="$SKIP_BACKUP" PROD_BACKUP_KEEP="$PROD_BACKUP_KEEP" bash -s <<'REMOTE'
+  SKIP_BACKUP="$SKIP_BACKUP" PROD_BACKUP_KEEP="$PROD_BACKUP_KEEP" \
+  REMOTE_DIR="$REMOTE_DIR" REMOTE_DB_SERVICE="$REMOTE_DB_SERVICE" \
+  REMOTE_PAYLOAD_SERVICE="$REMOTE_PAYLOAD_SERVICE" bash -s <<'REMOTE'
 set -e
-cd /home/ubuntu/app
+cd "$REMOTE_DIR"
 
 # Read DB name from remote .env (defaults match docker-compose.yml)
 DB_NAME="blockvibe-multitenant"
@@ -133,33 +152,35 @@ if [ -f .env ]; then
   fi
 fi
 
-sudo docker compose stop payload
+sudo docker compose stop "$REMOTE_PAYLOAD_SERVICE"
 
 if [ "${SKIP_BACKUP:-0}" -eq 0 ]; then
   BACKUP_DIR="/home/ubuntu/backups"
   BACKUP_FILE="$BACKUP_DIR/pre-push-$(date +%Y%m%d-%H%M%S).sql"
   mkdir -p "$BACKUP_DIR"
 
-  echo "Backing up production database before restore..."
-  sudo docker compose exec -T db pg_dump -U postgres -d "$DB_NAME" > "$BACKUP_FILE"
+  echo "Backing up remote database before restore..."
+  sudo docker compose exec -T "$REMOTE_DB_SERVICE" pg_dump -U postgres -d "$DB_NAME" > "$BACKUP_FILE"
 
   if [ ! -s "$BACKUP_FILE" ]; then
-    echo "Error: Production backup failed or is empty: $BACKUP_FILE"
-    sudo docker compose start payload
+    echo "Error: Remote backup failed or is empty: $BACKUP_FILE"
+    sudo docker compose start "$REMOTE_PAYLOAD_SERVICE"
     exit 1
   fi
 
-  echo "✓ Production backup: $BACKUP_FILE ($(du -sh "$BACKUP_FILE" | cut -f1))"
+  echo "✓ Remote backup: $BACKUP_FILE ($(du -sh "$BACKUP_FILE" | cut -f1))"
 
   # Keep the newest N backups
   KEEP="${PROD_BACKUP_KEEP:-7}"
   ls -1t "$BACKUP_DIR"/pre-push-*.sql 2>/dev/null | tail -n +$((KEEP + 1)) | xargs -r rm -f
 else
-  echo "WARNING: Skipping production backup (--no-backup)."
+  echo "WARNING: Skipping remote backup (--no-backup)."
 fi
 
-echo "Recreating public schema on production..."
-sudo docker compose exec -T db psql -U postgres -d "$DB_NAME" -v ON_ERROR_STOP=1 <<'SQL'
+echo "Recreating schemas..."
+sudo docker compose exec -T "$REMOTE_DB_SERVICE" psql -U postgres -d "$DB_NAME" -v ON_ERROR_STOP=1 <<'SQL'
+DROP SCHEMA IF EXISTS drizzle CASCADE;
+DROP SCHEMA IF EXISTS email_srv CASCADE;
 DROP SCHEMA public CASCADE;
 CREATE SCHEMA public;
 GRANT ALL ON SCHEMA public TO postgres;
@@ -167,32 +188,36 @@ GRANT ALL ON SCHEMA public TO public;
 SQL
 
 echo "Loading snapshot..."
-sudo docker compose exec -T db psql -U postgres -d "$DB_NAME" -v ON_ERROR_STOP=1 < /home/ubuntu/push-db-snapshot.sql
+cat /home/ubuntu/push-db-snapshot.sql | sudo docker compose exec -T "$REMOTE_DB_SERVICE" psql -U postgres -d "$DB_NAME" -v ON_ERROR_STOP=1
 
 rm -f /home/ubuntu/push-db-snapshot.sql
 
-sudo docker compose start payload
-echo "✓ Production database restored."
+sudo docker compose start "$REMOTE_PAYLOAD_SERVICE"
+echo "✓ Remote database restored."
 REMOTE
 
 if [ "$SKIP_MEDIA" -eq 0 ] && [ -d "$PROJECT_DIR/public/media" ]; then
-  echo "Syncing local media to production..."
+  echo "Syncing local media to $ENV_LABEL..."
   ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "ubuntu@$IP" \
-    "sudo mkdir -p /var/www/blockvibe/media && sudo chown -R 1001:1001 /var/www/blockvibe/media"
+    "sudo mkdir -p $REMOTE_MEDIA_DIR && sudo chown -R 1001:1001 $REMOTE_MEDIA_DIR"
   rsync -avz --rsync-path="sudo rsync" --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r \
     -e "ssh -i $SSH_KEY -o StrictHostKeyChecking=no" \
     "$PROJECT_DIR/public/media/" \
-    "ubuntu@$IP:/var/www/blockvibe/media/"
+    "ubuntu@$IP:$REMOTE_MEDIA_DIR/"
   ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "ubuntu@$IP" \
-    "sudo chown -R 1001:1001 /var/www/blockvibe/media && sudo chmod -R a+rX /var/www/blockvibe/media"
+    "sudo chown -R 1001:1001 $REMOTE_MEDIA_DIR && sudo chmod -R a+rX $REMOTE_MEDIA_DIR"
   echo "✓ Media sync complete."
 else
   echo "Skipped media sync."
 fi
 
-DOMAIN=$(terraform output -raw domain_url 2>/dev/null | sed 's|https://||' || echo "$IP")
+if [ "$STAGING" -eq 1 ]; then
+  DOMAIN="staging.blockvibe.org"
+else
+  DOMAIN=$(terraform output -raw domain_url 2>/dev/null | sed 's|https://||' || echo "$IP")
+fi
 echo "--------------------------------------------------------"
-echo "Production database updated from local."
+echo "$ENV_LABEL database updated from local."
 echo "Pre-restore backups (if any): ubuntu@$IP:/home/ubuntu/backups/pre-push-*.sql"
 echo "Visit: https://$DOMAIN"
 echo "Tip: run ./infra/deploy.sh if application code also changed."
