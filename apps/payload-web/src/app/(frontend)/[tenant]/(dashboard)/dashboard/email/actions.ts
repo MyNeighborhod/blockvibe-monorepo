@@ -3,9 +3,14 @@
 import { getPayload } from "payload"
 import configPromise from "@payload-config"
 import { headers } from "next/headers"
-import crypto from "crypto"
 import { getMeUser } from "@/utilities/getMeUser"
 import { resolveBroadcastImagesInHtml, uploadBroadcastImageFile } from "@/utilities/resolveBroadcastImages"
+import { sendBroadcastEmails } from "@/utilities/sendBroadcastEmails"
+import type { EmailDeliveryMethod } from "@/utilities/gmailOAuth"
+import {
+  getEmailAccountForTenant,
+  isEmailAccountConnected,
+} from "@/utilities/emailSrvAccount"
 
 const MAX_BROADCAST_IMAGE_BYTES = 5 * 1024 * 1024
 
@@ -65,7 +70,8 @@ export async function sendBroadcastAction(
   recipientEmails: string[],
   subject: string,
   message: string,
-  tenantId: string | number
+  tenantId: string | number,
+  delivery: EmailDeliveryMethod = "ses"
 ) {
   try {
     if (!recipientEmails || recipientEmails.length === 0) {
@@ -132,6 +138,7 @@ export async function sendBroadcastAction(
       id: tenantId,
     })
     const tenantSlug = tenantResult.slug
+    const numericTenantId = typeof tenantId === "string" ? parseInt(tenantId, 10) : tenantId
 
     const { user: senderUser } = await getMeUser()
     if (!senderUser) {
@@ -161,44 +168,33 @@ export async function sendBroadcastAction(
       throw new Error("No active (subscribed) recipients found in the selection.")
     }
 
-    // Send emails
-    for (const email of activeEmails) {
-      try {
-        const token = crypto
-          .createHmac("sha256", process.env.PAYLOAD_SECRET || "fallback-secret")
-          .update(email)
-          .digest("hex")
-
-        const protocol = host.startsWith("localhost") ? "http" : "https"
-        const unsubscribeUrl = `${protocol}://${host}/${tenantSlug}/unsubscribe?email=${encodeURIComponent(
-          email
-        )}&token=${token}`
-
-        await payload.sendEmail({
-          to: email,
-          subject: subject,
-          html: `
-            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
-              <h2 style="color: #0f172a; margin-bottom: 16px;">Community Announcement</h2>
-              <div style="color: #334155; font-size: 16px; line-height: 24px;">${resolvedMessage}</div>
-              <hr style="margin: 24px 0; border: 0; border-top: 1px solid #e2e8f0;" />
-              <p style="color: #64748b; font-size: 12px; text-align: center;">
-                Sent via ${host} to registered residents of your neighborhood association.
-              </p>
-              <p style="color: #64748b; font-size: 11px; text-align: center; margin-top: 12px;">
-                If you no longer wish to receive these emails, you can 
-                <a href="${unsubscribeUrl}" style="color: #0284c7; text-decoration: underline;">unsubscribe here</a>.
-              </p>
-            </div>
-          `,
-        })
-      } catch (emailError: any) {
-        payload.logger.error(
-          { err: emailError },
-          `Broadcast email delivery failed for ${email}`
-        )
-        throw new Error(`Email delivery failed for ${email}: ${emailError.message || emailError}`)
+    if (delivery === "gmail") {
+      const emailAccount = await getEmailAccountForTenant(numericTenantId)
+      if (!isEmailAccountConnected(emailAccount)) {
+        throw new Error("Connect Gmail in Settings before sending via Neighborhood Gmail.")
       }
+
+      await sendBroadcastEmails({
+        payload,
+        delivery,
+        gmailRefreshToken: emailAccount!.refreshToken,
+        gmailSenderEmail: emailAccount!.senderEmail,
+        activeEmails,
+        subject,
+        resolvedMessage,
+        host,
+        tenantSlug,
+      })
+    } else {
+      await sendBroadcastEmails({
+        payload,
+        delivery,
+        activeEmails,
+        subject,
+        resolvedMessage,
+        host,
+        tenantSlug,
+      })
     }
 
     // Update sent quota count

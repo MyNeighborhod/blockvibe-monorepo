@@ -94,6 +94,8 @@ src/
 
 To support the email workflows (newsletters, invites, and campaigns) across different tenants, the platform implements a **Dual-Delivery Pipeline** option while strictly maintaining opt-in and unsubscribe compliance regardless of the chosen delivery channel.
 
+> **Architecture reference:** [docs/email/architecture.md](../email/architecture.md)
+
 ### Dual-Adapter Delivery Options
 
 1. **Option A: Global AWS SES SMTP (Platform Fallback)**
@@ -102,7 +104,7 @@ To support the email workflows (newsletters, invites, and campaigns) across diff
 
 2. **Option B: Tenant-Connected Gmail API via OAuth2 (Custom Mailer)**
    * **Scope:** Enabled when a neighborhood association (tenant) connects their own Google Workspace or Gmail account via OAuth2 on the dashboard settings.
-   * **Mechanics:** Nodemailer dynamically initializes the transport configuration for the tenant using a securely stored `gmailRefreshToken` on the `Tenant` record, allowing them to send emails directly from their own address (e.g., `president@northofgrand.org`).
+   * **Mechanics:** Nodemailer uses a `refresh_token` in `email_srv.email_account` (`@blockvibe/email-srv`, separate from Payload CMS collections).
 
 ---
 

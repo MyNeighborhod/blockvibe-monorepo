@@ -256,6 +256,10 @@ export interface Tenant {
    * Visual template layout for this tenant.
    */
   template?: ('light' | 'dark' | 'auto') | null;
+  /**
+   * Default delivery channel for Email Broadcaster.
+   */
+  emailDeliveryDefault?: ('ses' | 'gmail') | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1773,6 +1777,7 @@ export interface TenantsSelect<T extends boolean = true> {
   slug?: T;
   domain?: T;
   template?: T;
+  emailDeliveryDefault?: T;
   updatedAt?: T;
   createdAt?: T;
 }

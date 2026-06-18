@@ -35,6 +35,7 @@
     "test:int": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.config.mts"
   },
   "dependencies": {
+    "@blockvibe/email-srv": "workspace:*",
     "@payloadcms/admin-bar": "3.85.0",
     "@payloadcms/db-postgres": "3.85.0",
     "@payloadcms/email-nodemailer": "3.85.0",

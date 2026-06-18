@@ -188,6 +188,8 @@ To prevent reputation spikes on new neighborhood domains, email dispatch queues 
 
 ## 6. Email Transport Adapters: Dual-Delivery Pipeline
 
+> **Canonical architecture (OAuth setup, Lambda worker, env vars, implementation status):** [docs/email/architecture.md](../../email/architecture.md)
+
 The platform supports a dual-delivery architecture to accommodate both global platform defaults and customized tenant configurations.
 
 ```mermaid
