@@ -32,6 +32,32 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"EmailDeliveryMethod": {
+				"type": "string",
+				"enum": [
+					"ses",
+					"gmail"
+				]
+			},
+			"GmailCampaignCredentials": {
+				"properties": {
+					"refreshToken": {
+						"type": "string"
+					},
+					"senderEmail": {
+						"type": "string"
+					},
+					"skipSentFolder": {
+						"type": "boolean"
+					}
+				},
+				"required": [
+					"refreshToken",
+					"senderEmail"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"EnqueueCampaignBody": {
 				"properties": {
 					"subject": {
@@ -53,10 +79,26 @@
 					"tenantSlug": {
 						"type": "string"
 					},
+					"delivery": {
+						"$ref": "#/components/schemas/EmailDeliveryMethod",
+						"description": "Defaults to ses when omitted"
+					},
+					"gmail": {
+						"$ref": "#/components/schemas/GmailCampaignCredentials",
+						"description": "Required when delivery is gmail — passed in signed invoke payload (Lambda has no DB)."
+					},
+					"broadcastId": {
+						"type": "number",
+						"format": "double",
+						"description": "Payload broadcasts row id for delivery status updates"
+					},
 					"tenantId": {
 						"type": "number",
 						"format": "double",
 						"description": "Must match tenantId claim inside the Bearer enqueue token"
+					},
+					"completionToken": {
+						"type": "string"
 					}
 				},
 				"required": [

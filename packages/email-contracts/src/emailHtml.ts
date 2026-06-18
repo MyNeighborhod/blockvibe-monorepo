@@ -20,7 +20,6 @@ export function buildBroadcastEmailHtml(params: {
 
   return `
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
-      <h2 style="color: #0f172a; margin-bottom: 16px;">Community Announcement</h2>
       <div style="color: #334155; font-size: 16px; line-height: 24px;">${resolvedMessage}</div>
       <hr style="margin: 24px 0; border: 0; border-top: 1px solid #e2e8f0;" />
       <p style="color: #64748b; font-size: 12px; text-align: center;">

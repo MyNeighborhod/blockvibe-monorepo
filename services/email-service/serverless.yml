@@ -1,5 +1,7 @@
 # Cost-minimized production deploy (single Lambda, direct invoke from EC2).
 # No API Gateway, no SQS, no provisioned concurrency. Cold starts are acceptable.
+#
+# DEPRECATED: Use AWS CDK instead — see infra/README.md and ./infra/deploy.sh
 
 service: blockvibe-email
 

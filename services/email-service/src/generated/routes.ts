@@ -25,6 +25,21 @@ const models: TsoaRoute.Models = {
         "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "EmailDeliveryMethod": {
+        "dataType": "refAlias",
+        "type": {"dataType":"union","subSchemas":[{"dataType":"enum","enums":["ses"]},{"dataType":"enum","enums":["gmail"]}],"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "GmailCampaignCredentials": {
+        "dataType": "refObject",
+        "properties": {
+            "refreshToken": {"dataType":"string","required":true},
+            "senderEmail": {"dataType":"string","required":true},
+            "skipSentFolder": {"dataType":"boolean"},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "EnqueueCampaignBody": {
         "dataType": "refObject",
         "properties": {
@@ -33,7 +48,11 @@ const models: TsoaRoute.Models = {
             "recipientEmails": {"dataType":"array","array":{"dataType":"string"},"required":true},
             "host": {"dataType":"string","required":true},
             "tenantSlug": {"dataType":"string","required":true},
+            "delivery": {"ref":"EmailDeliveryMethod"},
+            "gmail": {"ref":"GmailCampaignCredentials"},
+            "broadcastId": {"dataType":"double"},
             "tenantId": {"dataType":"double","required":true},
+            "completionToken": {"dataType":"string"},
         },
         "additionalProperties": false,
     },

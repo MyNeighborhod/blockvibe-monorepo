@@ -1,4 +1,4 @@
-import type { DirectCampaignInvokeEvent } from "./processCampaign.js"
+import type { DirectCampaignInvokeEvent } from "@blockvibe/email-contracts"
 import { runDirectCampaignInvoke } from "./processCampaign.js"
 
 /**

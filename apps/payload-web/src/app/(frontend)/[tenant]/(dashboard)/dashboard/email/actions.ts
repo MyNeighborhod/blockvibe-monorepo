@@ -16,6 +16,8 @@ import {
   sendBroadcastEmailsViaGmail,
 } from "@/utilities/sendBroadcastEmails"
 import type { EmailDeliveryMethod } from "@/utilities/gmailOAuth"
+import { mintBroadcastCompletionToken } from "@blockvibe/email-contracts"
+import { finalizeBroadcastDeliveryLog } from "@/utilities/broadcastDelivery"
 import {
   getEmailAccountForTenant,
   isEmailAccountConnected,
@@ -185,39 +187,92 @@ export async function sendBroadcastAction(
       throw new Error("No active (subscribed) recipients found in the selection.")
     }
 
+    const useWorker = shouldUseEmailService()
+
+    const broadcast = await payload.create({
+      collection: "broadcasts",
+      data: {
+        subject,
+        message: resolvedMessage,
+        recipients: activeEmails,
+        sender: senderUser.id,
+        tenant: numericTenantId,
+        delivery,
+        status: useWorker ? "queued" : "processing",
+        sentCount: 0,
+        failedCount: 0,
+        failedEmails: [],
+      },
+      user: senderUser,
+    })
+
+    const signedCompletionToken = mintBroadcastCompletionToken({
+      broadcastId: broadcast.id,
+      tenantId: numericTenantId,
+    })
+
+    const campaignBase = {
+      subject,
+      html: resolvedMessage,
+      recipientEmails: activeEmails,
+      host,
+      tenantSlug,
+      broadcastId: broadcast.id,
+    }
+
     if (delivery === "gmail") {
       const emailAccount = await getEmailAccountForTenant(numericTenantId)
       if (!isEmailAccountConnected(emailAccount)) {
         throw new Error("Connect Gmail in Settings before sending via Neighborhood Gmail.")
       }
 
-      await sendBroadcastEmailsViaGmail({
-        payload,
-        gmailRefreshToken: emailAccount!.refreshToken,
-        gmailSenderEmail: emailAccount!.senderEmail,
-        activeEmails,
-        subject,
-        resolvedMessage,
-        host,
-        tenantSlug,
-        skipGmailSentFolder,
-      })
-    } else if (shouldUseEmailService()) {
+      if (useWorker) {
+        await dispatchBroadcastCampaign({
+          tenantId: numericTenantId,
+          senderUserId: senderUser.id,
+          role: enqueueRole,
+          tenantIds: getUserTenantIds(senderUser),
+          broadcastId: broadcast.id,
+          completionToken: signedCompletionToken,
+          campaign: {
+            ...campaignBase,
+            delivery: "gmail",
+            gmail: {
+              refreshToken: emailAccount!.refreshToken,
+              senderEmail: emailAccount!.senderEmail,
+              skipSentFolder: skipGmailSentFolder,
+            },
+          },
+        })
+      } else {
+        const result = await sendBroadcastEmailsViaGmail({
+          payload,
+          gmailRefreshToken: emailAccount!.refreshToken,
+          gmailSenderEmail: emailAccount!.senderEmail,
+          activeEmails,
+          subject,
+          resolvedMessage,
+          host,
+          tenantSlug,
+          skipGmailSentFolder,
+        })
+        await finalizeBroadcastDeliveryLog(payload, broadcast.id, result)
+      }
+    } else if (useWorker) {
       await dispatchBroadcastCampaign({
         tenantId: numericTenantId,
         senderUserId: senderUser.id,
         role: enqueueRole,
         tenantIds: getUserTenantIds(senderUser),
+        broadcastId: broadcast.id,
+        completionToken: signedCompletionToken,
         campaign: {
-          subject,
-          html: resolvedMessage,
-          recipientEmails: activeEmails,
-          host,
-          tenantSlug,
+          ...campaignBase,
+          delivery: "ses",
         },
       })
     } else {
-      await sendBroadcastEmailsInline({
+      const result = await sendBroadcastEmailsInline({
         payload,
         activeEmails,
         subject,
@@ -225,6 +280,7 @@ export async function sendBroadcastAction(
         host,
         tenantSlug,
       })
+      await finalizeBroadcastDeliveryLog(payload, broadcast.id, result)
     }
 
     await payload.update({
@@ -235,26 +291,28 @@ export async function sendBroadcastAction(
       },
     })
 
-    try {
-      await payload.create({
-        collection: "broadcasts",
-        data: {
-          subject,
-          message: resolvedMessage,
-          recipients: activeEmails,
-          sender: senderUser.id,
-          tenant: numericTenantId,
-        },
-        user: senderUser,
-      })
-    } catch (logError: any) {
-      payload.logger.error(
-        { err: logError },
-        "Broadcast sent but failed to save communications log"
-      )
+    if (useWorker) {
+      return {
+        success: true,
+        count: activeEmails.length,
+        queued: true,
+        broadcastId: broadcast.id,
+      }
     }
 
-    return { success: true, count: activeEmails.length }
+    const updated = await payload.findByID({
+      collection: "broadcasts",
+      id: broadcast.id,
+      overrideAccess: true,
+    })
+
+    return {
+      success: true,
+      count: activeEmails.length,
+      sentCount: updated.sentCount ?? 0,
+      failedCount: updated.failedCount ?? 0,
+      broadcastId: broadcast.id,
+    }
   } catch (err: any) {
     return { success: false, error: err.message || "Failed to send communication." }
   }

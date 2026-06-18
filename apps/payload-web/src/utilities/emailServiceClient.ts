@@ -22,6 +22,8 @@ export async function dispatchBroadcastCampaign(params: {
   role: EmailEnqueueRole
   tenantIds: number[]
   campaign: EnqueueCampaignRequest
+  broadcastId: number
+  completionToken: string
 }): Promise<void> {
   const token = mintEnqueueToken({
     userId: params.senderUserId,
@@ -39,7 +41,12 @@ export async function dispatchBroadcastCampaign(params: {
     const event: DirectCampaignInvokeEvent = {
       token,
       tenantId: params.tenantId,
-      campaign: params.campaign,
+      campaign: {
+        ...params.campaign,
+        broadcastId: params.broadcastId,
+      },
+      broadcastId: params.broadcastId,
+      completionToken: params.completionToken,
     }
 
     const result = await client.send(
@@ -70,7 +77,9 @@ export async function dispatchBroadcastCampaign(params: {
     },
     body: JSON.stringify({
       tenantId: params.tenantId,
+      completionToken: params.completionToken,
       ...params.campaign,
+      broadcastId: params.broadcastId,
     }),
   })
 

@@ -1,134 +1,104 @@
 # Email service architecture
 
-Asynchronous email delivery for BlockVibe. **Production (cost-minimized):** one **Lambda** invoked directly from **EC2 payload-web** via IAM — no API Gateway, no SQS. **Local dev:** TSOA + Express on port 4001.
+Asynchronous email delivery for BlockVibe. **Production:** one **Lambda** (`blockvibe-email-{stage}-send`) invoked directly from **EC2 payload-web** via IAM — no API Gateway, no SQS. **Local dev:** TSOA + Express on port 4001.
 
-Monorepo layout:
-
-| Package / service | Path |
-| ----------------- | ---- |
-| Shared contracts + token crypto | `packages/email-contracts` |
-| Lambda handler + local HTTP API | `services/email-service` |
-| Admin UI + business rules | `apps/payload-web` |
+**Canonical docs:** [email/architecture.md](../email/architecture.md) · [email/deployment.md](../email/deployment.md)
 
 ---
 
-## Production topology (default — lowest cost)
+## Monorepo layout
 
-Cold starts are acceptable. This avoids all always-on or per-request AWS extras except Lambda compute and SES.
+| Package / service | Path |
+| ----------------- | ---- |
+| Shared contracts, tokens, Gmail API | `packages/email-contracts` |
+| OAuth token DB | `packages/email-srv` |
+| Lambda handler + local HTTP API | `services/email-service` |
+| Admin UI, OAuth, delivery log | `apps/payload-web` |
+
+---
+
+## Production topology
 
 ```mermaid
 sequenceDiagram
   participant Admin as Admin browser
   participant PW as payload-web on EC2
-  participant L as email-send Lambda 256MB
-  participant SES as AWS SES
+  participant L as blockvibe-email-staging-send
+  participant T as SES or Gmail API
 
   Admin->>PW: Send Communication
-  PW->>PW: Role, quota, unsubscribe, mintEnqueueToken()
-  PW->>L: lambda:InvokeFunction Event async IAM
+  PW->>PW: Create broadcasts log (queued)
+  PW->>PW: mintEnqueueToken + completionToken
+  PW->>L: lambda:InvokeFunction Event
   PW-->>Admin: Success immediately
-  Note over L: Cold start OK
-  loop Each recipient rate limited
-    L->>SES: sendEmail
+  loop Each recipient (100ms delay)
+    L->>T: send (continue on failure)
   end
+  L->>PW: POST /api/email/broadcasts/complete
+  PW->>PW: Update sentCount, failedEmails, status
 ```
 
 | Component | Used? | Why |
 | --------- | ----- | --- |
-| **API Gateway** | No | Saves ~$1/million requests + complexity |
-| **SQS** | No | Free tier anyway; skip until Gmail needs backpressure |
-| **2 Lambdas** | No | Single `invoke-handler` does verify + send |
-| **Provisioned concurrency** | No | Cold starts OK |
-| **Secrets Manager** | No | Use Postgres tenant fields until scale warrants SM |
-| **EC2 IAM → Lambda invoke** | Yes | Only payload-web can trigger sends |
-
-Deploy: `services/email-service/serverless.yml` → function `blockvibe-email-send` (256 MB, 300s timeout, **3-day** log retention).
-
-### EC2 IAM (attach to instance role)
-
-```json
-{
-  "Effect": "Allow",
-  "Action": "lambda:InvokeFunction",
-  "Resource": "arn:aws:lambda:us-east-1:ACCOUNT_ID:function:blockvibe-email-*"
-}
-```
-
-### payload-web invoke (async — recommended)
-
-```typescript
-import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda"
-import { mintEnqueueToken, type DirectCampaignInvokeEvent } from "@blockvibe/email-contracts"
-
-const token = mintEnqueueToken({ userId, role, tenantId, tenantIds })
-
-const payload: DirectCampaignInvokeEvent = {
-  token,
-  tenantId: tenant.id,
-  campaign: { subject, html, recipientEmails, host, tenantSlug },
-}
-
-await lambdaClient.send(
-  new InvokeCommand({
-    FunctionName: process.env.EMAIL_LAMBDA_FUNCTION_NAME, // blockvibe-email-dev-send
-    InvocationType: "Event", // fire-and-forget; admin does not wait for 100 SMTP calls
-    Payload: Buffer.from(JSON.stringify(payload)),
-  })
-)
-```
+| **API Gateway** | No | Cost + complexity |
+| **SQS** | No | Optional later for backpressure |
+| **EC2 IAM → Lambda** | Yes | Only payload-web can invoke |
+| **Postgres from Lambda** | No | Gmail creds in signed invoke payload |
 
 ---
 
-## Security model (implemented)
+## Deploy (AWS CDK)
 
-Browsers **never** call Lambda. Only **payload-web** (server-side) after role checks.
+```bash
+# One-time per account/region
+cd services/email-service/infra && pnpm exec cdk bootstrap
 
-### Layer 1 — IAM (production)
-
-Only the EC2 instance role running payload-web has `lambda:InvokeFunction`. No public HTTP endpoint on the email Lambda.
-
-### Layer 2 — Signed enqueue token
-
-Short-lived HMAC token (5 min) in the invoke payload — verified inside Lambda:
-
-```typescript
-import { mintEnqueueToken } from "@blockvibe/email-contracts"
-
-const token = mintEnqueueToken({
-  userId: senderUser.id,
-  role: senderUser.role, // admin | superadmin
-  tenantId: tenant.id,
-  tenantIds: getUserTenantIds(senderUser),
-})
+# From monorepo root
+pnpm email-service:deploy --staging
+pnpm email-service:deploy --prod
 ```
 
-| Claim | Purpose |
-| ----- | ------- |
-| `sub` | Sender user id |
-| `role` | `admin` or `superadmin` only |
-| `tenantId` | Campaign tenant |
-| `tenantIds` | Admin membership list |
-| `iat` / `exp` | TTL 300s |
+Function: `blockvibe-email-{stage}-send` — 256 MB, 300s timeout, 3-day CloudWatch retention.
 
-Lambda enforces: `admin` → `tenantId ∈ tenantIds`; `superadmin` → any tenant.
+**Details:** [services/email-service/infra/README.md](../../../../services/email-service/infra/README.md) · [email/deployment.md](../email/deployment.md)
 
-### Layer 3 — Business rules (payload-web, before invoke)
+### EC2 env after Lambda deploy
 
-Monthly quota, unsubscribed filter, image hosting — same as today.
+```bash
+EMAIL_LAMBDA_FUNCTION_NAME=blockvibe-email-staging-send
+EMAIL_SERVICE_SIGNING_SECRET=<shared with Lambda>
+AWS_REGION=us-east-1
+```
 
-### Role matrix
-
-| Role | Send? |
-| ---- | ----- |
-| `superadmin` | Yes — any tenant |
-| `admin` | Yes — own tenant(s) |
-| `editor` / `contributor` | No |
+Terraform grants `lambda:InvokeFunction` on `blockvibe-email-*`.
 
 ---
 
-## Local development (TSOA + Express)
+## Security model
 
-HTTP API for OpenAPI and manual testing — **not deployed to AWS** in the cost-minimized setup.
+Browsers **never** call Lambda.
+
+1. **IAM** — only EC2 instance role can `lambda:InvokeFunction`
+2. **Enqueue token** — 5-minute HMAC in invoke payload (`mintEnqueueToken`)
+3. **Completion token** — 1-hour HMAC for delivery log callback (`mintBroadcastCompletionToken`)
+4. **Business rules** — quota, role, unsubscribed filter run in payload-web before invoke
+
+---
+
+## Send paths in the worker
+
+| `campaign.delivery` | Transport | Credentials |
+| ------------------- | ----------- | ------------- |
+| `ses` (default) | nodemailer → SES SMTP | Lambda env `SMTP_*` |
+| `gmail` | Gmail API `messages.send` | `campaign.gmail.refreshToken` + `senderEmail` from invoke payload |
+
+Gmail tokens are **not** read from Postgres in the worker. payload-web loads them from `email_srv.email_account` and embeds them in the signed campaign payload.
+
+Per-recipient failures are collected; the worker reports `sentCount`, `failedCount`, and `failedEmails` via the completion callback.
+
+---
+
+## Local development
 
 ```bash
 pnpm email-service:build
@@ -136,26 +106,14 @@ EMAIL_SERVICE_SIGNING_SECRET=dev-secret pnpm email-service:dev
 # http://localhost:4001/health  ·  /docs
 ```
 
-`POST /campaigns` with `Authorization: Bearer <token>` still works locally via `src/lambda.ts` + Express.
+In `apps/payload-web/.env`:
 
----
+```bash
+EMAIL_SERVICE_URL=http://localhost:4001
+EMAIL_SERVICE_SIGNING_SECRET=dev-secret
+```
 
-## Optional scale-up path (higher cost)
-
-Add only when Gmail OAuth or high volume requires it:
-
-| Upgrade | When | Extra cost |
-| ------- | ---- | ---------- |
-| SQS + worker Lambda | Gmail rate limits / DLQ | ~$0 + second Lambda |
-| API Gateway or Function URL | Non-EC2 callers | ~$1/million |
-| Secrets Manager | Many Gmail refresh tokens | $0.40/secret/mo |
-| Provisioned concurrency | Sub-second latency required | **Avoid** — user accepts cold starts |
-
----
-
-## Gmail OAuth (future)
-
-OAuth in payload-web settings; store `gmailRefreshToken` on **Tenant** (Postgres, not Secrets Manager at first). Lambda worker picks SES vs Gmail; Gmail path needs **queue + rate limit** — add SQS then.
+`POST /campaigns` accepts the same campaign shape as the Lambda invoke event (including `broadcastId`, `completionToken`, `gmail`).
 
 ---
 
@@ -164,10 +122,12 @@ OAuth in payload-web settings; store `gmailRefreshToken` on **Tenant** (Postgres
 | Step | Status |
 | ---- | ------ |
 | `@blockvibe/email-contracts` | Done |
-| `invoke-handler` (production Lambda) | Done |
-| Express/TSOA (local only) | Done |
-| payload-web `lambda:InvokeFunction` | **Not wired yet** |
-| SES send in `processCampaignJob` | **Stub** |
+| CDK deploy (`infra/`) | Done |
+| `invoke-handler` (Lambda) | Done |
+| Express/TSOA (local) | Done |
+| payload-web `lambda:InvokeFunction` | Done (staging) |
+| SES + Gmail in worker | Done |
+| Delivery log callback | Done |
 
 ---
 
@@ -175,60 +135,25 @@ OAuth in payload-web settings; store `gmailRefreshToken` on **Tenant** (Postgres
 
 | Variable | Where | Purpose |
 | -------- | ----- | ------- |
-| `EMAIL_SERVICE_SIGNING_SECRET` | payload-web + Lambda | HMAC signing |
-| `EMAIL_LAMBDA_FUNCTION_NAME` | payload-web | e.g. `blockvibe-email-dev-send` |
-| `EMAIL_CAMPAIGN_QUEUE_URL` | Optional | Only if SQS path enabled |
+| `EMAIL_SERVICE_SIGNING_SECRET` | payload-web + Lambda | Enqueue + completion HMAC |
+| `EMAIL_LAMBDA_FUNCTION_NAME` | payload-web | e.g. `blockvibe-email-staging-send` |
+| `AWS_REGION` | payload-web | Lambda client |
+| `GOOGLE_CLIENT_ID` / `SECRET` | Lambda | Gmail token refresh |
+| `SMTP_*` | Lambda | SES path |
+| `PAYLOAD_SECRET` | Lambda | Unsubscribe links in HTML |
+| `EMAIL_SERVICE_URL` | Local payload-web | `http://localhost:4001` |
 | `PORT` | Local Express | Default `4001` |
 
 ---
 
-## Monthly cost estimate (cost-minimized topology)
+## Cost (pilot scale)
 
-**Single Lambda**, **direct IAM invoke**, **SES** delivery, **3-day** CloudWatch retention, **256 MB** memory. EC2 unchanged.
-
-### Fixed
-
-| Component | Monthly |
-| --------- | ------- |
-| Lambda (idle) | **$0** |
-| API Gateway | **$0** (not used) |
-| SQS | **$0** (not used) |
-| CloudWatch (3-day retention, low volume) | **~$0 – $0.50** |
-| Secrets Manager | **$0** (Postgres for tokens) |
-| **Total fixed** | **~$0 – $0.50** |
-
-### Variable
-
-| Component | Price | Pilot (400 emails/mo) |
-| --------- | ----- | --------------------- |
-| **SES** | $0.10 / 1,000 | **$0.04** |
-| Lambda compute | ~256 MB × ~30–60s per broadcast | **&lt; $0.01** |
-| **Total variable** | | **~$0.05** |
-
-### Scenarios
-
-| Scenario | Emails/mo | SES | Lambda | **Total incremental** |
-| -------- | --------- | --- | ------ | --------------------- |
-| Pilot | 400 | $0.04 | ~$0 | **~$0.05** |
-| Small | 2,000 | $0.20 | ~$0.02 | **~$0.25** |
-| Medium | 12,000 | $1.20 | ~$0.05 | **~$1.25** |
-| Busy | 40,000 | $4.00 | ~$0.15 | **~$4.15** |
-
-**At pilot scale you pay essentially SES only (~4¢/month for 400 emails).** Lambda idle cost is zero; cold starts add latency, not line-item cost.
-
-### Cost controls
-
-- Per-tenant monthly quota (payload-web) — already implemented
-- 256 MB Lambda (not 512+)
-- `logRetentionInDays: 3` in serverless.yml
-- No provisioned concurrency
-- Async `InvocationType: Event` so EC2 does not hold connections
-- Rate limit inside `processCampaignJob` when SES send is implemented
+Essentially **SES usage only** (~$0.04/month for 400 emails). Lambda idle cost is $0; cold starts add latency, not line-item cost. See prior cost tables in git history or [architecture.md §10](../email/architecture.md#10-limits-summary).
 
 ---
 
 ## Related docs
 
-- [CRM §7 — embedded images](../crm/implementation_plan.md#7-email-broadcaster--embedded-images)
-- [Email system design](../milestones/m1/email_system_design.md)
+- [email/deployment.md](../email/deployment.md) — full deploy checklist
+- [email/architecture.md](../email/architecture.md) — OAuth, data model, delivery log
 - [services/email-service README](../../../../services/email-service/README.md)

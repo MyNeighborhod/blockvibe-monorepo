@@ -11,6 +11,7 @@ import { enqueueCampaignJob } from "../services/queueService.js"
 interface EnqueueCampaignBody extends EnqueueCampaignRequest {
   /** Must match tenantId claim inside the Bearer enqueue token */
   tenantId: number
+  completionToken?: string
 }
 
 @Route("campaigns")
@@ -45,7 +46,10 @@ export class CampaignsController extends Controller {
       recipientEmails: body.recipientEmails,
       host: body.host,
       tenantSlug: body.tenantSlug,
-    })
+      delivery: body.delivery,
+      gmail: body.gmail,
+      broadcastId: body.broadcastId,
+    }, { completionToken: body.completionToken })
 
     this.setStatus(202)
     return {

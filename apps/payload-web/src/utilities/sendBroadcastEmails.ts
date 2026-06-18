@@ -1,6 +1,34 @@
-import type { Payload } from "payload"
+import type { BroadcastDeliveryResult } from "@blockvibe/email-contracts"
 import { buildBroadcastEmailHtml } from "@blockvibe/email-contracts"
+import type { Payload } from "payload"
 import { refreshGoogleAccessToken, removeGmailSentLabel, sendGmailHtmlEmail } from "./gmailOAuth"
+
+function emptyResult(): BroadcastDeliveryResult {
+  return { sentCount: 0, failedCount: 0, failedEmails: [] }
+}
+
+async function deliverToRecipient(params: {
+  send: () => Promise<void>
+  email: string
+  payload: Payload
+  result: BroadcastDeliveryResult
+}): Promise<void> {
+  try {
+    await params.send()
+    params.result.sentCount += 1
+  } catch (emailError: unknown) {
+    const message = emailError instanceof Error ? emailError.message : String(emailError)
+    params.payload.logger.error(
+      { err: emailError },
+      `Broadcast email delivery failed for ${params.email}`
+    )
+    params.result.failedCount += 1
+    params.result.failedEmails.push(params.email)
+    if (message) {
+      params.payload.logger.error(`Delivery error for ${params.email}: ${message}`)
+    }
+  }
+}
 
 export async function sendBroadcastEmailsInline(params: {
   payload: Payload
@@ -9,9 +37,10 @@ export async function sendBroadcastEmailsInline(params: {
   resolvedMessage: string
   host: string
   tenantSlug: string
-}): Promise<void> {
+}): Promise<BroadcastDeliveryResult> {
   const { payload, activeEmails, subject, resolvedMessage, host, tenantSlug } = params
   const unsubscribeSecret = process.env.PAYLOAD_SECRET || "fallback-secret"
+  const result = emptyResult()
 
   for (const email of activeEmails) {
     const html = buildBroadcastEmailHtml({
@@ -22,18 +51,21 @@ export async function sendBroadcastEmailsInline(params: {
       unsubscribeSecret,
     })
 
-    try {
-      await payload.sendEmail({
-        to: email,
-        subject,
-        html,
-      })
-    } catch (emailError: unknown) {
-      const message = emailError instanceof Error ? emailError.message : String(emailError)
-      payload.logger.error({ err: emailError }, `Broadcast email delivery failed for ${email}`)
-      throw new Error(`Email delivery failed for ${email}: ${message}`)
-    }
+    await deliverToRecipient({
+      payload,
+      email,
+      result,
+      send: async () => {
+        await payload.sendEmail({
+          to: email,
+          subject,
+          html,
+        })
+      },
+    })
   }
+
+  return result
 }
 
 export async function sendBroadcastEmailsViaGmail(params: {
@@ -46,7 +78,7 @@ export async function sendBroadcastEmailsViaGmail(params: {
   host: string
   tenantSlug: string
   skipGmailSentFolder?: boolean
-}): Promise<void> {
+}): Promise<BroadcastDeliveryResult> {
   const {
     payload,
     gmailRefreshToken,
@@ -61,6 +93,7 @@ export async function sendBroadcastEmailsViaGmail(params: {
 
   const unsubscribeSecret = process.env.PAYLOAD_SECRET || "fallback-secret"
   const accessToken = await refreshGoogleAccessToken(gmailRefreshToken)
+  const result = emptyResult()
 
   for (const email of activeEmails) {
     const html = buildBroadcastEmailHtml({
@@ -71,21 +104,24 @@ export async function sendBroadcastEmailsViaGmail(params: {
       unsubscribeSecret,
     })
 
-    try {
-      const messageId = await sendGmailHtmlEmail({
-        accessToken,
-        from: gmailSenderEmail,
-        to: email,
-        subject,
-        html,
-      })
-      if (skipGmailSentFolder) {
-        await removeGmailSentLabel(accessToken, messageId)
-      }
-    } catch (emailError: unknown) {
-      const message = emailError instanceof Error ? emailError.message : String(emailError)
-      payload.logger.error({ err: emailError }, `Gmail broadcast failed for ${email}`)
-      throw new Error(`Email delivery failed for ${email}: ${message}`)
-    }
+    await deliverToRecipient({
+      payload,
+      email,
+      result,
+      send: async () => {
+        const messageId = await sendGmailHtmlEmail({
+          accessToken,
+          from: gmailSenderEmail,
+          to: email,
+          subject,
+          html,
+        })
+        if (skipGmailSentFolder) {
+          await removeGmailSentLabel(accessToken, messageId)
+        }
+      },
+    })
   }
+
+  return result
 }

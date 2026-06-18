@@ -14,15 +14,14 @@ export const Broadcasts: CollectionConfig = {
       const role = (user as any)?.role
       return isApproved(user) && (role === "admin" || role === "editor" || role === "superadmin")
     },
-    update: () => false, // Sent communication logs should be immutable
+    update: () => false,
     delete: ({ req: { user } }) => {
       if (!user) return false
-      // Only superadmin can delete logs for auditing/database maintenance
       return (user as any)?.role === "superadmin"
     },
   },
   admin: {
-    defaultColumns: ["subject", "sender", "createdAt"],
+    defaultColumns: ["subject", "delivery", "status", "sentCount", "failedCount", "createdAt"],
     useAsTitle: "subject",
   },
   fields: [
@@ -44,7 +43,66 @@ export const Broadcasts: CollectionConfig = {
       type: "json",
       required: true,
       admin: {
-        description: "JSON array of resident email addresses who received this broadcast.",
+        description: "JSON array of resident email addresses targeted by this broadcast.",
+      },
+    },
+    {
+      name: "delivery",
+      type: "select",
+      required: true,
+      defaultValue: "ses",
+      options: [
+        { label: "Platform SES", value: "ses" },
+        { label: "Neighborhood Gmail", value: "gmail" },
+      ],
+    },
+    {
+      name: "status",
+      type: "select",
+      required: true,
+      defaultValue: "queued",
+      options: [
+        { label: "Queued", value: "queued" },
+        { label: "Processing", value: "processing" },
+        { label: "Completed", value: "completed" },
+        { label: "Partially failed", value: "partial" },
+        { label: "Failed", value: "failed" },
+      ],
+      admin: {
+        description: "Delivery progress for this broadcast.",
+      },
+    },
+    {
+      name: "sentCount",
+      type: "number",
+      defaultValue: 0,
+      required: true,
+      admin: {
+        description: "Number of emails delivered successfully.",
+      },
+    },
+    {
+      name: "failedCount",
+      type: "number",
+      defaultValue: 0,
+      required: true,
+      admin: {
+        description: "Number of emails that failed to send.",
+      },
+    },
+    {
+      name: "failedEmails",
+      type: "json",
+      defaultValue: [],
+      admin: {
+        description: "JSON array of recipient addresses that failed delivery.",
+      },
+    },
+    {
+      name: "jobId",
+      type: "text",
+      admin: {
+        description: "Email worker job id (async sends).",
       },
     },
     {

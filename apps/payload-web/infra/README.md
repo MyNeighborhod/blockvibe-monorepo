@@ -44,7 +44,9 @@ This builds the Docker image **on your machine** (not on EC2), syncs media, uplo
 | `./infra/deploy.sh --staging`         | Full deploy to **staging** (`.env.staging`, port 3001)              |
 | `./infra/deploy.sh --staging --skip-media` | Code-only staging deploy                                       |
 | `./infra/sync-media.sh`               | Media-only sync, no rebuild                                         |
-| `./infra/push-db-to-prod.sh`          | **Replace production DB** with local (source of truth) + sync media |
+| `./infra/push-db-to-prod.sh`          | **Replace production DB** with local + optional media |
+| `./infra/push-db-to-prod.sh --staging --yes` | **Replace staging DB** with local + optional media |
+| `pnpm email-service:deploy --staging` | Deploy **email Lambda** (CDK) — separate from `deploy.sh` |
 | `pnpm seed:prod-content`              | Seed prod **content only** (platform home + NOG users) via SSH tunnel |
 | `./infra/sync-prod-schema.sh`         | Pull prod DB → schema push locally → push back (no full content replace) |
 
@@ -100,7 +102,7 @@ Run from `apps/payload-web`:
 
 4. Open `https://<your-domain>` (from `terraform output domain_url`).
 
-Full details: [docs/deployment/readme.md](../docs/deployment/readme.md) · **Day-to-day flows:** [production-flows.md](../docs/deployment/production-flows.md) · **Email service (queued Lambda):** [docs/email-service/readme.md](../docs/email-service/readme.md)
+Full details: [docs/deployment/readme.md](../docs/deployment/readme.md) · **Day-to-day flows:** [production-flows.md](../docs/deployment/production-flows.md) · **Email (architecture + deploy):** [docs/email/readme.md](../docs/email/readme.md)
 
 ## Files in this directory
 

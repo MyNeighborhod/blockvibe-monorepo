@@ -61,12 +61,12 @@ flowchart TB
     Invoke --> Process
     Process -->|"delivery: ses"| SES
     Process -->|"delivery: gmail"| GmailAPI
-    Process --> DB
+    Process -->|"POST /api/email/broadcasts/complete"| Actions
 ```
 
-**Production (target):** payload-web calls `lambda:InvokeFunction` with `InvocationType: "Event"` so the admin UI returns immediately while the worker sends sequentially (rate-limited).
+**Staging / production:** When `EMAIL_LAMBDA_FUNCTION_NAME` is set, both SES and Gmail sends run in the **worker** (async). payload-web returns immediately; the worker updates the delivery log via a signed completion callback.
 
-**Local dev:** Either inline `payload.sendEmail` (no worker env vars), or `EMAIL_SERVICE_URL=http://localhost:4001` for the Express dev server.
+**Local dev:** Without worker env vars, sends run **inline** in `sendBroadcastAction` (same delivery log fields, synchronous).
 
 ---
 
@@ -83,12 +83,18 @@ flowchart TD
     Pick -->|Neighborhood Gmail| GmailCheck{Tenant has\nrefresh_token?}
 
     GmailCheck -->|No| Error[Show error:\nConnect Gmail in Settings]
-    GmailCheck -->|Yes| GmailPath[Worker: nodemailer OAuth2\n+ tenant refresh_token]
+    GmailCheck -->|Yes| GmailPath[Gmail API via worker or inline]
 
-    SESPath --> Send[One email per recipient\n~100ms apart]
-    GmailPath --> Send
+    SESPath --> CreateLog[Create broadcasts row\nstatus=queued|processing]
+    GmailPath --> CreateLog
+    CreateLog --> Send{Worker configured?}
 
-    Send --> Log[Update quota + broadcasts log]
+    Send -->|Yes| Async[Lambda Event invoke\nreturn UI immediately]
+    Send -->|No| Inline[Send in server action\nupdate log when done]
+
+    Async --> WorkerSend[Worker: per-recipient send\n100ms delay, collect failures]
+    Inline --> WorkerSend
+    WorkerSend --> Complete[Update broadcasts:\nsentCount, failedCount,\nfailedEmails, status]
 ```
 
 ### Option A — Platform SES (default)
@@ -106,7 +112,8 @@ flowchart TD
 | Item | Detail |
 | ---- | ------ |
 | **From address** | Connected mailbox (e.g. `northofgrandpresident@gmail.com`) |
-| **Credentials** | Per-tenant `gmailRefreshToken` in Postgres; app-level `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` |
+| **Credentials** | Per-tenant `refresh_token` in `email_srv.email_account`; passed to worker in signed invoke payload |
+| **Transport** | **Gmail API** `messages.send` (not SMTP — `gmail.send` scope does not support SMTP auth) |
 | **Scope** | `gmail.send` + `userinfo.email` + `gmail.labels` (send, read address, optional Sent-folder control) |
 | **When to use** | Admin chooses Neighborhood Gmail and tenant is connected |
 | **Limits** | **Per connected Google account** (~500/day personal Gmail, ~2,000/day Workspace) — independent per org |
@@ -246,43 +253,53 @@ sequenceDiagram
 sequenceDiagram
     participant Admin
     participant PW as payload-web
-    participant Worker as email-service
-    participant Transport as SES or Gmail
+    participant Worker as email-service Lambda
+    participant Transport as SES or Gmail API
+    participant DB as Postgres broadcasts
 
-    Admin->>PW: sendBroadcastAction<br/>delivery, recipients, subject, html
-    PW->>PW: Admin/superadmin, tenant access
-    PW->>PW: Quota check, filter unsubscribed
-    PW->>PW: resolveBroadcastImagesInHtml
-    PW->>PW: mintEnqueueToken (HMAC)
-    PW->>Worker: Lambda Event or POST /campaigns
-    PW->>PW: Update quota + broadcasts log
-    PW-->>Admin: Success (async — not waiting for SMTP)
+    Admin->>PW: sendBroadcastAction
+    PW->>PW: Role, quota, unsubscribed filter, resolve images
+    PW->>DB: Create broadcasts row (queued/processing)
+    PW->>PW: mintEnqueueToken + mintBroadcastCompletionToken
 
-    Worker->>Worker: verifyEnqueueToken
-    alt delivery = ses
-        Worker->>Transport: nodemailer SMTP (SES)
-    else delivery = gmail
-        Worker->>Worker: Load tenant refresh_token from DB
-        Worker->>Transport: nodemailer OAuth2
-    end
-    loop each recipient
-        Transport-->>Worker: sent
+    alt EMAIL_LAMBDA_FUNCTION_NAME or EMAIL_SERVICE_URL set
+        PW->>Worker: Invoke Event (async) with campaign + gmail creds + broadcastId
+        PW-->>Admin: Success — queued
+        Worker->>Worker: verifyEnqueueToken
+        loop each recipient (100ms apart)
+            Worker->>Transport: send (continue on failure)
+        end
+        Worker->>PW: POST /api/email/broadcasts/complete
+        PW->>DB: Update sentCount, failedCount, failedEmails, status
+    else local inline
+        PW->>Transport: send per recipient in server action
+        PW->>DB: Update delivery log
+        PW-->>Admin: Success with counts
     end
 ```
 
-**Campaign payload** (extends `@blockvibe/email-contracts`):
+**Campaign payload** (`@blockvibe/email-contracts` `EnqueueCampaignRequest`):
 
 ```typescript
 {
   subject: string
   html: string
   recipientEmails: string[]
-  host: string
+  host: string              // tenant host for unsubscribe links + worker callback URL
   tenantSlug: string
-  delivery: "ses" | "gmail"   // new
-  tenantId: number            // required for gmail path
+  delivery?: "ses" | "gmail"
+  broadcastId?: number      // CMS log row to update
+  gmail?: {                 // required when delivery === "gmail"
+    refreshToken: string
+    senderEmail: string
+    skipSentFolder?: boolean
+  }
 }
 ```
+
+**Direct Lambda invoke** also includes `completionToken` (HMAC, 1h TTL) for the worker callback.
+
+Per-recipient failures are **collected** (send continues). Status is `completed`, `partial`, or `failed` based on counts.
 
 ---
 
@@ -337,24 +354,37 @@ apps/payload-web/
   src/utilities/emailSrvAccount.ts   # Thin adapter for dashboard routes
   src/app/api/integrations/gmail/    # OAuth (writes via email-srv)
 
-services/email-service/        # Future: reads credentials from invoke payload only
+services/email-service/        # Lambda worker — no Postgres; Gmail creds from invoke payload
 ```
 
-### 7.2 `tenants` (CMS only)
+### 7.3 Broadcasts (delivery log)
 
-| Field | Purpose |
-| ----- | ------- |
-| `emailDeliveryDefault` | `ses` \| `gmail` — UI preference only |
+Collection: `broadcasts` (tenant-scoped via multi-tenant plugin). Shown on **Dashboard → Email** as **Delivery log** (last 20 per neighborhood).
 
-### 7.3 Other CMS collections
+| Field | Type | Purpose |
+| ----- | ---- | ------- |
+| `subject` | text | Broadcast subject |
+| `message` | textarea | Resolved HTML body |
+| `recipients` | json | Target email addresses |
+| `delivery` | select | `ses` \| `gmail` |
+| `status` | select | `queued` \| `processing` \| `completed` \| `partial` \| `failed` |
+| `sentCount` | number | Successful deliveries |
+| `failedCount` | number | Failed deliveries |
+| `failedEmails` | json | **Array of failing addresses** |
+| `jobId` | text | Worker job UUID (async sends) |
+| `sender` | relationship | User who sent |
 
-| Collection | Role in email |
-| ---------- | ------------- |
-| `users` | Recipients; `unsubscribed`, `status === approved'` |
-| `tenant-email-quotas` | 500 emails/month per tenant (app limit) |
-| `broadcasts` | Sent log (subject, html, recipients) |
+**Status rules** (`resolveBroadcastDeliveryStatus` in `@blockvibe/email-contracts`):
 
-### 7.4 Auth between payload-web and worker
+| Condition | Status |
+| --------- | ------ |
+| `sentCount === 0` and `failedCount > 0` | `failed` |
+| `failedCount > 0` | `partial` |
+| otherwise | `completed` |
+
+**Worker callback:** `POST /api/email/broadcasts/complete` with `Authorization: Bearer <completionToken>`. Token is minted at send time and binds `broadcastId` + `tenantId`. Updates use `overrideAccess: true` (collection `update` access is false for immutability).
+
+### 7.4 Other CMS collections
 
 Short-lived HMAC **enqueue token** (`EMAIL_SERVICE_SIGNING_SECRET`), same pattern as API Bearer auth locally.
 
@@ -370,28 +400,48 @@ Short-lived HMAC **enqueue token** (`EMAIL_SERVICE_SIGNING_SECRET`), same patter
 | `EMAIL_SERVICE_SIGNING_SECRET` | Verify tokens |
 | `SMTP_*` | SES transport |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Gmail OAuth refresh |
-| `PAYLOAD_SECRET` | Unsubscribe HMAC in HTML |
+| `PAYLOAD_SECRET` | Unsubscribe HMAC in HTML; fallback for completion signing |
 
-**Lambda does not connect to Postgres.** payload-web reads `email_srv.email_account` via `@blockvibe/email-srv` and passes Gmail credentials inside the **signed invoke payload** (see §6).
+**Lambda does not connect to Postgres.** payload-web reads `email_srv.email_account` and passes Gmail `refreshToken` + `senderEmail` in the signed invoke payload.
+
+### 7.5 `tenants` (CMS only)
+
+| Field | Purpose |
+| ----- | ------- |
+| `emailDeliveryDefault` | `ses` \| `gmail` — Broadcaster default |
+
+### 7.6 Other CMS collections (recipients & quotas)
+
+| Collection | Role in email |
+| ---------- | ------------- |
+| `users` | Recipients; `unsubscribed`, `status === approved` |
+| `tenant-email-quotas` | 500 emails/month per tenant (app limit) |
+
+### 7.7 Auth between payload-web and worker
 
 ---
 
-## 8. Email worker deployment
-
-Cost-minimized production topology (see `services/email-service` on branch `feat/email-service-lambda`):
+## 8. Email worker deployment (AWS CDK)
 
 ```
 EC2 payload-web  --IAM lambda:InvokeFunction-->  blockvibe-email-{stage}-send
                                                       |
-                                                      +--> SES SMTP
-                                                      +--> Gmail API (OAuth)
+                                                      +--> SES SMTP (nodemailer)
+                                                      +--> Gmail API (OAuth refresh in payload)
+                                                      +--> POST callback → payload-web delivery log
 ```
 
-| Component | Prod | Local |
-| --------- | ---- | ----- |
-| Entry | `invoke-handler.ts` | `server.ts` (Express + TSOA) |
-| Deploy | `serverless deploy` (no API Gateway) | `pnpm email-service:dev` |
-| EC2 IAM | `lambda:InvokeFunction` on `blockvibe-email-*` | N/A |
+| Component | Staging / prod | Local |
+| --------- | -------------- | ----- |
+| Entry | `invoke-handler.ts` | `server.ts` (Express + TSOA, :4001) |
+| Deploy | `pnpm email-service:deploy --staging\|--prod` | `pnpm email-service:dev` |
+| Bundle | esbuild → `dist/lambda/invoke-handler.js` | tsc |
+| IaC | `services/email-service/infra/` (AWS CDK) | N/A |
+| Function name | `blockvibe-email-staging-send` / `blockvibe-email-prod-send` | N/A |
+
+**Full deploy steps:** [deployment.md](./deployment.md)
+
+`serverless.yml` is deprecated; use CDK.
 
 ---
 
@@ -425,37 +475,30 @@ Rules are **identical** for SES and Gmail. See [email_system_design.md §6](../m
 
 | Piece | Status |
 | ----- | ------ |
-| Email Broadcaster UI + SES inline send | **Shipped** (main) |
-| Image upload / hosted URLs in HTML | **Shipped** |
-| Email microservice + Lambda invoke | **Branch** `feat/email-service-lambda` |
-| Google OAuth client + env vars | **Done** (your setup) |
-| Tenant Gmail fields | **Shipped** — `email_srv.email_account` via `@blockvibe/email-srv` |
-| OAuth connect/callback routes | **Shipped** |
-| Settings → Connect Gmail UI | **Shipped** |
-| Broadcaster delivery selector | **Shipped** |
-| Worker Gmail transporter + DB token load | **Planned** (email-service branch; inline Gmail send works on main path) |
-
-**Suggested build order:**
-
-1. Tenant schema fields  
-2. OAuth routes + Settings UI  
-3. Test connect locally (test user in Google Audience)  
-4. Delivery picker on broadcaster  
-5. Worker: `delivery` flag + Gmail nodemailer transport  
-6. Merge email-service branch + deploy Lambda  
+| Email Broadcaster UI | **Shipped** |
+| Dual delivery (SES / Gmail) selector | **Shipped** |
+| Gmail OAuth connect + `email_srv` tokens | **Shipped** |
+| Gmail API send (not SMTP) | **Shipped** |
+| Async worker (Lambda CDK) — SES + Gmail | **Shipped** (staging) |
+| Delivery log per tenant (`broadcasts`) | **Shipped** |
+| Per-recipient failure tracking + `failedEmails` JSON | **Shipped** |
+| Worker completion callback | **Shipped** |
+| Optional “skip Gmail Sent folder” | **Shipped** |
+| List-Unsubscribe headers on worker | Planned |
+| SES bounce webhooks | Planned |
 
 ---
 
 ## 12. Local verification checklist
 
-After implementation:
-
-1. `GOOGLE_CLIENT_*` in `.env`; Gmail API enabled; `gmail.send` in Data Access  
-2. Your Gmail listed as **Test user** in Google Audience  
-3. `pnpm dev` (payload-web) + `pnpm email-service:dev` (optional)  
-4. NOG admin → Settings → Connect Gmail  
-5. Email Broadcaster → choose **Gmail** → send test to yourself  
-6. Confirm **From** is the connected Gmail address (Mailpit locally, inbox in prod)
+1. `GOOGLE_CLIENT_*` in `.env`; Gmail API enabled; scopes in Data Access  
+2. `pnpm --filter @blockvibe/email-srv db:migrate`  
+3. Your Gmail as **Test user** (if Google app in Testing mode)  
+4. `pnpm --filter payload-web dev`  
+5. Optional worker: `EMAIL_SERVICE_URL=http://localhost:4001` + `pnpm email-service:dev`  
+6. Settings → Connect Gmail  
+7. Broadcaster → send → verify **Delivery log** (sent/failed counts, failed addresses)  
+8. Staging: deploy Lambda + payload-web per [deployment.md](./deployment.md)
 
 ---
 

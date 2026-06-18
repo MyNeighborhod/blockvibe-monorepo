@@ -1,5 +1,26 @@
+export type EmailDeliveryMethod = "ses" | "gmail"
+
+export type BroadcastDeliveryStatus =
+  | "queued"
+  | "processing"
+  | "completed"
+  | "partial"
+  | "failed"
+
+export interface BroadcastDeliveryResult {
+  sentCount: number
+  failedCount: number
+  failedEmails: string[]
+}
+
 /** Roles allowed to enqueue outbound email campaigns. */
 export type EmailEnqueueRole = "admin" | "superadmin"
+
+export interface GmailCampaignCredentials {
+  refreshToken: string
+  senderEmail: string
+  skipSentFolder?: boolean
+}
 
 /** Claims embedded in the short-lived signed enqueue token (minted by payload-web). */
 export interface EnqueueTokenClaims {
@@ -23,6 +44,12 @@ export interface EnqueueCampaignRequest {
   /** Request host used to build unsubscribe links, e.g. nog.blockvibe.org */
   host: string
   tenantSlug: string
+  /** Defaults to ses when omitted */
+  delivery?: EmailDeliveryMethod
+  /** Required when delivery is gmail — passed in signed invoke payload (Lambda has no DB). */
+  gmail?: GmailCampaignCredentials
+  /** Payload broadcasts row id for delivery status updates */
+  broadcastId?: number
 }
 
 export interface EnqueueCampaignResponse {
@@ -36,6 +63,8 @@ export interface DirectCampaignInvokeEvent {
   token: string
   tenantId: number
   campaign: EnqueueCampaignRequest
+  broadcastId?: number
+  completionToken?: string
 }
 
 export interface CampaignJobMessage {

@@ -1,6 +1,7 @@
 import crypto from "crypto"
 import type {
   CampaignJobMessage,
+  DirectCampaignInvokeEvent,
   EnqueueCampaignRequest,
   EnqueueCampaignResponse,
 } from "@blockvibe/email-contracts"
@@ -14,23 +15,20 @@ import { sendCampaignEmails } from "./sendCampaignEmails.js"
  * Process one campaign job (SES today, Gmail OAuth later).
  * Shared by direct Lambda invoke and optional SQS worker.
  */
-export async function processCampaignJob(message: CampaignJobMessage): Promise<void> {
+export async function processCampaignJob(
+  message: CampaignJobMessage,
+  options?: { completionToken?: string }
+): Promise<void> {
   console.info("[email-worker] processing campaign", {
     jobId: message.jobId,
     tenantId: message.claims.tenantId,
     senderUserId: message.claims.sub,
     recipientCount: message.campaign.recipientEmails.length,
     subject: message.campaign.subject,
+    broadcastId: message.campaign.broadcastId,
   })
 
-  await sendCampaignEmails(message)
-}
-
-export interface DirectCampaignInvokeEvent {
-  /** Short-lived HMAC token minted by payload-web */
-  token: string
-  tenantId: number
-  campaign: EnqueueCampaignRequest
+  await sendCampaignEmails(message, options)
 }
 
 export async function runDirectCampaignInvoke(
@@ -51,6 +49,13 @@ export async function runDirectCampaignInvoke(
     throw new Error("At least one recipient email is required.")
   }
 
+  const delivery = event.campaign.delivery ?? "ses"
+  if (delivery === "gmail") {
+    if (!event.campaign.gmail?.refreshToken || !event.campaign.gmail?.senderEmail) {
+      throw new Error("Gmail refresh token and sender email are required for gmail delivery.")
+    }
+  }
+
   const jobId = crypto.randomUUID()
   const message: CampaignJobMessage = {
     jobId,
@@ -59,7 +64,32 @@ export async function runDirectCampaignInvoke(
     enqueuedAt: new Date().toISOString(),
   }
 
-  await processCampaignJob(message)
+  try {
+    await processCampaignJob(message, { completionToken: event.completionToken })
+  } catch (err: unknown) {
+    const broadcastId = event.campaign.broadcastId
+    if (broadcastId && event.completionToken) {
+      const { reportBroadcastCompletion } = await import("./reportBroadcastCompletion.js")
+      const failedEmails = event.campaign.recipientEmails
+      try {
+        await reportBroadcastCompletion({
+          host: event.campaign.host,
+          completionToken: event.completionToken,
+          body: {
+            broadcastId,
+            tenantId: event.tenantId,
+            jobId,
+            sentCount: 0,
+            failedCount: failedEmails.length,
+            failedEmails,
+          },
+        })
+      } catch (reportErr: unknown) {
+        console.error("[email-invoke] failed to report catastrophic campaign failure", reportErr)
+      }
+    }
+    throw err
+  }
 
   return {
     jobId,

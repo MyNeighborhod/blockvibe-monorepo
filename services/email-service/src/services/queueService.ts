@@ -8,7 +8,8 @@ const sqs = new SQSClient({})
 export async function enqueueCampaignJob(
   claims: EnqueueTokenClaims,
   tenantId: number,
-  campaign: EnqueueCampaignRequest
+  campaign: EnqueueCampaignRequest,
+  options?: { completionToken?: string }
 ): Promise<{ jobId: string; recipientCount: number }> {
   const jobId = crypto.randomUUID()
   const message: CampaignJobMessage = {
@@ -20,7 +21,7 @@ export async function enqueueCampaignJob(
 
   const queueUrl = process.env.EMAIL_CAMPAIGN_QUEUE_URL
   if (!queueUrl) {
-    await processCampaignJob(message)
+    await processCampaignJob(message, { completionToken: options?.completionToken })
     return { jobId, recipientCount: campaign.recipientEmails.length }
   }
 

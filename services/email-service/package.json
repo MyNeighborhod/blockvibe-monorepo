@@ -7,6 +7,7 @@
   "scripts": {
     "build": "pnpm run build:routes && tsc",
     "build:routes": "tsoa spec-and-routes",
+    "build:lambda": "node scripts/bundle-lambda.mjs",
     "dev": "tsx watch src/server.ts",
     "start": "node dist/server.js",
     "lint": "tsc --noEmit"
@@ -27,6 +28,7 @@
     "@types/node": "^22.10.2",
     "@types/nodemailer": "^6.4.15",
     "@types/swagger-ui-express": "^4.1.8",
+    "esbuild": "^0.25.0",
     "tsx": "^4.21.0",
     "typescript": "5.7.3"
   }

@@ -1069,7 +1069,7 @@ export interface Broadcast {
    */
   message: string;
   /**
-   * JSON array of resident email addresses who received this broadcast.
+   * JSON array of resident email addresses targeted by this broadcast.
    */
   recipients:
     | {
@@ -1080,6 +1080,35 @@ export interface Broadcast {
     | number
     | boolean
     | null;
+  delivery: 'ses' | 'gmail';
+  /**
+   * Delivery progress for this broadcast.
+   */
+  status: 'queued' | 'processing' | 'completed' | 'partial' | 'failed';
+  /**
+   * Number of emails delivered successfully.
+   */
+  sentCount: number;
+  /**
+   * Number of emails that failed to send.
+   */
+  failedCount: number;
+  /**
+   * JSON array of recipient addresses that failed delivery.
+   */
+  failedEmails?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Email worker job id (async sends).
+   */
+  jobId?: string | null;
   /**
    * The user who drafted and sent this announcement.
    */
@@ -1863,6 +1892,12 @@ export interface BroadcastsSelect<T extends boolean = true> {
   subject?: T;
   message?: T;
   recipients?: T;
+  delivery?: T;
+  status?: T;
+  sentCount?: T;
+  failedCount?: T;
+  failedEmails?: T;
+  jobId?: T;
   sender?: T;
   updatedAt?: T;
   createdAt?: T;
