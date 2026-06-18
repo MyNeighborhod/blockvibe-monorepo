@@ -5,7 +5,16 @@ import configPromise from "@payload-config"
 import { headers } from "next/headers"
 import { getMeUser } from "@/utilities/getMeUser"
 import { resolveBroadcastImagesInHtml, uploadBroadcastImageFile } from "@/utilities/resolveBroadcastImages"
-import { sendBroadcastEmails } from "@/utilities/sendBroadcastEmails"
+import { getUserTenantIds } from "@/access/roles"
+import {
+  dispatchBroadcastCampaign,
+  getEmailEnqueueRole,
+  shouldUseEmailService,
+} from "@/utilities/emailServiceClient"
+import {
+  sendBroadcastEmailsInline,
+  sendBroadcastEmailsViaGmail,
+} from "@/utilities/sendBroadcastEmails"
 import type { EmailDeliveryMethod } from "@/utilities/gmailOAuth"
 import {
   getEmailAccountForTenant,
@@ -86,7 +95,6 @@ export async function sendBroadcastAction(
 
     const payload = await getPayload({ config: configPromise })
 
-    // Get tenant quota
     const quotas = await payload.find({
       collection: "tenant-email-quotas",
       where: {
@@ -108,7 +116,7 @@ export async function sendBroadcastAction(
       })
     }
 
-    const currentMonth = new Date().toISOString().slice(0, 7) // "YYYY-MM"
+    const currentMonth = new Date().toISOString().slice(0, 7)
     let sent = quota.emailsSentThisMonth ?? 0
     const limit = quota.monthlyEmailLimit ?? 500
 
@@ -145,6 +153,15 @@ export async function sendBroadcastAction(
       throw new Error("You must be logged in to send a broadcast.")
     }
 
+    const enqueueRole = getEmailEnqueueRole(senderUser as { role?: string | null })
+    if (!enqueueRole) {
+      throw new Error("Only neighborhood admins may send broadcasts.")
+    }
+
+    if (enqueueRole === "admin" && !getUserTenantIds(senderUser).includes(numericTenantId)) {
+      throw new Error("You are not authorized to send broadcasts for this neighborhood.")
+    }
+
     const resolvedMessage = await resolveBroadcastImagesInHtml(message, {
       payload,
       tenantId,
@@ -153,7 +170,6 @@ export async function sendBroadcastAction(
       user: senderUser,
     })
 
-    // Filter out recipientEmails that are unsubscribed
     const activeUsers = await payload.find({
       collection: "users",
       where: {
@@ -174,9 +190,8 @@ export async function sendBroadcastAction(
         throw new Error("Connect Gmail in Settings before sending via Neighborhood Gmail.")
       }
 
-      await sendBroadcastEmails({
+      await sendBroadcastEmailsViaGmail({
         payload,
-        delivery,
         gmailRefreshToken: emailAccount!.refreshToken,
         gmailSenderEmail: emailAccount!.senderEmail,
         activeEmails,
@@ -185,10 +200,23 @@ export async function sendBroadcastAction(
         host,
         tenantSlug,
       })
+    } else if (shouldUseEmailService()) {
+      await dispatchBroadcastCampaign({
+        tenantId: numericTenantId,
+        senderUserId: senderUser.id,
+        role: enqueueRole,
+        tenantIds: getUserTenantIds(senderUser),
+        campaign: {
+          subject,
+          html: resolvedMessage,
+          recipientEmails: activeEmails,
+          host,
+          tenantSlug,
+        },
+      })
     } else {
-      await sendBroadcastEmails({
+      await sendBroadcastEmailsInline({
         payload,
-        delivery,
         activeEmails,
         subject,
         resolvedMessage,
@@ -197,7 +225,6 @@ export async function sendBroadcastAction(
       })
     }
 
-    // Update sent quota count
     await payload.update({
       collection: "tenant-email-quotas",
       id: quota.id,
@@ -206,16 +233,15 @@ export async function sendBroadcastAction(
       },
     })
 
-    // Save to the sent communications log (Broadcasts collection)
     try {
       await payload.create({
         collection: "broadcasts",
         data: {
           subject,
-          message: resolvedMessage, // HTML content with hosted image URLs
-          recipients: activeEmails, // JSON array of emails
+          message: resolvedMessage,
+          recipients: activeEmails,
           sender: senderUser.id,
-          tenant: typeof tenantId === "string" ? parseInt(tenantId, 10) : tenantId,
+          tenant: numericTenantId,
         },
         user: senderUser,
       })

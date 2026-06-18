@@ -1,15 +1,19 @@
 import crypto from "crypto"
 
+export function buildUnsubscribeToken(email: string, secret: string): string {
+  return crypto.createHmac("sha256", secret).update(email).digest("hex")
+}
+
 export function buildBroadcastEmailHtml(params: {
   resolvedMessage: string
   host: string
   tenantSlug: string
   recipientEmail: string
+  unsubscribeSecret: string
 }): string {
-  const secret = process.env.PAYLOAD_SECRET || "fallback-secret"
-  const { resolvedMessage, host, tenantSlug, recipientEmail } = params
+  const { resolvedMessage, host, tenantSlug, recipientEmail, unsubscribeSecret } = params
   const protocol = host.startsWith("localhost") ? "http" : "https"
-  const token = crypto.createHmac("sha256", secret).update(recipientEmail).digest("hex")
+  const token = buildUnsubscribeToken(recipientEmail, unsubscribeSecret)
   const unsubscribeUrl = `${protocol}://${host}/${tenantSlug}/unsubscribe?email=${encodeURIComponent(
     recipientEmail
   )}&token=${token}`

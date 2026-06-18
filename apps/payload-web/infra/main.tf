@@ -113,6 +113,7 @@ resource "aws_instance" "web" {
   key_name = var.ssh_key_name == "" ? aws_key_pair.kp[0].key_name : var.ssh_key_name
 
   vpc_security_group_ids = [aws_security_group.web_sg.id]
+  iam_instance_profile   = aws_iam_instance_profile.ec2_web.name
 
   # Root block device size and performance configuration
   root_block_device {
@@ -269,6 +270,45 @@ resource "cloudflare_record" "ses_dmarc" {
   ttl     = 3600
 }
 
+
+# --- EC2 instance role (direct Lambda invoke for email microservice) ---
+resource "aws_iam_role" "ec2_web" {
+  name = "${var.instance_name}-ec2-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "ec2_lambda_invoke" {
+  name = "${var.instance_name}-lambda-invoke"
+  role = aws_iam_role.ec2_web.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["lambda:InvokeFunction"]
+        Resource = "arn:aws:lambda:us-east-1:*:function:blockvibe-email-*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_instance_profile" "ec2_web" {
+  name = "${var.instance_name}-ec2-profile"
+  role = aws_iam_role.ec2_web.name
+}
 
 # --- IAM Credentials for SES SMTP ---
 resource "aws_iam_user" "ses_user" {

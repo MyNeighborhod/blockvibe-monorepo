@@ -1,70 +1,18 @@
 import nodemailer from "nodemailer"
 import type { Payload } from "payload"
-import { buildBroadcastEmailHtml } from "./broadcastEmailHtml"
+import { buildBroadcastEmailHtml } from "@blockvibe/email-contracts"
 import { getGoogleOAuthConfig } from "./gmailOAuth"
-import type { EmailDeliveryMethod } from "./gmailOAuth"
 
-export async function sendBroadcastEmails(params: {
+export async function sendBroadcastEmailsInline(params: {
   payload: Payload
-  delivery: EmailDeliveryMethod
-  gmailRefreshToken?: string | null
-  gmailSenderEmail?: string | null
   activeEmails: string[]
   subject: string
   resolvedMessage: string
   host: string
   tenantSlug: string
 }): Promise<void> {
-  const {
-    payload,
-    delivery,
-    gmailRefreshToken,
-    gmailSenderEmail,
-    activeEmails,
-    subject,
-    resolvedMessage,
-    host,
-    tenantSlug,
-  } = params
-
-  if (delivery === "gmail") {
-    if (!gmailRefreshToken || !gmailSenderEmail) {
-      throw new Error("Connect Gmail in Settings before sending via Neighborhood Gmail.")
-    }
-    const { clientId, clientSecret } = getGoogleOAuthConfig()
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        type: "OAuth2",
-        user: gmailSenderEmail,
-        clientId,
-        clientSecret,
-        refreshToken: gmailRefreshToken,
-      },
-    })
-
-    for (const email of activeEmails) {
-      const html = buildBroadcastEmailHtml({
-        resolvedMessage,
-        host,
-        tenantSlug,
-        recipientEmail: email,
-      })
-      try {
-        await transporter.sendMail({
-          from: gmailSenderEmail,
-          to: email,
-          subject,
-          html,
-        })
-      } catch (emailError: unknown) {
-        const message = emailError instanceof Error ? emailError.message : String(emailError)
-        payload.logger.error({ err: emailError }, `Gmail broadcast failed for ${email}`)
-        throw new Error(`Email delivery failed for ${email}: ${message}`)
-      }
-    }
-    return
-  }
+  const { payload, activeEmails, subject, resolvedMessage, host, tenantSlug } = params
+  const unsubscribeSecret = process.env.PAYLOAD_SECRET || "fallback-secret"
 
   for (const email of activeEmails) {
     const html = buildBroadcastEmailHtml({
@@ -72,7 +20,9 @@ export async function sendBroadcastEmails(params: {
       host,
       tenantSlug,
       recipientEmail: email,
+      unsubscribeSecret,
     })
+
     try {
       await payload.sendEmail({
         to: email,
@@ -82,6 +32,64 @@ export async function sendBroadcastEmails(params: {
     } catch (emailError: unknown) {
       const message = emailError instanceof Error ? emailError.message : String(emailError)
       payload.logger.error({ err: emailError }, `Broadcast email delivery failed for ${email}`)
+      throw new Error(`Email delivery failed for ${email}: ${message}`)
+    }
+  }
+}
+
+export async function sendBroadcastEmailsViaGmail(params: {
+  payload: Payload
+  gmailRefreshToken: string
+  gmailSenderEmail: string
+  activeEmails: string[]
+  subject: string
+  resolvedMessage: string
+  host: string
+  tenantSlug: string
+}): Promise<void> {
+  const {
+    payload,
+    gmailRefreshToken,
+    gmailSenderEmail,
+    activeEmails,
+    subject,
+    resolvedMessage,
+    host,
+    tenantSlug,
+  } = params
+
+  const { clientId, clientSecret } = getGoogleOAuthConfig()
+  const unsubscribeSecret = process.env.PAYLOAD_SECRET || "fallback-secret"
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      type: "OAuth2",
+      user: gmailSenderEmail,
+      clientId,
+      clientSecret,
+      refreshToken: gmailRefreshToken,
+    },
+  })
+
+  for (const email of activeEmails) {
+    const html = buildBroadcastEmailHtml({
+      resolvedMessage,
+      host,
+      tenantSlug,
+      recipientEmail: email,
+      unsubscribeSecret,
+    })
+
+    try {
+      await transporter.sendMail({
+        from: gmailSenderEmail,
+        to: email,
+        subject,
+        html,
+      })
+    } catch (emailError: unknown) {
+      const message = emailError instanceof Error ? emailError.message : String(emailError)
+      payload.logger.error({ err: emailError }, `Gmail broadcast failed for ${email}`)
       throw new Error(`Email delivery failed for ${email}: ${message}`)
     }
   }
