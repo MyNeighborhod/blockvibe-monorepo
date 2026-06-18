@@ -6,7 +6,7 @@ import { runEmailSrvMigrations } from "../src/migrations/index.js"
 
 const packageRoot = path.dirname(fileURLToPath(import.meta.url))
 
-dotenv.config({ path: path.resolve(packageRoot, "../../apps/payload-web/.env") })
+dotenv.config({ path: path.resolve(packageRoot, "../../../apps/payload-web/.env") })
 dotenv.config({ path: path.resolve(packageRoot, "../.env") })
 
 async function main() {

@@ -310,7 +310,9 @@ Package: `packages/email-srv` · Table: **`email_srv.email_account`**
 | `connected_at` | Last connect time |
 | `connected_by_user_id` | Admin who authorized |
 
-Schema is managed with **Drizzle** (`packages/email-srv`). Run migrations before deploy or local dev:
+Schema is managed with **Drizzle** (`packages/email-srv`). See **[packages/email-srv/README.md](../../../../packages/email-srv/README.md)** for local, staging, and production migration steps.
+
+Quick local run:
 
 ```bash
 pnpm --filter @blockvibe/email-srv db:migrate

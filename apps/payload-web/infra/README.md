@@ -20,7 +20,7 @@ pnpm test:e2e:prod   # optional full suite
 
 - Deploy ships **your local working tree** (Docker build from disk). Commit/push to GitHub is separate — the server does not `git pull`.
 - `deploy.sh` uploads `.env.production` → server `.env` on every run. Edit secrets locally before deploying if they changed.
-- `deploy.sh` does **not** seed Postgres or run migrations. After schema changes, see [production-flows.md](../docs/deployment/production-flows.md).
+- `deploy.sh` does **not** seed Postgres or run migrations. After Payload schema changes, see [production-flows.md](../docs/deployment/production-flows.md). After **`email_srv`** schema changes (Gmail OAuth), run [email-srv migrations](../../packages/email-srv/README.md#staging) via SSH tunnel before deploy.
 - New tenant subdomain? Add the hostname to `infra/Caddyfile`, then deploy.
 
 **Staging:** same flow with `./infra/deploy.sh --staging --skip-media` (uses `.env.staging`, `nog.staging.blockvibe.org`, etc.).
@@ -57,7 +57,7 @@ This builds the Docker image **on your machine** (not on EC2), syncs media, uplo
 5. Rsyncs `public/media/` to EBS (unless `--skip-media`)
 6. On EC2: `docker load`, `docker compose down && up -d`, reload Caddy
 
-**Requires:** Docker Desktop running, SSH key at `~/.ssh/blockvibe_id_rsa` or `infra/id_rsa`, and `terraform apply` completed once in `infra/`.
+**Requires:** Docker Desktop running, SSH key at `~/.ssh/blockvibes_id_rsa` or `infra/id_rsa`, and `terraform apply` completed once in `infra/`.
 
 ### Local DB → production (source of truth)
 
