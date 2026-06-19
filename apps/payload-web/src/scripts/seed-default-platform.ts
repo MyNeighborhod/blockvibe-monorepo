@@ -10,12 +10,7 @@ import dotenv from "dotenv"
 dotenv.config()
 
 import { getPayload } from "payload"
-import {
-  getNogShowcaseUrl,
-  lexicalRichText,
-  richHeading,
-  richParagraph,
-} from "./seed-helpers"
+import { getNogShowcaseUrl, lexicalRichText, richHeading, richParagraph } from "./seed-helpers"
 
 async function run() {
   const configPromise = (await import("../payload.config")).default

@@ -12,7 +12,10 @@ export const TenantEmailQuotas: CollectionConfig = {
       if (!user) return false
       if ((user as any).role === "superadmin") return true
 
-      const userTenants = (user as any).tenants?.map((t: any) => typeof t.tenant === "object" ? t.tenant.id : t.tenant) || []
+      const userTenants =
+        (user as any).tenants?.map((t: any) =>
+          typeof t.tenant === "object" ? t.tenant.id : t.tenant,
+        ) || []
       return {
         tenant: {
           in: userTenants,

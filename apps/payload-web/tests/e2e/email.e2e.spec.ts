@@ -60,14 +60,16 @@ test.describe("Email Broadcaster Campaign E2E Flow", () => {
     const targetEmail = "eugen8@gmail.com"
     await expectResidentListed(adminPage, targetEmail)
     const checkbox = adminPage.locator(`input[id="resident-checkbox-${targetEmail}"]`)
-    
+
     // Ensure it is checked
     if (!(await checkbox.isChecked())) {
       await checkbox.check()
     }
 
     // Ensure other checkboxes (like john or johanna neighbor) are unchecked
-    const otherCheckboxes = adminPage.locator("input[type='checkbox']").and(adminPage.locator(`:not([id="resident-checkbox-${targetEmail}"])`))
+    const otherCheckboxes = adminPage
+      .locator("input[type='checkbox']")
+      .and(adminPage.locator(`:not([id="resident-checkbox-${targetEmail}"])`))
     const count = await otherCheckboxes.count()
     for (let i = 0; i < count; i++) {
       const cb = otherCheckboxes.nth(i)
@@ -81,7 +83,7 @@ test.describe("Email Broadcaster Campaign E2E Flow", () => {
 
     // 5. Compose the communication details
     await adminPage.fill("input[id='broadcast-subject']", "Important NOG Community Update")
-    
+
     // Focus the editor and insert rich text with a small picture (20x20 blue square)
     const editor = adminPage.locator("[id='broadcast-message']")
     await editor.focus()
@@ -104,7 +106,9 @@ test.describe("Email Broadcaster Campaign E2E Flow", () => {
 
     // 7. Assert success notification (supports either inline SES or async worker)
     await expect(
-      adminPage.locator("text=/Communication sent successfully to 1 residents|Broadcast queued for 1 recipient/i")
+      adminPage.locator(
+        "text=/Communication sent successfully to 1 residents|Broadcast queued for 1 recipient/i",
+      ),
     ).toBeVisible()
 
     // 8. Local database validation (check that broadcast was correctly logged)
@@ -119,7 +123,9 @@ test.describe("Email Broadcaster Campaign E2E Flow", () => {
       expect(broadcastsResult.docs.length).toBe(1)
       const broadcastDoc = broadcastsResult.docs[0]
       expect(broadcastDoc.subject).toBe("Important NOG Community Update")
-      expect(broadcastDoc.message).toContain("Hello, this is an <strong>official community announcement</strong>")
+      expect(broadcastDoc.message).toContain(
+        "Hello, this is an <strong>official community announcement</strong>",
+      )
       // Check that recipients JSON field contains our target email
       expect(JSON.stringify(broadcastDoc.recipients)).toContain("eugen8@gmail.com")
     }

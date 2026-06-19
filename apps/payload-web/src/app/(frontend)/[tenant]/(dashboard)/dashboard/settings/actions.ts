@@ -37,7 +37,7 @@ export async function disconnectGmailAction(tenantId: number) {
 
 export async function updateEmailDeliveryDefaultAction(
   tenantId: number,
-  delivery: EmailDeliveryMethod
+  delivery: EmailDeliveryMethod,
 ) {
   try {
     const { user } = await getMeUser()

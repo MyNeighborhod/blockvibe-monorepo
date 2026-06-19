@@ -3,7 +3,7 @@ import { getUserTenantIds, isSuperAdmin } from "@/access/roles"
 
 export function assertCanManageTenantEmailSettings(
   user: User | null | undefined,
-  tenantId: number
+  tenantId: number,
 ): void {
   if (!user) {
     throw new Error("You must be logged in.")

@@ -100,9 +100,9 @@ pnpm exec playwright test tests/e2e/multitenant.e2e.spec.ts --config=playwright.
 
 #### Running all tests
 
-| Target | Headless | UI mode |
-| ------ | -------- | ------- |
-| **Local** (`http://localhost:3000`) | `pnpm test:e2e` | `pnpm test:e2e:ui` |
+| Target                                  | Headless             | UI mode                 |
+| --------------------------------------- | -------------------- | ----------------------- |
+| **Local** (`http://localhost:3000`)     | `pnpm test:e2e`      | `pnpm test:e2e:ui`      |
 | **Prod** (`https://info.blockvibe.org`) | `pnpm test:e2e:prod` | `pnpm test:e2e:prod:ui` |
 
 Both commands run **all** specs in `tests/e2e/` (admin, dashboard, invite, multitenant, platform, frontend, legal, neighbor).

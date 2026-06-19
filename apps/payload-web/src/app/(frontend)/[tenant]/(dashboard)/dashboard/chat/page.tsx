@@ -33,7 +33,8 @@ export default async function ChatDashboard({ params }: Args) {
           Platform AI Assistant
         </h1>
         <p className="text-muted-foreground">
-          Ask questions about the BlockVibe platform, configuration, and site management. Paste screenshots directly into the chat for troubleshooting support.
+          Ask questions about the BlockVibe platform, configuration, and site management. Paste
+          screenshots directly into the chat for troubleshooting support.
         </p>
       </div>
 

@@ -6,7 +6,14 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card"
 import { sendBroadcastAction, uploadBroadcastImageAction } from "./actions"
 import { DEFAULT_BROADCAST_MESSAGE_HTML } from "./broadcastDefaults"
 import { RichTextEditor } from "@/components/RichTextEditor"
@@ -57,7 +64,7 @@ export function BroadcastForm({
 
   const handleToggleEmail = (email: string) => {
     setSelectedEmails((prev) =>
-      prev.includes(email) ? prev.filter((e) => e !== email) : [...prev, email]
+      prev.includes(email) ? prev.filter((e) => e !== email) : [...prev, email],
     )
   }
 
@@ -76,27 +83,19 @@ export function BroadcastForm({
     setSuccess(null)
 
     try {
-      const res = await sendBroadcastAction(
-        selectedEmails,
-        subject,
-        message,
-        tenantId,
-        delivery
-      )
+      const res = await sendBroadcastAction(selectedEmails, subject, message, tenantId, delivery)
       if (res.success) {
         const count = res.count
         if ("queued" in res && res.queued) {
           setSuccess(
-            `Broadcast queued for ${count} recipient${count === 1 ? "" : "s"}. Check the delivery log for results.`
+            `Broadcast queued for ${count} recipient${count === 1 ? "" : "s"}. Check the delivery log for results.`,
           )
         } else if ("failedCount" in res && res.failedCount && res.failedCount > 0) {
-          const sentCount = "sentCount" in res ? res.sentCount ?? count : count
-          setSuccess(
-            `Sent ${sentCount} of ${count}. ${res.failedCount} failed — see delivery log.`
-          )
+          const sentCount = "sentCount" in res ? (res.sentCount ?? count) : count
+          setSuccess(`Sent ${sentCount} of ${count}. ${res.failedCount} failed — see delivery log.`)
         } else {
           setSuccess(
-            `Communication sent successfully to ${count} residents via ${delivery === "gmail" ? "Gmail" : "SES"}!`
+            `Communication sent successfully to ${count} residents via ${delivery === "gmail" ? "Gmail" : "SES"}!`,
           )
         }
         setSubject("")
@@ -131,7 +130,9 @@ export function BroadcastForm({
         <Card className="md:col-span-1 backdrop-blur-md bg-card/60 border border-border/40">
           <CardHeader>
             <CardTitle className="font-sans text-lg">Select Residents</CardTitle>
-            <CardDescription>Choose which community residents will receive this broadcast.</CardDescription>
+            <CardDescription>
+              Choose which community residents will receive this broadcast.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between pb-2 border-b border-border/40">
@@ -150,7 +151,9 @@ export function BroadcastForm({
             </div>
             <div className="max-h-96 overflow-y-auto space-y-2 pr-1">
               {residents.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">No residents found.</p>
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No residents found.
+                </p>
               ) : (
                 residents.map((resident) => {
                   const isChecked = selectedEmails.includes(resident.email)
@@ -158,7 +161,9 @@ export function BroadcastForm({
                     <div
                       key={resident.email}
                       className={`flex items-start gap-3 p-2 rounded-lg border transition-colors ${
-                        isChecked ? "bg-primary/5 border-primary/20" : "bg-transparent border-border/20"
+                        isChecked
+                          ? "bg-primary/5 border-primary/20"
+                          : "bg-transparent border-border/20"
                       }`}
                     >
                       <input
@@ -172,7 +177,9 @@ export function BroadcastForm({
                         htmlFor={`resident-checkbox-${resident.email}`}
                         className="flex flex-col gap-0.5 cursor-pointer text-sm font-normal text-foreground select-none flex-1"
                       >
-                        <span className="font-medium text-foreground">{resident.name || "Unnamed Resident"}</span>
+                        <span className="font-medium text-foreground">
+                          {resident.name || "Unnamed Resident"}
+                        </span>
                         <span className="text-xs text-muted-foreground">{resident.email}</span>
                       </Label>
                     </div>
@@ -187,7 +194,9 @@ export function BroadcastForm({
         <Card className="md:col-span-2 backdrop-blur-md bg-card/60 border border-border/40">
           <CardHeader>
             <CardTitle className="font-sans text-lg">Compose Announcement</CardTitle>
-            <CardDescription>Write the subject and message body for the email campaign.</CardDescription>
+            <CardDescription>
+              Write the subject and message body for the email campaign.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2 pb-4 border-b border-border/40">
@@ -247,7 +256,11 @@ export function BroadcastForm({
             </div>
           </CardContent>
           <CardFooter className="flex justify-end gap-2 border-t border-border/40 pt-4">
-            <Button type="submit" disabled={loading || selectedEmails.length === 0} className="font-medium">
+            <Button
+              type="submit"
+              disabled={loading || selectedEmails.length === 0}
+              className="font-medium"
+            >
               {loading ? "Sending Broadcast..." : "Send Communication"}
             </Button>
           </CardFooter>

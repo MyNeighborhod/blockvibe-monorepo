@@ -130,7 +130,7 @@ export interface GoogleTokenResponse {
 
 export async function exchangeGoogleAuthCode(
   code: string,
-  request?: Request
+  request?: Request,
 ): Promise<GoogleTokenResponse> {
   const { clientId, clientSecret } = getGoogleOAuthConfig()
   const response = await fetch("https://oauth2.googleapis.com/token", {
@@ -145,7 +145,10 @@ export async function exchangeGoogleAuthCode(
     }),
   })
 
-  const data = (await response.json()) as GoogleTokenResponse & { error?: string; error_description?: string }
+  const data = (await response.json()) as GoogleTokenResponse & {
+    error?: string
+    error_description?: string
+  }
   if (!response.ok) {
     const message = data.error_description || data.error || "Token exchange failed."
     throw new Error(message)

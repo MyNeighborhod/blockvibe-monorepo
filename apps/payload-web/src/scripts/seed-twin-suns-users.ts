@@ -44,8 +44,7 @@ async function run() {
     {
       name: "Twin Suns Contributor",
       email:
-        process.env.TENANT_TWIN_SUNS_CONTRIBUTOR_USERNAME ||
-        "contributor@twin-suns.blockvibe.org",
+        process.env.TENANT_TWIN_SUNS_CONTRIBUTOR_USERNAME || "contributor@twin-suns.blockvibe.org",
       password: process.env.TENANT_TWIN_SUNS_CONTRIBUTOR_PASSWORD || "contrib1234",
       role: "contributor" as const,
       isNeighbor: true,

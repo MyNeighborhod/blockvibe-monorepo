@@ -77,14 +77,18 @@ export default function ResubscribePage({ params }: PageProps) {
             )}
           </div>
           <CardTitle className="text-3xl font-serif">
-            {loading ? "Processing Request" : success ? "Resubscribed Successfully" : "Unable to Resubscribe"}
+            {loading
+              ? "Processing Request"
+              : success
+                ? "Resubscribed Successfully"
+                : "Unable to Resubscribe"}
           </CardTitle>
           <CardDescription className="text-muted-foreground/80 mt-2">
             {loading
               ? "We are restoring your email preferences..."
               : success
-              ? "You will receive broadcast emails from this neighborhood again."
-              : "We encountered an error processing your resubscribe request."}
+                ? "You will receive broadcast emails from this neighborhood again."
+                : "We encountered an error processing your resubscribe request."}
           </CardDescription>
         </CardHeader>
 
@@ -96,7 +100,8 @@ export default function ResubscribePage({ params }: PageProps) {
           )}
           {!loading && success && (
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Your email <strong className="text-foreground">{email}</strong> has been added back to our active announcement list.
+              Your email <strong className="text-foreground">{email}</strong> has been added back to
+              our active announcement list.
             </p>
           )}
           {!loading && error && (

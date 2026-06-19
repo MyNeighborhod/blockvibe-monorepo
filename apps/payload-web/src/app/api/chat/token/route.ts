@@ -26,7 +26,7 @@ export async function GET() {
         email: user.email,
       },
       secret,
-      { expiresIn: "15m" }
+      { expiresIn: "15m" },
     )
 
     return NextResponse.json({ token })

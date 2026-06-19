@@ -77,14 +77,18 @@ export default function UnsubscribePage({ params }: PageProps) {
             )}
           </div>
           <CardTitle className="text-3xl font-serif">
-            {loading ? "Processing Request" : success ? "Unsubscribed Successfully" : "Unable to Unsubscribe"}
+            {loading
+              ? "Processing Request"
+              : success
+                ? "Unsubscribed Successfully"
+                : "Unable to Unsubscribe"}
           </CardTitle>
           <CardDescription className="text-muted-foreground/80 mt-2">
             {loading
               ? "We are processing your opt-out request..."
               : success
-              ? "You will no longer receive broadcast emails from this neighborhood."
-              : "We encountered an error processing your unsubscribe request."}
+                ? "You will no longer receive broadcast emails from this neighborhood."
+                : "We encountered an error processing your unsubscribe request."}
           </CardDescription>
         </CardHeader>
 
@@ -96,7 +100,8 @@ export default function UnsubscribePage({ params }: PageProps) {
           )}
           {!loading && success && (
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Your email <strong className="text-foreground">{email}</strong> has been removed from our active announcement list.
+              Your email <strong className="text-foreground">{email}</strong> has been removed from
+              our active announcement list.
             </p>
           )}
           {!loading && error && (

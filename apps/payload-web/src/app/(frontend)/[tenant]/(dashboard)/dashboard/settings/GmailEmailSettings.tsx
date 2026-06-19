@@ -35,17 +35,15 @@ export function GmailEmailSettings({
   const [delivery, setDelivery] = useState<EmailDeliveryMethod>(emailDeliveryDefault || "ses")
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(
-    flash?.type === "error"
-      ? flash.detail || mapGoogleOAuthError(flash.code)
-      : null
+    flash?.type === "error" ? flash.detail || mapGoogleOAuthError(flash.code) : null,
   )
   const [success, setSuccess] = useState<string | null>(
-    flash?.type === "success" ? "Gmail connected successfully." : null
+    flash?.type === "success" ? "Gmail connected successfully." : null,
   )
   const [isPending, startTransition] = useTransition()
 
   const connectUrl = `/api/integrations/gmail/connect?tenantId=${tenantId}&tenantSlug=${encodeURIComponent(
-    tenantSlug
+    tenantSlug,
   )}`
 
   const handleDisconnect = () => {
@@ -82,12 +80,15 @@ export function GmailEmailSettings({
       <CardHeader>
         <CardTitle className="font-sans">Email delivery</CardTitle>
         <CardDescription>
-          Send broadcasts from the platform address (SES) or your neighborhood&apos;s connected Gmail.
+          Send broadcasts from the platform address (SES) or your neighborhood&apos;s connected
+          Gmail.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {error && (
-          <div className="p-3 rounded-lg border border-error bg-error/10 text-error text-sm">{error}</div>
+          <div className="p-3 rounded-lg border border-error bg-error/10 text-error text-sm">
+            {error}
+          </div>
         )}
         {success && (
           <div className="p-3 rounded-lg border border-success bg-success/10 text-success text-sm">
@@ -192,7 +193,9 @@ export function GmailEmailSettings({
                   {callbackUrl}
                 </code>
               </li>
-              <li>Enable Gmail API and add scope <code>gmail.send</code> under Data Access.</li>
+              <li>
+                Enable Gmail API and add scope <code>gmail.send</code> under Data Access.
+              </li>
               <li>
                 JavaScript origins use the site root only (no path): e.g.{" "}
                 <code>http://localhost:3000</code>

@@ -11,7 +11,7 @@ export type TenantEmailAccount = EmailAccountRecord
 export { isEmailAccountConnected }
 
 export async function getEmailAccountForTenant(
-  tenantId: number
+  tenantId: number,
 ): Promise<TenantEmailAccount | null> {
   return getEmailAccountByTenantId(tenantId)
 }

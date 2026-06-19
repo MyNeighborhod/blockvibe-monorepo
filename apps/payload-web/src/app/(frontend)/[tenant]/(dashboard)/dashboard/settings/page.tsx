@@ -3,7 +3,11 @@ import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 import { getMeUser } from "@/utilities/getMeUser"
 import { getTenantBySlug } from "@/utilities/getGlobals"
-import { getGmailCallbackUrl, isGoogleOAuthConfigured, mapGoogleOAuthError } from "@/utilities/gmailOAuth"
+import {
+  getGmailCallbackUrl,
+  isGoogleOAuthConfigured,
+  mapGoogleOAuthError,
+} from "@/utilities/gmailOAuth"
 import { getEmailAccountForTenant } from "@/utilities/emailSrvAccount"
 import { GmailEmailSettings } from "./GmailEmailSettings"
 

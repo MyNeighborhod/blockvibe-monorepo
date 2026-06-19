@@ -3,7 +3,13 @@ import type { Metadata } from "next"
 import { cn } from "@/utilities/ui"
 import { GeistMono } from "geist/font/mono"
 import { GeistSans } from "geist/font/sans"
-import { Playfair_Display, Gentium_Book_Plus, Montserrat, Quicksand, Nunito } from "next/font/google"
+import {
+  Playfair_Display,
+  Gentium_Book_Plus,
+  Montserrat,
+  Quicksand,
+  Nunito,
+} from "next/font/google"
 import React from "react"
 import fs from "fs"
 import path from "path"

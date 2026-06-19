@@ -50,12 +50,16 @@ if (requestedFile) {
       if (fs.existsSync(localDir)) {
         fs.readdirSync(localDir)
           .filter((file) => file.startsWith("snapshot_") && file.endsWith(".sql"))
-          .forEach((file) => allFiles.push({ name: `local/${file}`, path: path.join(localDir, file) }))
+          .forEach((file) =>
+            allFiles.push({ name: `local/${file}`, path: path.join(localDir, file) }),
+          )
       }
       if (fs.existsSync(prodDir)) {
         fs.readdirSync(prodDir)
           .filter((file) => file.startsWith("snapshot_") && file.endsWith(".sql"))
-          .forEach((file) => allFiles.push({ name: `prod/${file}`, path: path.join(prodDir, file) }))
+          .forEach((file) =>
+            allFiles.push({ name: `prod/${file}`, path: path.join(prodDir, file) }),
+          )
       }
 
       const matches = allFiles.filter((file) => file.name.includes(requestedFile))
@@ -78,7 +82,8 @@ if (requestedFile) {
 } else {
   // Default: Get the latest snapshot file from the local directory
   const localFiles = fs.existsSync(localDir)
-    ? fs.readdirSync(localDir)
+    ? fs
+        .readdirSync(localDir)
         .filter((file) => file.startsWith("snapshot_") && file.endsWith(".sql"))
         .sort((a, b) => b.localeCompare(a))
     : []

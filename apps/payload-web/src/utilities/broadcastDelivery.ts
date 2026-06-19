@@ -6,7 +6,7 @@ export async function finalizeBroadcastDeliveryLog(
   payload: Payload,
   broadcastId: number,
   result: BroadcastDeliveryResult,
-  jobId?: string
+  jobId?: string,
 ): Promise<void> {
   await payload.update({
     collection: "broadcasts",

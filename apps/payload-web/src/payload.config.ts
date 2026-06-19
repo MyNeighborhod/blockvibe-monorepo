@@ -32,8 +32,8 @@ export default buildConfig({
       // The `BeforeDashboard` component renders the 'welcome' block that you see after logging into your admin panel.
       // Feel free to delete this at any time. Simply remove the line below.
       beforeDashboard: ["@/components/BeforeDashboard"],
-      // Render the floating documentation chat button in the admin nav panel
-      afterNav: ["@/components/AdminChatButton"],
+      // Render the floating documentation chat provider wrapping the admin panel
+      providers: ["@/components/AdminChatButton"],
     },
     importMap: {
       baseDir: path.resolve(dirname),
@@ -84,7 +84,19 @@ export default buildConfig({
         : undefined,
     },
   }),
-  collections: [Pages, Posts, Media, Categories, Users, Tenants, Header, Footer, Invites, TenantEmailQuotas, Broadcasts],
+  collections: [
+    Pages,
+    Posts,
+    Media,
+    Categories,
+    Users,
+    Tenants,
+    Header,
+    Footer,
+    Invites,
+    TenantEmailQuotas,
+    Broadcasts,
+  ],
   cors: [getServerSideURL()].filter(Boolean),
   globals: [],
   plugins,

@@ -33,7 +33,7 @@ export function ChatInterface({ chatServiceUrl }: ChatInterfaceProps) {
   const [token, setToken] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  
+
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -177,21 +177,18 @@ export function ChatInterface({ chatServiceUrl }: ChatInterfaceProps) {
 
   // Simple Regex-based Markdown to HTML renderer for clean UI representation
   const renderMessageContent = (text: string) => {
-    let formatted = text
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      
+    let formatted = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+
     // Code Blocks (```code```)
     formatted = formatted.replace(
       /```([\s\S]*?)```/g,
-      '<pre class="bg-zinc-950 text-zinc-100 p-4 rounded-lg my-2 font-mono text-sm overflow-x-auto border border-zinc-800">$1</pre>'
+      '<pre class="bg-zinc-950 text-zinc-100 p-4 rounded-lg my-2 font-mono text-sm overflow-x-auto border border-zinc-800">$1</pre>',
     )
 
     // Inline Code (`code`)
     formatted = formatted.replace(
       /`([^`]+)`/g,
-      '<code class="bg-muted px-1.5 py-0.5 rounded font-mono text-sm border border-border/40">$1</code>'
+      '<code class="bg-muted px-1.5 py-0.5 rounded font-mono text-sm border border-border/40">$1</code>',
     )
 
     // Bold (**text**)
@@ -203,7 +200,7 @@ export function ChatInterface({ chatServiceUrl }: ChatInterfaceProps) {
     // Attributions (answered by Gemini/Cursor)
     formatted = formatted.replace(
       /\((answered by [^)]+)\)/gi,
-      '<span class="text-xs text-muted-foreground block mt-2 italic border-t border-border/40 pt-1">$1</span>'
+      '<span class="text-xs text-muted-foreground block mt-2 italic border-t border-border/40 pt-1">$1</span>',
     )
 
     // Newlines to line breaks (excluding pre/li blocks)
@@ -217,7 +214,10 @@ export function ChatInterface({ chatServiceUrl }: ChatInterfaceProps) {
       {/* Scope Warning Bar */}
       <div className="bg-yellow-500/10 border-b border-yellow-500/20 px-4 py-2 flex items-center gap-2 text-xs text-yellow-600 dark:text-yellow-400">
         <AlertTriangle className="h-4 w-4 flex-shrink-0" />
-        <span>This assistant is under a strict SOP. It is restricted to answering questions related to BlockVibe documentation and site management.</span>
+        <span>
+          This assistant is under a strict SOP. It is restricted to answering questions related to
+          BlockVibe documentation and site management.
+        </span>
       </div>
 
       {/* Messages Feed */}
@@ -254,8 +254,15 @@ export function ChatInterface({ chatServiceUrl }: ChatInterfaceProps) {
               {msg.experimental_attachments && msg.experimental_attachments.length > 0 && (
                 <div className="flex flex-wrap gap-2 justify-end">
                   {msg.experimental_attachments.map((att, i) => (
-                    <div key={i} className="border border-border/40 rounded-lg overflow-hidden max-w-[200px] shadow-sm bg-muted/20">
-                      <img src={att.url} alt="Attachment" className="max-h-[120px] w-auto object-cover" />
+                    <div
+                      key={i}
+                      className="border border-border/40 rounded-lg overflow-hidden max-w-[200px] shadow-sm bg-muted/20"
+                    >
+                      <img
+                        src={att.url}
+                        alt="Attachment"
+                        className="max-h-[120px] w-auto object-cover"
+                      />
                     </div>
                   ))}
                 </div>
@@ -297,7 +304,11 @@ export function ChatInterface({ chatServiceUrl }: ChatInterfaceProps) {
               key={index}
               className="relative border border-border/60 rounded-lg p-1 bg-card flex items-center gap-2 shadow-sm"
             >
-              <img src={att.url} alt="Attachment Preview" className="h-10 w-10 object-cover rounded" />
+              <img
+                src={att.url}
+                alt="Attachment Preview"
+                className="h-10 w-10 object-cover rounded"
+              />
               <div className="text-xs max-w-[120px] truncate pr-4">
                 <p className="font-medium truncate">{att.name}</p>
                 <p className="text-[10px] text-muted-foreground">Screenshot</p>

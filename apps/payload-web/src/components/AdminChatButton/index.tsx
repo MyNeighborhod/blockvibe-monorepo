@@ -5,18 +5,13 @@ import { MessageSquare, X } from "lucide-react"
 import { ChatInterface } from "../../app/(frontend)/[tenant]/(dashboard)/dashboard/chat/ChatInterface"
 import "./index.scss"
 
-export function AdminChatButton() {
+export function AdminChatProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false)
-  const [chatUrl, setChatUrl] = useState("http://localhost:4002")
-
-  useEffect(() => {
-    // Resolve the environment variable on the client
-    const url = process.env.NEXT_PUBLIC_CHAT_SERVICE_URL || "http://localhost:4002"
-    setChatUrl(url)
-  }, [])
+  const chatUrl = process.env.NEXT_PUBLIC_CHAT_SERVICE_URL || "http://localhost:4002"
 
   return (
     <>
+      {children}
       {/* Floating Action Button */}
       <button
         type="button"
@@ -40,7 +35,9 @@ export function AdminChatButton() {
             <div className="admin-chat-drawer-header">
               <div>
                 <h3 className="admin-chat-drawer-title">Documentation AI</h3>
-                <p className="admin-chat-drawer-subtitle">Ask questions about BlockVibe & Site Management</p>
+                <p className="admin-chat-drawer-subtitle">
+                  Ask questions about BlockVibe & Site Management
+                </p>
               </div>
               <button
                 type="button"
@@ -62,4 +59,4 @@ export function AdminChatButton() {
   )
 }
 
-export default AdminChatButton
+export default AdminChatProvider

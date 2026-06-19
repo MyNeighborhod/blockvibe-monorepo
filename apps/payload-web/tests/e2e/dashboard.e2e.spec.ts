@@ -200,11 +200,7 @@ test.describe("Frontend Tenant Dashboard & Auth E2E Tests", () => {
     const context = await browser.newContext({ baseURL: twinSunsBaseURL })
     const page = await context.newPage()
 
-    await loginFrontendTenant(
-      page,
-      "contributor@twin-suns.blockvibe.org",
-      "contrib1234",
-    )
+    await loginFrontendTenant(page, "contributor@twin-suns.blockvibe.org", "contrib1234")
     await expect(page.locator("text=Twin Suns Contributor").first()).toBeVisible()
     await expect(page.getByText("contributor", { exact: true })).toBeVisible()
     await expect(page.getByText("Neighbor", { exact: true })).toBeVisible()

@@ -1,670 +1,818 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BlockVibe - Aurora Waves Theme</title>
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  
-  <style>
-    /* Global Styles & Design Tokens */
-    :root {
-      --bg-color: #0c0f17;
-      --text-color: #f8fafc;
-      --text-muted: #94a3b8;
-      --accent-color: #fb7185;
-      --accent-glow: #6366f1;
-      --card-bg: rgba(15, 23, 42, 0.55);
-      --card-border: rgba(255, 255, 255, 0.06);
-      --input-bg: rgba(255, 255, 255, 0.04);
-      --font-display: 'Plus Jakarta Sans', sans-serif;
-      --font-body: 'Plus Jakarta Sans', sans-serif;
-    }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BlockVibe - Aurora Waves Theme</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      background-color: var(--bg-color);
-      color: var(--text-color);
-      font-family: var(--font-body);
-      line-height: 1.6;
-      overflow-x: hidden;
-      position: relative;
-      min-height: 100vh;
-    }
-
-    /* Shifting Aurora Mesh Background */
-    body::before {
-      content: '';
-      position: fixed;
-      top: 0; left: 0; width: 100vw; height: 100vh;
-      background: 
-        radial-gradient(circle at 10% 20%, rgba(251, 113, 133, 0.12) 0%, transparent 40%),
-        radial-gradient(circle at 90% 80%, rgba(99, 102, 241, 0.12) 0%, transparent 45%),
-        radial-gradient(circle at 50% 50%, rgba(186, 230, 253, 0.06) 0%, transparent 50%);
-      z-index: -2;
-      animation: auroraMove 20s infinite alternate ease-in-out;
-    }
-    @keyframes auroraMove {
-      0% {
-        transform: scale(1) translate(0px, 0px);
+    <style>
+      /* Global Styles & Design Tokens */
+      :root {
+        --bg-color: #0c0f17;
+        --text-color: #f8fafc;
+        --text-muted: #94a3b8;
+        --accent-color: #fb7185;
+        --accent-glow: #6366f1;
+        --card-bg: rgba(15, 23, 42, 0.55);
+        --card-border: rgba(255, 255, 255, 0.06);
+        --input-bg: rgba(255, 255, 255, 0.04);
+        --font-display: "Plus Jakarta Sans", sans-serif;
+        --font-body: "Plus Jakarta Sans", sans-serif;
       }
-      50% {
-        transform: scale(1.1) translate(20px, -30px);
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
       }
-      100% {
-        transform: scale(0.95) translate(-10px, 10px);
+
+      body {
+        background-color: var(--bg-color);
+        color: var(--text-color);
+        font-family: var(--font-body);
+        line-height: 1.6;
+        overflow-x: hidden;
+        position: relative;
+        min-height: 100vh;
       }
-    }
 
-    /* Layout Wrapper */
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 24px;
-    }
+      /* Shifting Aurora Mesh Background */
+      body::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background:
+          radial-gradient(circle at 10% 20%, rgba(251, 113, 133, 0.12) 0%, transparent 40%),
+          radial-gradient(circle at 90% 80%, rgba(99, 102, 241, 0.12) 0%, transparent 45%),
+          radial-gradient(circle at 50% 50%, rgba(186, 230, 253, 0.06) 0%, transparent 50%);
+        z-index: -2;
+        animation: auroraMove 20s infinite alternate ease-in-out;
+      }
+      @keyframes auroraMove {
+        0% {
+          transform: scale(1) translate(0px, 0px);
+        }
+        50% {
+          transform: scale(1.1) translate(20px, -30px);
+        }
+        100% {
+          transform: scale(0.95) translate(-10px, 10px);
+        }
+      }
 
-    /* Navigation */
-    header {
-      padding: 24px 0;
-      border-bottom: 1px solid var(--card-border);
-      backdrop-filter: blur(16px);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-    .nav-flex {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .logo {
-      font-family: var(--font-display);
-      font-size: 24px;
-      font-weight: 800;
-      color: var(--text-color);
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .logo-wave {
-      display: flex;
-      gap: 3px;
-      align-items: center;
-    }
-    .logo-wave span {
-      display: inline-block;
-      width: 3px;
-      height: 12px;
-      background-color: var(--accent-color);
-      border-radius: 2px;
-    }
-    .logo-wave span:nth-child(2) { height: 18px; background-color: var(--accent-glow); }
-    .logo-wave span:nth-child(3) { height: 14px; background-color: var(--accent-color); }
-    
-    .nav-btn {
-      background: linear-gradient(135deg, rgba(251, 113, 133, 0.1), rgba(99, 102, 241, 0.1));
-      border: 1px solid var(--card-border);
-      color: var(--text-color);
-      padding: 10px 22px;
-      border-radius: 12px;
-      font-family: var(--font-display);
-      font-weight: 600;
-      font-size: 14px;
-      text-decoration: none;
-      transition: all 0.3s ease;
-      backdrop-filter: blur(8px);
-    }
-    .nav-btn:hover {
-      border-color: var(--accent-color);
-      box-shadow: 0 0 20px rgba(251, 113, 133, 0.2);
-    }
+      /* Layout Wrapper */
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
 
-    /* Hero Section */
-    .hero {
-      padding: 100px 0 64px;
-      text-align: center;
-    }
-    h1 {
-      font-family: var(--font-display);
-      font-size: 58px;
-      font-weight: 800;
-      line-height: 1.15;
-      margin-bottom: 24px;
-      letter-spacing: -1.5px;
-      background: linear-gradient(to right, #ffffff, var(--accent-color), var(--accent-glow));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .hero p {
-      font-size: 19px;
-      color: var(--text-muted);
-      max-width: 760px;
-      margin: 0 auto 40px;
-      font-weight: 400;
-    }
+      /* Navigation */
+      header {
+        padding: 24px 0;
+        border-bottom: 1px solid var(--card-border);
+        backdrop-filter: blur(16px);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+      .nav-flex {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .logo {
+        font-family: var(--font-display);
+        font-size: 24px;
+        font-weight: 800;
+        color: var(--text-color);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .logo-wave {
+        display: flex;
+        gap: 3px;
+        align-items: center;
+      }
+      .logo-wave span {
+        display: inline-block;
+        width: 3px;
+        height: 12px;
+        background-color: var(--accent-color);
+        border-radius: 2px;
+      }
+      .logo-wave span:nth-child(2) {
+        height: 18px;
+        background-color: var(--accent-glow);
+      }
+      .logo-wave span:nth-child(3) {
+        height: 14px;
+        background-color: var(--accent-color);
+      }
 
-    /* Action Card */
-    .action-card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 24px;
-      padding: 36px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      text-align: left;
-      backdrop-filter: blur(20px);
-      margin-bottom: 80px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-    }
-    .action-info h3 {
-      font-family: var(--font-display);
-      font-size: 24px;
-      font-weight: 700;
-      margin-bottom: 8px;
-    }
-    .action-info p {
-      color: var(--text-muted);
-      font-size: 15px;
-    }
-    .primary-btn {
-      background: linear-gradient(135deg, var(--accent-color), var(--accent-glow));
-      color: #0c0f17;
-      font-family: var(--font-display);
-      font-weight: 700;
-      padding: 14px 28px;
-      border-radius: 12px;
-      text-decoration: none;
-      border: none;
-      cursor: pointer;
-      box-shadow: 0 4px 15px rgba(251, 113, 133, 0.3);
-      transition: all 0.3s ease;
-      white-space: nowrap;
-    }
-    .primary-btn:hover {
-      box-shadow: 0 4px 25px rgba(251, 113, 133, 0.5);
-      transform: scale(1.02);
-    }
+      .nav-btn {
+        background: linear-gradient(135deg, rgba(251, 113, 133, 0.1), rgba(99, 102, 241, 0.1));
+        border: 1px solid var(--card-border);
+        color: var(--text-color);
+        padding: 10px 22px;
+        border-radius: 12px;
+        font-family: var(--font-display);
+        font-weight: 600;
+        font-size: 14px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(8px);
+      }
+      .nav-btn:hover {
+        border-color: var(--accent-color);
+        box-shadow: 0 0 20px rgba(251, 113, 133, 0.2);
+      }
 
-    /* Features Grid */
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 24px;
-      margin-bottom: 96px;
-    }
-    .feature-card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 20px;
-      padding: 36px;
-      backdrop-filter: blur(16px);
-      transition: all 0.3s ease;
-    }
-    .feature-card:hover {
-      border-color: var(--accent-color);
-      transform: translateY(-2px);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
-    }
-    .feature-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 14px;
-      background: rgba(251, 113, 133, 0.08);
-      border: 1px solid rgba(251, 113, 133, 0.15);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 24px;
-      color: var(--accent-color);
-    }
-    .feature-card h4 {
-      font-family: var(--font-display);
-      font-size: 21px;
-      font-weight: 700;
-      margin-bottom: 12px;
-    }
-    .feature-card p {
-      color: var(--text-muted);
-      font-size: 15px;
-      line-height: 1.6;
-    }
+      /* Hero Section */
+      .hero {
+        padding: 100px 0 64px;
+        text-align: center;
+      }
+      h1 {
+        font-family: var(--font-display);
+        font-size: 58px;
+        font-weight: 800;
+        line-height: 1.15;
+        margin-bottom: 24px;
+        letter-spacing: -1.5px;
+        background: linear-gradient(to right, #ffffff, var(--accent-color), var(--accent-glow));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .hero p {
+        font-size: 19px;
+        color: var(--text-muted);
+        max-width: 760px;
+        margin: 0 auto 40px;
+        font-weight: 400;
+      }
 
-    /* Form Section */
-    .form-section {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 24px;
-      padding: 48px;
-      max-width: 800px;
-      margin: 0 auto 96px;
-      backdrop-filter: blur(20px);
-      box-shadow: 0 15px 35px rgba(0,0,0,0.25);
-    }
-    .form-title {
-      font-family: var(--font-display);
-      font-size: 32px;
-      font-weight: 800;
-      text-align: center;
-      margin-bottom: 12px;
-    }
-    .form-subtitle {
-      text-align: center;
-      color: var(--text-muted);
-      margin-bottom: 32px;
-    }
-    .form-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 20px;
-    }
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .form-group.full-width {
-      grid-column: span 2;
-    }
-    label {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-color);
-      font-family: var(--font-display);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    input {
-      background: var(--input-bg);
-      border: 1px solid var(--card-border);
-      padding: 12px 16px;
-      border-radius: 10px;
-      color: var(--text-color);
-      font-family: var(--font-body);
-      transition: all 0.3s ease;
-    }
-    input:focus {
-      outline: none;
-      border-color: var(--accent-color);
-      background: rgba(255,255,255,0.08);
-      box-shadow: 0 0 12px rgba(251, 113, 133, 0.2);
-    }
-    .captcha-box {
-      background: rgba(15, 23, 42, 0.4);
-      border: 1px solid var(--card-border);
-      padding: 16px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      grid-column: span 2;
-      margin: 8px 0;
-    }
-    .captcha-question {
-      font-family: var(--font-display);
-      font-weight: 700;
-      color: var(--accent-color);
-    }
-    .form-submit-btn {
-      width: 100%;
-      grid-column: span 2;
-      padding: 14px;
-      border-radius: 12px;
-      border: none;
-      font-family: var(--font-display);
-      font-weight: 700;
-      font-size: 16px;
-      background: linear-gradient(135deg, var(--accent-color), var(--accent-glow));
-      color: #0c0f17;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-    .form-submit-btn:hover {
-      box-shadow: 0 4px 20px rgba(251, 113, 133, 0.45);
-      transform: translateY(-1px);
-    }
+      /* Action Card */
+      .action-card {
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 24px;
+        padding: 36px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        text-align: left;
+        backdrop-filter: blur(20px);
+        margin-bottom: 80px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      }
+      .action-info h3 {
+        font-family: var(--font-display);
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+      .action-info p {
+        color: var(--text-muted);
+        font-size: 15px;
+      }
+      .primary-btn {
+        background: linear-gradient(135deg, var(--accent-color), var(--accent-glow));
+        color: #0c0f17;
+        font-family: var(--font-display);
+        font-weight: 700;
+        padding: 14px 28px;
+        border-radius: 12px;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(251, 113, 133, 0.3);
+        transition: all 0.3s ease;
+        white-space: nowrap;
+      }
+      .primary-btn:hover {
+        box-shadow: 0 4px 25px rgba(251, 113, 133, 0.5);
+        transform: scale(1.02);
+      }
 
-    /* Footer */
-    footer {
-      border-top: 1px solid var(--card-border);
-      padding: 40px 0;
-      text-align: center;
-      color: var(--text-muted);
-      font-size: 14px;
-    }
+      /* Features Grid */
+      .features-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 24px;
+        margin-bottom: 96px;
+      }
+      .feature-card {
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 20px;
+        padding: 36px;
+        backdrop-filter: blur(16px);
+        transition: all 0.3s ease;
+      }
+      .feature-card:hover {
+        border-color: var(--accent-color);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+      }
+      .feature-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        background: rgba(251, 113, 133, 0.08);
+        border: 1px solid rgba(251, 113, 133, 0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 24px;
+        color: var(--accent-color);
+      }
+      .feature-card h4 {
+        font-family: var(--font-display);
+        font-size: 21px;
+        font-weight: 700;
+        margin-bottom: 12px;
+      }
+      .feature-card p {
+        color: var(--text-muted);
+        font-size: 15px;
+        line-height: 1.6;
+      }
 
-    /* ==========================================================================
+      /* Form Section */
+      .form-section {
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 24px;
+        padding: 48px;
+        max-width: 800px;
+        margin: 0 auto 96px;
+        backdrop-filter: blur(20px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+      }
+      .form-title {
+        font-family: var(--font-display);
+        font-size: 32px;
+        font-weight: 800;
+        text-align: center;
+        margin-bottom: 12px;
+      }
+      .form-subtitle {
+        text-align: center;
+        color: var(--text-muted);
+        margin-bottom: 32px;
+      }
+      .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+      }
+      .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .form-group.full-width {
+        grid-column: span 2;
+      }
+      label {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-color);
+        font-family: var(--font-display);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      input {
+        background: var(--input-bg);
+        border: 1px solid var(--card-border);
+        padding: 12px 16px;
+        border-radius: 10px;
+        color: var(--text-color);
+        font-family: var(--font-body);
+        transition: all 0.3s ease;
+      }
+      input:focus {
+        outline: none;
+        border-color: var(--accent-color);
+        background: rgba(255, 255, 255, 0.08);
+        box-shadow: 0 0 12px rgba(251, 113, 133, 0.2);
+      }
+      .captcha-box {
+        background: rgba(15, 23, 42, 0.4);
+        border: 1px solid var(--card-border);
+        padding: 16px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        grid-column: span 2;
+        margin: 8px 0;
+      }
+      .captcha-question {
+        font-family: var(--font-display);
+        font-weight: 700;
+        color: var(--accent-color);
+      }
+      .form-submit-btn {
+        width: 100%;
+        grid-column: span 2;
+        padding: 14px;
+        border-radius: 12px;
+        border: none;
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 16px;
+        background: linear-gradient(135deg, var(--accent-color), var(--accent-glow));
+        color: #0c0f17;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+      .form-submit-btn:hover {
+        box-shadow: 0 4px 20px rgba(251, 113, 133, 0.45);
+        transform: translateY(-1px);
+      }
+
+      /* Footer */
+      footer {
+        border-top: 1px solid var(--card-border);
+        padding: 40px 0;
+        text-align: center;
+        color: var(--text-muted);
+        font-size: 14px;
+      }
+
+      /* ==========================================================================
        DESIGN DOC FLOATING SIDEBAR
        ========================================================================== */
-    .design-doc-trigger {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      width: 56px;
-      height: 56px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--accent-color), var(--accent-glow));
-      color: #0c0f17;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      box-shadow: 0 4px 20px rgba(251, 113, 133, 0.3);
-      z-index: 1000;
-      transition: all 0.3s ease;
-      border: none;
-    }
-    .design-doc-trigger:hover {
-      transform: scale(1.05);
-      box-shadow: 0 6px 25px rgba(251, 113, 133, 0.5);
-    }
-    .design-sidebar {
-      position: fixed;
-      top: 0;
-      right: -400px;
-      width: 400px;
-      height: 100%;
-      background: rgba(12, 15, 23, 0.95);
-      backdrop-filter: blur(20px);
-      border-left: 1px solid var(--card-border);
-      box-shadow: -10px 0 30px rgba(0,0,0,0.5);
-      z-index: 1001;
-      padding: 40px 32px;
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
-      transition: right 0.3s ease;
-      overflow-y: auto;
-    }
-    .design-sidebar.open {
-      right: 0;
-    }
-    .sidebar-close {
-      align-self: flex-end;
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      cursor: pointer;
-      font-size: 24px;
-      transition: color 0.2s;
-    }
-    .sidebar-close:hover {
-      color: var(--text-color);
-    }
-    .sidebar-title {
-      font-family: var(--font-display);
-      font-size: 22px;
-      font-weight: 800;
-      color: var(--text-color);
-      margin-bottom: 4px;
-    }
-    .sidebar-section {
-      border-top: 1px solid var(--card-border);
-      padding-top: 20px;
-    }
-    .sidebar-section h5 {
-      font-family: var(--font-display);
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--accent-color);
-      margin-bottom: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .sidebar-section p, .sidebar-section li {
-      font-size: 14px;
-      color: var(--text-muted);
-      line-height: 1.6;
-    }
-    .sidebar-section ul {
-      list-style-type: none;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .palette-box {
-      display: flex;
-      gap: 8px;
-      margin-top: 12px;
-    }
-    .palette-color {
-      flex: 1;
-      height: 32px;
-      border-radius: 6px;
-      border: 1px solid rgba(255,255,255,0.1);
-    }
-    .portal-link {
-      margin-top: auto;
-      display: block;
-      text-align: center;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid var(--card-border);
-      color: var(--text-color);
-      padding: 12px;
-      border-radius: 10px;
-      text-decoration: none;
-      font-family: var(--font-display);
-      font-weight: 700;
-      transition: all 0.2s;
-    }
-    .portal-link:hover {
-      background: var(--accent-color);
-      color: #0c0f17;
-      border-color: var(--accent-color);
-    }
-    .backdrop-overlay {
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.4);
-      z-index: 1000;
-      display: none;
-    }
-    .backdrop-overlay.open {
-      display: block;
-    }
+      .design-doc-trigger {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--accent-color), var(--accent-glow));
+        color: #0c0f17;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 4px 20px rgba(251, 113, 133, 0.3);
+        z-index: 1000;
+        transition: all 0.3s ease;
+        border: none;
+      }
+      .design-doc-trigger:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 25px rgba(251, 113, 133, 0.5);
+      }
+      .design-sidebar {
+        position: fixed;
+        top: 0;
+        right: -400px;
+        width: 400px;
+        height: 100%;
+        background: rgba(12, 15, 23, 0.95);
+        backdrop-filter: blur(20px);
+        border-left: 1px solid var(--card-border);
+        box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+        z-index: 1001;
+        padding: 40px 32px;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        transition: right 0.3s ease;
+        overflow-y: auto;
+      }
+      .design-sidebar.open {
+        right: 0;
+      }
+      .sidebar-close {
+        align-self: flex-end;
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        font-size: 24px;
+        transition: color 0.2s;
+      }
+      .sidebar-close:hover {
+        color: var(--text-color);
+      }
+      .sidebar-title {
+        font-family: var(--font-display);
+        font-size: 22px;
+        font-weight: 800;
+        color: var(--text-color);
+        margin-bottom: 4px;
+      }
+      .sidebar-section {
+        border-top: 1px solid var(--card-border);
+        padding-top: 20px;
+      }
+      .sidebar-section h5 {
+        font-family: var(--font-display);
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--accent-color);
+        margin-bottom: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .sidebar-section p,
+      .sidebar-section li {
+        font-size: 14px;
+        color: var(--text-muted);
+        line-height: 1.6;
+      }
+      .sidebar-section ul {
+        list-style-type: none;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .palette-box {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .palette-color {
+        flex: 1;
+        height: 32px;
+        border-radius: 6px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .portal-link {
+        margin-top: auto;
+        display: block;
+        text-align: center;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--card-border);
+        color: var(--text-color);
+        padding: 12px;
+        border-radius: 10px;
+        text-decoration: none;
+        font-family: var(--font-display);
+        font-weight: 700;
+        transition: all 0.2s;
+      }
+      .portal-link:hover {
+        background: var(--accent-color);
+        color: #0c0f17;
+        border-color: var(--accent-color);
+      }
+      .backdrop-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 1000;
+        display: none;
+      }
+      .backdrop-overlay.open {
+        display: block;
+      }
 
-    /* Responsive */
-    @media (max-width: 768px) {
-      h1 { font-size: 36px; }
-      .features-grid { grid-template-columns: 1fr; }
-      .action-card { flex-direction: column; gap: 24px; text-align: center; }
-      .form-grid { grid-template-columns: 1fr; }
-      .form-group.full-width, .captcha-box, .form-submit-btn { grid-column: span 1; }
-      .design-sidebar { width: 100%; right: -100%; }
-    }
-  </style>
-</head>
-<body>
-
-  <!-- Header -->
-  <header>
-    <div class="container nav-flex">
-      <a href="#" class="logo">
-        <div class="logo-wave">
-          <span></span>
-          <span></span>
-          <span></span>
-        </div>
-        BlockVibe
-      </a>
-      <a href="http://nog.localhost:3000" class="nav-btn">Visit Example Site</a>
-    </div>
-  </header>
-
-  <!-- Hero Section -->
-  <section class="hero">
-    <div class="container">
-      <h1>One platform for your neighborhood</h1>
-      <p>BlockVibe provides neighborhood associations with the digital tools they need to connect residents, build community trust, run democratic polls, and secure support.</p>
-    </div>
-  </section>
-
-  <!-- Content Containers -->
-  <main class="container">
-    
-    <!-- Action Card -->
-    <div class="action-card">
-      <div class="action-info">
-        <h3>See BlockVibe in Action</h3>
-        <p>Explore our showcase site modeled for the North of Grand neighborhood in Des Moines, Iowa.</p>
+      /* Responsive */
+      @media (max-width: 768px) {
+        h1 {
+          font-size: 36px;
+        }
+        .features-grid {
+          grid-template-columns: 1fr;
+        }
+        .action-card {
+          flex-direction: column;
+          gap: 24px;
+          text-align: center;
+        }
+        .form-grid {
+          grid-template-columns: 1fr;
+        }
+        .form-group.full-width,
+        .captcha-box,
+        .form-submit-btn {
+          grid-column: span 1;
+        }
+        .design-sidebar {
+          width: 100%;
+          right: -100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Header -->
+    <header>
+      <div class="container nav-flex">
+        <a href="#" class="logo">
+          <div class="logo-wave">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          BlockVibe
+        </a>
+        <a href="http://nog.localhost:3000" class="nav-btn">Visit Example Site</a>
       </div>
-      <a href="http://nog.localhost:3000" class="primary-btn">Visit Example Site</a>
-    </div>
+    </header>
 
-    <!-- Features Grid -->
-    <section class="features-grid">
-      <div class="feature-card">
-        <div class="feature-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-        </div>
-        <h4>Modern Site Builder</h4>
-        <p>Launch a clean public website for your association with custom themes, static pages, contact forms, and layouts.</p>
-      </div>
-
-      <div class="feature-card">
-        <div class="feature-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-        </div>
-        <h4>Resident CRM & Directory</h4>
-        <p>Maintain a secure registry of neighbors, track registered members vs mailing contacts, and manage roles in one workspace.</p>
-      </div>
-
-      <div class="feature-card">
-        <div class="feature-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-        </div>
-        <h4>Email Broadcaster</h4>
-        <p>Compose and send announcements directly to your verified neighborhood contact list using AWS SES.</p>
-      </div>
-
-      <div class="feature-card">
-        <div class="feature-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9 12l2 2 4-4"></path></svg>
-        </div>
-        <h4>Democratic Voting</h4>
-        <p>Run secure board elections, budget approvals, and community opinion polls with one ballot per member rules.</p>
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="container">
+        <h1>One platform for your neighborhood</h1>
+        <p>
+          BlockVibe provides neighborhood associations with the digital tools they need to connect
+          residents, build community trust, run democratic polls, and secure support.
+        </p>
       </div>
     </section>
 
-    <!-- Space Request Form -->
-    <section class="form-section">
-      <h2 class="form-title">Bring BlockVibe to Your Neighborhood</h2>
-      <p class="form-subtitle">Submit a request to set up a digital workspace for your neighborhood association.</p>
-      
-      <form id="spaceRequestForm" onsubmit="handleFormSubmit(event)">
-        <div class="form-grid">
-          <div class="form-group">
-            <label for="appName">Your Name</label>
-            <input type="text" id="appName" required placeholder="e.g. John Doe">
+    <!-- Content Containers -->
+    <main class="container">
+      <!-- Action Card -->
+      <div class="action-card">
+        <div class="action-info">
+          <h3>See BlockVibe in Action</h3>
+          <p>
+            Explore our showcase site modeled for the North of Grand neighborhood in Des Moines,
+            Iowa.
+          </p>
+        </div>
+        <a href="http://nog.localhost:3000" class="primary-btn">Visit Example Site</a>
+      </div>
+
+      <!-- Features Grid -->
+      <section class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+              <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
           </div>
-          <div class="form-group">
-            <label for="appEmail">Email Address</label>
-            <input type="email" id="appEmail" required placeholder="e.g. john@example.com">
+          <h4>Modern Site Builder</h4>
+          <p>
+            Launch a clean public website for your association with custom themes, static pages,
+            contact forms, and layouts.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
           </div>
-          <div class="form-group">
-            <label for="neighborhoodName">Neighborhood Name</label>
-            <input type="text" id="neighborhoodName" required placeholder="e.g. North of Grand">
+          <h4>Resident CRM & Directory</h4>
+          <p>
+            Maintain a secure registry of neighbors, track registered members vs mailing contacts,
+            and manage roles in one workspace.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
+              ></path>
+              <polyline points="22,6 12,13 2,6"></polyline>
+            </svg>
           </div>
-          <div class="form-group">
-            <label for="city">City</label>
-            <input type="text" id="city" required placeholder="e.g. Des Moines">
+          <h4>Email Broadcaster</h4>
+          <p>
+            Compose and send announcements directly to your verified neighborhood contact list using
+            AWS SES.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M9 12l2 2 4-4"></path>
+            </svg>
           </div>
-          
-          <div class="captcha-box">
-            <div>
-              <span class="captcha-question">Solve Challenge: What is 7 + 6?</span>
+          <h4>Democratic Voting</h4>
+          <p>
+            Run secure board elections, budget approvals, and community opinion polls with one
+            ballot per member rules.
+          </p>
+        </div>
+      </section>
+
+      <!-- Space Request Form -->
+      <section class="form-section">
+        <h2 class="form-title">Bring BlockVibe to Your Neighborhood</h2>
+        <p class="form-subtitle">
+          Submit a request to set up a digital workspace for your neighborhood association.
+        </p>
+
+        <form id="spaceRequestForm" onsubmit="handleFormSubmit(event)">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="appName">Your Name</label>
+              <input type="text" id="appName" required placeholder="e.g. John Doe" />
             </div>
-            <input type="number" id="captchaAnswer" required placeholder="Answer" style="width: 120px;">
+            <div class="form-group">
+              <label for="appEmail">Email Address</label>
+              <input type="email" id="appEmail" required placeholder="e.g. john@example.com" />
+            </div>
+            <div class="form-group">
+              <label for="neighborhoodName">Neighborhood Name</label>
+              <input type="text" id="neighborhoodName" required placeholder="e.g. North of Grand" />
+            </div>
+            <div class="form-group">
+              <label for="city">City</label>
+              <input type="text" id="city" required placeholder="e.g. Des Moines" />
+            </div>
+
+            <div class="captcha-box">
+              <div>
+                <span class="captcha-question">Solve Challenge: What is 7 + 6?</span>
+              </div>
+              <input
+                type="number"
+                id="captchaAnswer"
+                required
+                placeholder="Answer"
+                style="width: 120px"
+              />
+            </div>
+
+            <button type="submit" class="form-submit-btn">Submit Request</button>
           </div>
+        </form>
+      </section>
+    </main>
 
-          <button type="submit" class="form-submit-btn">Submit Request</button>
-        </div>
-      </form>
-    </section>
+    <!-- Footer -->
+    <footer>
+      <div class="container">
+        <p>&copy; 2026 BlockVibe. All rights reserved.</p>
+      </div>
+    </footer>
 
-  </main>
-
-  <!-- Footer -->
-  <footer>
-    <div class="container">
-      <p>&copy; 2026 BlockVibe. All rights reserved.</p>
-    </div>
-  </footer>
-
-  <!-- ==========================================================================
+    <!-- ==========================================================================
        DESIGN DOC OVERLAY & SIDEBAR INTERACTION
        ========================================================================== -->
-  <div class="backdrop-overlay" id="backdropOverlay" onclick="toggleSidebar()"></div>
-  
-  <button class="design-doc-trigger" onclick="toggleSidebar()" title="View Design Approach">
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-  </button>
+    <div class="backdrop-overlay" id="backdropOverlay" onclick="toggleSidebar()"></div>
 
-  <div class="design-sidebar" id="designSidebar">
-    <button class="sidebar-close" onclick="toggleSidebar()">&times;</button>
-    
-    <div>
-      <h3 class="sidebar-title">Design 6: Aurora Waves</h3>
-      <p style="font-size: 13px; color: var(--accent-color); font-family: var(--font-display); font-weight: 700; text-transform: uppercase;">Animated Gradient Mode</p>
-    </div>
+    <button class="design-doc-trigger" onclick="toggleSidebar()" title="View Design Approach">
+      <svg
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+        <line x1="16" y1="13" x2="8" y2="13"></line>
+        <line x1="16" y1="17" x2="8" y2="17"></line>
+        <polyline points="10 9 9 9 8 9"></polyline>
+      </svg>
+    </button>
 
-    <div class="sidebar-section">
-      <h5>Theme Concept</h5>
-      <p>Uses smooth, slow-moving radial background gradients. Creates a sense of warmth, fluidity, and modern community growth. Perfect for creative art or music-centric blocks.</p>
-    </div>
+    <div class="design-sidebar" id="designSidebar">
+      <button class="sidebar-close" onclick="toggleSidebar()">&times;</button>
 
-    <div class="sidebar-section">
-      <h5>Typography</h5>
-      <ul style="margin-top: 8px;">
-        <li><strong>Headers & Body:</strong> Plus Jakarta Sans (Slightly wide, friendly, highly legible modern sans-serif)</li>
-      </ul>
-    </div>
-
-    <div class="sidebar-section">
-      <h5>Color Palette</h5>
-      <div class="palette-box">
-        <div class="palette-color" style="background-color: #0c0f17;" title="Background: #0c0f17"></div>
-        <div class="palette-color" style="background-color: #fb7185;" title="Accent 1: #fb7185"></div>
-        <div class="palette-color" style="background-color: #6366f1;" title="Accent 2: #6366f1"></div>
-        <div class="palette-color" style="background-color: rgba(15, 23, 42, 0.55);" title="Card Fill"></div>
+      <div>
+        <h3 class="sidebar-title">Design 6: Aurora Waves</h3>
+        <p
+          style="
+            font-size: 13px;
+            color: var(--accent-color);
+            font-family: var(--font-display);
+            font-weight: 700;
+            text-transform: uppercase;
+          "
+        >
+          Animated Gradient Mode
+        </p>
       </div>
+
+      <div class="sidebar-section">
+        <h5>Theme Concept</h5>
+        <p>
+          Uses smooth, slow-moving radial background gradients. Creates a sense of warmth, fluidity,
+          and modern community growth. Perfect for creative art or music-centric blocks.
+        </p>
+      </div>
+
+      <div class="sidebar-section">
+        <h5>Typography</h5>
+        <ul style="margin-top: 8px">
+          <li>
+            <strong>Headers & Body:</strong> Plus Jakarta Sans (Slightly wide, friendly, highly
+            legible modern sans-serif)
+          </li>
+        </ul>
+      </div>
+
+      <div class="sidebar-section">
+        <h5>Color Palette</h5>
+        <div class="palette-box">
+          <div
+            class="palette-color"
+            style="background-color: #0c0f17"
+            title="Background: #0c0f17"
+          ></div>
+          <div
+            class="palette-color"
+            style="background-color: #fb7185"
+            title="Accent 1: #fb7185"
+          ></div>
+          <div
+            class="palette-color"
+            style="background-color: #6366f1"
+            title="Accent 2: #6366f1"
+          ></div>
+          <div
+            class="palette-color"
+            style="background-color: rgba(15, 23, 42, 0.55)"
+            title="Card Fill"
+          ></div>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <h5>Key Visual Techniques</h5>
+        <p style="margin-top: 8px">
+          Shifting radial gradient keyframes, backdrop blurs, high-contrast button gradients, and
+          pill-shaped navigation cards.
+        </p>
+      </div>
+
+      <a href="/designs/index.html" class="portal-link">Back to Designs Portal</a>
     </div>
 
-    <div class="sidebar-section">
-      <h5>Key Visual Techniques</h5>
-      <p style="margin-top: 8px;">Shifting radial gradient keyframes, backdrop blurs, high-contrast button gradients, and pill-shaped navigation cards.</p>
-    </div>
-
-    <a href="/designs/index.html" class="portal-link">Back to Designs Portal</a>
-  </div>
-
-  <script>
-    function toggleSidebar() {
-      const sidebar = document.getElementById('designSidebar');
-      const overlay = document.getElementById('backdropOverlay');
-      sidebar.classList.toggle('open');
-      overlay.classList.toggle('open');
-    }
-
-    function handleFormSubmit(event) {
-      event.preventDefault();
-      const captchaAnswer = document.getElementById('captchaAnswer').value;
-      if (parseInt(captchaAnswer) === 13) {
-        alert('Space request submitted successfully! (Challenge verified)');
-        document.getElementById('spaceRequestForm').reset();
-      } else {
-        alert('Incorrect challenge solution. Please try again.');
+    <script>
+      function toggleSidebar() {
+        const sidebar = document.getElementById("designSidebar")
+        const overlay = document.getElementById("backdropOverlay")
+        sidebar.classList.toggle("open")
+        overlay.classList.toggle("open")
       }
-    }
-  </script>
-</body>
+
+      function handleFormSubmit(event) {
+        event.preventDefault()
+        const captchaAnswer = document.getElementById("captchaAnswer").value
+        if (parseInt(captchaAnswer) === 13) {
+          alert("Space request submitted successfully! (Challenge verified)")
+          document.getElementById("spaceRequestForm").reset()
+        } else {
+          alert("Incorrect challenge solution. Please try again.")
+        }
+      }
+    </script>
+  </body>
 </html>

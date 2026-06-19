@@ -57,8 +57,7 @@ export default function LoginPage() {
         return
       }
 
-      const isStaff =
-        user.role === "superadmin" || user.role === "admin" || user.role === "editor"
+      const isStaff = user.role === "superadmin" || user.role === "admin" || user.role === "editor"
       router.push(isStaff ? "/dashboard" : "/profile")
       router.refresh()
     } catch (err: any) {

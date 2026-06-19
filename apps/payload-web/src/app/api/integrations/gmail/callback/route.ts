@@ -73,7 +73,10 @@ export async function GET(request: Request) {
       refreshToken = existing?.refreshToken ?? undefined
     }
     if (!refreshToken) {
-      return settingsRedirect(request, tenantSlug, { gmail: "error", code: "missing_refresh_token" })
+      return settingsRedirect(request, tenantSlug, {
+        gmail: "error",
+        code: "missing_refresh_token",
+      })
     }
 
     const senderEmail = await fetchGoogleAccountEmail(tokenResponse.access_token)
@@ -103,7 +106,11 @@ export async function GET(request: Request) {
       message.includes("redirect_uri") || message.includes("Redirect URI")
         ? "redirect_mismatch"
         : "callback_failed"
-    return settingsRedirect(request, tenantSlug, { gmail: "error", code: codeParam, detail: message })
+    return settingsRedirect(request, tenantSlug, {
+      gmail: "error",
+      code: codeParam,
+      detail: message,
+    })
   }
 }
 

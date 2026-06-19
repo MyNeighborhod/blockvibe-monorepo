@@ -4,7 +4,10 @@ import { getPayload } from "payload"
 import configPromise from "@payload-config"
 import { headers } from "next/headers"
 import { getMeUser } from "@/utilities/getMeUser"
-import { resolveBroadcastImagesInHtml, uploadBroadcastImageFile } from "@/utilities/resolveBroadcastImages"
+import {
+  resolveBroadcastImagesInHtml,
+  uploadBroadcastImageFile,
+} from "@/utilities/resolveBroadcastImages"
 import { getUserTenantIds } from "@/access/roles"
 import {
   dispatchBroadcastCampaign,
@@ -18,10 +21,7 @@ import {
 import type { EmailDeliveryMethod } from "@/utilities/gmailOAuth"
 import { mintBroadcastCompletionToken } from "@blockvibe/email-contracts"
 import { finalizeBroadcastDeliveryLog } from "@/utilities/broadcastDelivery"
-import {
-  getEmailAccountForTenant,
-  isEmailAccountConnected,
-} from "@/utilities/emailSrvAccount"
+import { getEmailAccountForTenant, isEmailAccountConnected } from "@/utilities/emailSrvAccount"
 
 const MAX_BROADCAST_IMAGE_BYTES = 5 * 1024 * 1024
 
@@ -82,7 +82,7 @@ export async function sendBroadcastAction(
   subject: string,
   message: string,
   tenantId: string | number,
-  delivery: EmailDeliveryMethod = "ses"
+  delivery: EmailDeliveryMethod = "ses",
 ) {
   try {
     if (!recipientEmails || recipientEmails.length === 0) {
@@ -136,7 +136,7 @@ export async function sendBroadcastAction(
 
     if (sent + recipientEmails.length > limit) {
       throw new Error(
-        `This neighborhood has insufficient monthly email quota (${sent}/${limit}) to send to ${recipientEmails.length} recipients.`
+        `This neighborhood has insufficient monthly email quota (${sent}/${limit}) to send to ${recipientEmails.length} recipients.`,
       )
     }
 

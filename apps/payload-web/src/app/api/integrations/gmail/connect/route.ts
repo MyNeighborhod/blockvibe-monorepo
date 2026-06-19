@@ -21,7 +21,7 @@ export async function GET(request: Request) {
     if (!isGoogleOAuthConfigured()) {
       return NextResponse.json(
         { message: "Google OAuth is not configured on this server." },
-        { status: 503 }
+        { status: 503 },
       )
     }
 
@@ -35,7 +35,10 @@ export async function GET(request: Request) {
     const tenantSlug = url.searchParams.get("tenantSlug")?.trim()
 
     if (!tenantId || !tenantSlug) {
-      return NextResponse.json({ message: "tenantId and tenantSlug are required." }, { status: 400 })
+      return NextResponse.json(
+        { message: "tenantId and tenantSlug are required." },
+        { status: 400 },
+      )
     }
 
     assertCanManageTenantEmailSettings(user, tenantId)

@@ -48,7 +48,9 @@ export async function sendInviteAction(name: string, email: string, tenantId: st
     }
 
     if (sent >= limit) {
-      throw new Error(`This neighborhood has reached its monthly email limit (${sent}/${limit}). Please contact a superadmin to increase the limit.`)
+      throw new Error(
+        `This neighborhood has reached its monthly email limit (${sent}/${limit}). Please contact a superadmin to increase the limit.`,
+      )
     }
 
     // Check if user already exists
@@ -127,7 +129,7 @@ export async function sendInviteAction(name: string, email: string, tenantId: st
     } catch (emailError: any) {
       payload.logger.error(
         { err: emailError },
-        `Invite created for ${email} but email delivery failed. Deleting invite record ${inviteRecord.id}`
+        `Invite created for ${email} but email delivery failed. Deleting invite record ${inviteRecord.id}`,
       )
       // Delete invite record to allow retrying
       try {
@@ -138,7 +140,7 @@ export async function sendInviteAction(name: string, email: string, tenantId: st
       } catch (deleteError) {
         payload.logger.error(
           { err: deleteError },
-          `Failed to delete failed invite record ${inviteRecord.id}`
+          `Failed to delete failed invite record ${inviteRecord.id}`,
         )
       }
       throw new Error(`Email delivery failed: ${emailError.message || emailError}`)

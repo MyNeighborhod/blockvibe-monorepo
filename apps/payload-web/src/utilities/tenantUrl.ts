@@ -8,7 +8,7 @@ const STAGING_DOMAIN = process.env.NEXT_PUBLIC_STAGING_DOMAIN || "staging.blockv
 export function getPlatformServerURLFromHost(
   hostname: string,
   protocol: string = "https:",
-  port?: string
+  port?: string,
 ): string {
   if (hostname === "localhost" || hostname === "127.0.0.1" || hostname.endsWith(".localhost")) {
     const portSuffix = port && port !== "80" && port !== "443" ? `:${port}` : ":3000"

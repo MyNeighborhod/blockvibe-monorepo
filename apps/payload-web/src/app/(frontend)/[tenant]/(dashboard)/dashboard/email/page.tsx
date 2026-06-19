@@ -76,7 +76,8 @@ export default async function EmailDashboard({ params }: Args) {
           Email Broadcaster
         </h1>
         <p className="text-muted-foreground">
-          Send custom announcements, notifications, or newsletters to residents in your neighborhood.
+          Send custom announcements, notifications, or newsletters to residents in your
+          neighborhood.
         </p>
       </div>
 

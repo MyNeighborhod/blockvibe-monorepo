@@ -43,9 +43,12 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       mapInstanceRef.current = map
 
       // Load OpenStreetMap tiles
-      leaflet.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      }).addTo(map)
+      leaflet
+        .tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution:
+            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        })
+        .addTo(map)
 
       // Add a marker at the center
       leaflet.marker([latitude, longitude]).addTo(map)
@@ -54,15 +57,17 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       if (boundaryGeoJSON) {
         try {
           const parsedGeoJSON = JSON.parse(boundaryGeoJSON)
-          leaflet.geoJSON(parsedGeoJSON, {
-            style: {
-              color: "#ef4444", // Red border (matching Weebly contact style)
-              dashArray: "5, 5", // Dashed lines
-              fillColor: "#ef4444", // Transparent red shading
-              fillOpacity: 0.1,
-              weight: 2.5,
-            },
-          }).addTo(map)
+          leaflet
+            .geoJSON(parsedGeoJSON, {
+              style: {
+                color: "#ef4444", // Red border (matching Weebly contact style)
+                dashArray: "5, 5", // Dashed lines
+                fillColor: "#ef4444", // Transparent red shading
+                fillOpacity: 0.1,
+                weight: 2.5,
+              },
+            })
+            .addTo(map)
         } catch (e) {
           console.error("LeafletMap: Failed to parse boundaryGeoJSON:", e)
         }

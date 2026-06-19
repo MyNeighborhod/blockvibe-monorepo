@@ -54,7 +54,7 @@ export async function dispatchBroadcastCampaign(params: {
         FunctionName: lambdaName,
         InvocationType: "Event",
         Payload: Buffer.from(JSON.stringify(event)),
-      })
+      }),
     )
 
     const status = result.StatusCode ?? 0

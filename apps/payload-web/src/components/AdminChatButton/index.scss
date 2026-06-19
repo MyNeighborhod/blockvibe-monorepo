@@ -115,14 +115,20 @@
   font-size: 16px;
   font-weight: 600;
   color: var(--theme-elevation-800, #111);
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
 }
 
 .admin-chat-drawer-subtitle {
   margin: 2px 0 0 0;
   font-size: 12px;
   color: var(--theme-elevation-500, #666);
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
 }
 
 .admin-chat-drawer-close {

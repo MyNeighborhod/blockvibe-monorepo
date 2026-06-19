@@ -107,7 +107,8 @@ export const ContactBlock: Block = {
       label: "Map Boundary GeoJSON Polygon",
       admin: {
         condition: (_, { showMap }) => Boolean(showMap),
-        description: "Paste a GeoJSON Feature or Polygon coordinate geometry to highlight the neighborhood boundary on the map.",
+        description:
+          "Paste a GeoJSON Feature or Polygon coordinate geometry to highlight the neighborhood boundary on the map.",
       },
     },
     {

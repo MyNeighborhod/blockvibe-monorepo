@@ -24,7 +24,9 @@ async function run() {
 
   const nogTenant = nogTenants.docs[0]
   if (!nogTenant) {
-    throw new Error("NOG tenant not found. Run seed-nog.ts first or ensure nog tenant exists on this database.")
+    throw new Error(
+      "NOG tenant not found. Run seed-nog.ts first or ensure nog tenant exists on this database.",
+    )
   }
 
   const nogAdminEmail = process.env.TENANT_NOG_USERNAME || "admin@nog.blockvibe.org"
@@ -53,7 +55,7 @@ async function run() {
 
   for (const doc of existingUsers.docs) {
     payload.logger.info(`Deleting existing user: ${doc.email} (ID: ${doc.id})`)
-    
+
     // Delete associated broadcasts first to avoid foreign key NOT NULL constraint violation on sender_id
     await payload.delete({
       collection: "broadcasts",

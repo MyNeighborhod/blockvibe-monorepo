@@ -26,33 +26,31 @@ function parseDataUrl(dataUrl: string): { mime: string; buffer: Buffer } | null 
 export function buildBroadcastImagePublicUrl(
   host: string,
   tenantSlug: string,
-  filename: string
+  filename: string,
 ): string {
   const protocol = host.startsWith("localhost") ? "http" : "https"
   return `${protocol}://${host}/media/${tenantSlug}/${filename}`
 }
 
-export async function uploadBroadcastImageFile(
-  {
-    payload,
-    tenantId,
-    tenantSlug,
-    host,
-    user,
-    buffer,
-    mime,
-    originalName,
-  }: {
-    payload: Payload
-    tenantId: string | number
-    tenantSlug: string
-    host: string
-    user: User
-    buffer: Buffer
-    mime: string
-    originalName?: string
-  }
-): Promise<string> {
+export async function uploadBroadcastImageFile({
+  payload,
+  tenantId,
+  tenantSlug,
+  host,
+  user,
+  buffer,
+  mime,
+  originalName,
+}: {
+  payload: Payload
+  tenantId: string | number
+  tenantSlug: string
+  host: string
+  user: User
+  buffer: Buffer
+  mime: string
+  originalName?: string
+}): Promise<string> {
   const extFromName = originalName?.split(".").pop()?.toLowerCase()
   const ext = MIME_TO_EXT[mime] || extFromName || "png"
   const filename = `broadcast-${Date.now()}-${crypto.randomBytes(4).toString("hex")}.${ext}`
@@ -98,7 +96,7 @@ export async function resolveBroadcastImagesInHtml(
     tenantSlug: string
     host: string
     user: User
-  }
+  },
 ): Promise<string> {
   const dataUrls = [...html.matchAll(DATA_IMAGE_SRC_RE)].map((match) => match[1])
   if (dataUrls.length === 0) return html

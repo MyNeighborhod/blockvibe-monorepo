@@ -21,12 +21,7 @@ export function SignOutButton({ className }: { className?: string }) {
   }
 
   return (
-    <Button
-      type="button"
-      onClick={handleLogout}
-      disabled={loggingOut}
-      className={className}
-    >
+    <Button type="button" onClick={handleLogout} disabled={loggingOut} className={className}>
       {loggingOut ? "Signing out..." : "Sign Out"}
     </Button>
   )

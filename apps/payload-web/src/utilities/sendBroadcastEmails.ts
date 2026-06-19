@@ -20,7 +20,7 @@ async function deliverToRecipient(params: {
     const message = emailError instanceof Error ? emailError.message : String(emailError)
     params.payload.logger.error(
       { err: emailError },
-      `Broadcast email delivery failed for ${params.email}`
+      `Broadcast email delivery failed for ${params.email}`,
     )
     params.result.failedCount += 1
     params.result.failedEmails.push(params.email)

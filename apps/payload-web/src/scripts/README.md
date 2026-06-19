@@ -23,17 +23,17 @@ You run a seed command
 
 Payload needs two env vars to connect:
 
-| Variable | Role |
-| -------- | ---- |
-| `DATABASE_URL` | **Which database** to read/write |
+| Variable         | Role                                                                    |
+| ---------------- | ----------------------------------------------------------------------- |
+| `DATABASE_URL`   | **Which database** to read/write                                        |
 | `PAYLOAD_SECRET` | Must match that environment (`.env` locally, `.env.production` on prod) |
 
 Optional URL helpers (for platform landing CTAs):
 
-| Variable | Role |
-| -------- | ---- |
-| `NEXT_PUBLIC_SERVER_URL` | Platform base URL (`http://localhost:3000` or `https://info.blockvibe.org`) |
-| `NOG_SHOWCASE_URL` | Override showcase link (default: derived from server URL → `nog.localhost:3000` or `https://nog.blockvibe.org`) |
+| Variable                 | Role                                                                                                            |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_SERVER_URL` | Platform base URL (`http://localhost:3000` or `https://info.blockvibe.org`)                                     |
+| `NOG_SHOWCASE_URL`       | Override showcase link (default: derived from server URL → `nog.localhost:3000` or `https://nog.blockvibe.org`) |
 
 User passwords for seeded accounts come from `.env` (`TENANT_NOG_*`, etc.).
 
@@ -45,12 +45,12 @@ User passwords for seeded accounts come from `.env` (`TENANT_NOG_*`, etc.).
 
 Uses `DATABASE_URL` from `.env` (typically `postgres://postgres:local@127.0.0.1:5432/04-payload-multitenant`).
 
-| Command | Scope | Destructive? |
-| ------- | ----- | ------------ |
-| `pnpm tsx src/scripts/seed-nog.ts` | **Full** NOG tenant: pages, posts, media, users, **and** default platform home | **Yes** — wipes and rebuilds `nog` tenant |
-| `pnpm seed:default-platform` | Default tenant only (`info` landing page, space request form, header/footer) | **Yes** — replaces default tenant pages/globals |
-| `pnpm seed:nog-users` | NOG admin + neighbor users only | **Partial** — deletes/recreates those three users |
-| `pnpm tsx src/scripts/seed-beaverdale.ts` | Full Beaverdale tenant | **Yes** — wipes and rebuilds `beaverdale` |
+| Command                                   | Scope                                                                          | Destructive?                                      |
+| ----------------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------- |
+| `pnpm tsx src/scripts/seed-nog.ts`        | **Full** NOG tenant: pages, posts, media, users, **and** default platform home | **Yes** — wipes and rebuilds `nog` tenant         |
+| `pnpm seed:default-platform`              | Default tenant only (`info` landing page, space request form, header/footer)   | **Yes** — replaces default tenant pages/globals   |
+| `pnpm seed:nog-users`                     | NOG admin + neighbor users only                                                | **Partial** — deletes/recreates those three users |
+| `pnpm tsx src/scripts/seed-beaverdale.ts` | Full Beaverdale tenant                                                         | **Yes** — wipes and rebuilds `beaverdale`         |
 
 Run from the project root while local Postgres is up (`docker compose up -d` in the repo root).
 
@@ -85,11 +85,11 @@ That port (`15432`) means **production via tunnel**, not your local Docker DB.
 
 ### Do not run the wrong script against the wrong database
 
-| Mistake | Risk |
-| ------- | ---- |
-| Run `seed-nog.ts` while `DATABASE_URL` points at prod | Wipes and rebuilds the entire NOG tenant on production |
+| Mistake                                                                     | Risk                                                                                      |
+| --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Run `seed-nog.ts` while `DATABASE_URL` points at prod                       | Wipes and rebuilds the entire NOG tenant on production                                    |
 | Run `pnpm seed:default-platform` with prod `DATABASE_URL` exported manually | Replaces platform homepage and form on prod (may be intended, but know what you're doing) |
-| `source .env` before a manual prod `DATABASE_URL` | Local `.env` overwrites the tunnel URL — writes go to localhost (see below) |
+| `source .env` before a manual prod `DATABASE_URL`                           | Local `.env` overwrites the tunnel URL — writes go to localhost (see below)               |
 
 `infra/seed-prod-content.sh` sets `DATABASE_URL` **after** sourcing `.env` specifically to avoid that bug.
 
@@ -161,20 +161,20 @@ For deploy, seed, schema sync, DB push, media, and verification against **info**
 
 ## Related infra scripts
 
-| Script | Purpose |
-| ------ | ------- |
-| `infra/seed-prod-content.sh` | Prod wrapper for `seed-default-platform` + `seed-nog-users` |
-| `infra/push-db-to-prod.sh` | Full local DB → prod replace |
-| `infra/sync-prod-schema.sh` | Pull prod DB, schema-push locally, push back (migrations without full content replace) |
+| Script                       | Purpose                                                                                |
+| ---------------------------- | -------------------------------------------------------------------------------------- |
+| `infra/seed-prod-content.sh` | Prod wrapper for `seed-default-platform` + `seed-nog-users`                            |
+| `infra/push-db-to-prod.sh`   | Full local DB → prod replace                                                           |
+| `infra/sync-prod-schema.sh`  | Pull prod DB, schema-push locally, push back (migrations without full content replace) |
 
 ---
 
 ## Quick decision guide
 
-| Goal | Command |
-| ---- | ------- |
-| Fresh local dev with full NOG site | `pnpm tsx src/scripts/seed-nog.ts` |
-| Fix local `info` landing only | `pnpm seed:default-platform` |
-| Fix prod `info` landing + nog users | `pnpm seed:prod-content` |
-| Copy entire local DB to prod | `./infra/push-db-to-prod.sh` |
-| Reset local neighbor login passwords | `pnpm seed:nog-users` |
+| Goal                                 | Command                            |
+| ------------------------------------ | ---------------------------------- |
+| Fresh local dev with full NOG site   | `pnpm tsx src/scripts/seed-nog.ts` |
+| Fix local `info` landing only        | `pnpm seed:default-platform`       |
+| Fix prod `info` landing + nog users  | `pnpm seed:prod-content`           |
+| Copy entire local DB to prod         | `./infra/push-db-to-prod.sh`       |
+| Reset local neighbor login passwords | `pnpm seed:nog-users`              |
