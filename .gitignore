@@ -32,6 +32,10 @@ playwright/.cache/
 .env
 .env*.local
 .env.production
+.docs
+
+
+
 
 # typescript
 *.tsbuildinfo
