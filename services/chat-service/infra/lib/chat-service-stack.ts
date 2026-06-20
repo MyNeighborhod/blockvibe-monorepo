@@ -50,6 +50,7 @@ export class ChatServiceStack extends cdk.Stack {
       timeout: cdk.Duration.seconds(45), // LLMs can take up to 30s
       environment,
       logGroup: new logs.LogGroup(this, "ChatFunctionLogGroup", {
+        logGroupName: `/aws/lambda/blockvibe-chat-${props.stage}-service`,
         retention: logs.RetentionDays.THREE_DAYS,
         removalPolicy: cdk.RemovalPolicy.DESTROY,
       }),

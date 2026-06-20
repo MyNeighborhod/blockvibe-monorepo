@@ -63,6 +63,7 @@ export class EmailServiceStack extends cdk.Stack {
       timeout: cdk.Duration.seconds(300),
       environment,
       logGroup: new logs.LogGroup(this, "SendFunctionLogGroup", {
+        logGroupName: `/aws/lambda/blockvibe-email-${props.stage}-send`,
         retention: logs.RetentionDays.THREE_DAYS,
       }),
     })

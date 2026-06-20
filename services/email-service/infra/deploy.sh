@@ -32,16 +32,28 @@ PAYLOAD_WEB_DIR="$MONOREPO_ROOT/apps/payload-web"
 
 case "$STAGE" in
   prod)
-    ENV_SOURCE="$PAYLOAD_WEB_DIR/.env.production"
+    ENV_SOURCE="$SERVICE_DIR/.env.production"
+    if [ ! -f "$ENV_SOURCE" ]; then
+      ENV_SOURCE="$SERVICE_DIR/.env.prod"
+    fi
+    if [ ! -f "$ENV_SOURCE" ]; then
+      ENV_SOURCE="$PAYLOAD_WEB_DIR/.env.production"
+    fi
     ;;
   staging)
-    ENV_SOURCE="$PAYLOAD_WEB_DIR/.env.staging"
+    ENV_SOURCE="$SERVICE_DIR/.env.staging"
+    if [ ! -f "$ENV_SOURCE" ]; then
+      ENV_SOURCE="$PAYLOAD_WEB_DIR/.env.staging"
+    fi
     ;;
   *)
     ENV_SOURCE="$SERVICE_DIR/.env"
     if [ ! -f "$ENV_SOURCE" ]; then
+      ENV_SOURCE="$PAYLOAD_WEB_DIR/.env"
+    fi
+    if [ ! -f "$ENV_SOURCE" ]; then
       ENV_SOURCE="$SERVICE_DIR/.env.example"
-      echo "WARNING: $SERVICE_DIR/.env not found. Using .env.example placeholders."
+      echo "WARNING: Local .env not found. Using .env.example placeholders."
     fi
     ;;
 esac
