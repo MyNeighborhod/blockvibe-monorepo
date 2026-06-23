@@ -1,0 +1,35 @@
+// Custom password eye toggle button styles
+.password-toggle-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--theme-elevation-400, #7a7a7a);
+  transition: color 0.2s ease;
+  z-index: 5;
+
+  &:hover {
+    color: var(--theme-elevation-800, #333);
+  }
+
+  svg {
+    display: block;
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+    fill: none;
+  }
+}
+
+// Add padding to the password input field so the text does not overlap the eye icon
+.field-type.password input[type="password"],
+.field-type.password input[data-show-password="true"] {
+  padding-right: 42px !important;
+}

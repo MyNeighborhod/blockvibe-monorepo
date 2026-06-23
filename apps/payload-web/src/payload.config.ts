@@ -33,7 +33,7 @@ export default buildConfig({
       // Feel free to delete this at any time. Simply remove the line below.
       beforeDashboard: ["@/components/BeforeDashboard"],
       // Render the floating documentation chat provider wrapping the admin panel
-      providers: ["@/components/AdminChatButton"],
+      providers: ["@/components/AdminChatButton", "@/components/PasswordToggle"],
     },
     importMap: {
       baseDir: path.resolve(dirname),
