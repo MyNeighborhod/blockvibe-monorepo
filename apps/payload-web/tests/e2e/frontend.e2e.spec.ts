@@ -24,7 +24,10 @@ test.describe("Frontend", () => {
     await context.close()
   })
 
-  test("renders data-live-preview-path attributes for visual page building", async ({ browser, baseURL }) => {
+  test("renders data-live-preview-path attributes for visual page building", async ({
+    browser,
+    baseURL,
+  }) => {
     const targetBaseURL = getTenantURL(baseURL || "http://localhost:3000", "nog")
     const context = await browser.newContext({ baseURL: targetBaseURL })
     const page = await context.newPage()
