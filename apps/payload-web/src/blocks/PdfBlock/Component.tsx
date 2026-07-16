@@ -1,7 +1,5 @@
-"use client"
-
-import React, { useState } from "react"
-import { FileText, Download, Eye, Plus, Minus } from "lucide-react"
+import React from "react"
+import { FileText, Download, Eye } from "lucide-react"
 import type { Media } from "@/payload-types"
 
 export type PdfBlockType = {
@@ -21,8 +19,6 @@ function formatBytes(bytes?: number | null, decimals = 1) {
 }
 
 export const PdfBlock: React.FC<PdfBlockType> = ({ pdfFile, height = 600, title }) => {
-  const [currentHeight, setCurrentHeight] = useState(height || 600)
-
   if (!pdfFile || typeof pdfFile !== "object") return null
 
   const fileUrl = pdfFile.url || ""
@@ -45,25 +41,7 @@ export const PdfBlock: React.FC<PdfBlockType> = ({ pdfFile, height = 600, title 
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          {/* Height Zoom Controls */}
-          <button
-            type="button"
-            onClick={() => setCurrentHeight((h) => Math.max(h - 100, 300))}
-            className="inline-flex items-center justify-center w-8 h-8 rounded-md border border-border bg-card hover:bg-accent text-foreground transition-colors shadow-sm"
-            title="Zoom Out (Decrease Height)"
-          >
-            <Minus className="w-4 h-4" />
-          </button>
-          <button
-            type="button"
-            onClick={() => setCurrentHeight((h) => Math.min(h + 100, 1800))}
-            className="inline-flex items-center justify-center w-8 h-8 rounded-md border border-border bg-card hover:bg-accent text-foreground transition-colors shadow-sm mr-2"
-            title="Zoom In (Increase Height)"
-          >
-            <Plus className="w-4 h-4" />
-          </button>
-
+        <div className="flex gap-2">
           <a
             href={fileUrl}
             target="_blank"
@@ -87,7 +65,7 @@ export const PdfBlock: React.FC<PdfBlockType> = ({ pdfFile, height = 600, title 
       {/* Embedded PDF Viewer container */}
       <div 
         className="w-full overflow-hidden border border-border rounded-lg shadow-md bg-zinc-100 dark:bg-zinc-950 flex flex-col"
-        style={{ height: `${currentHeight}px` }}
+        style={{ height: `${height || 600}px` }}
       >
         <iframe
           src={`${fileUrl}#toolbar=1`}
