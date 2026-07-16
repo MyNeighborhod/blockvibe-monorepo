@@ -10,6 +10,7 @@ import { IframeBlock } from "../../blocks/IframeBlock/config"
 import { SlideshowBlock } from "../../blocks/SlideshowBlock/config"
 import { FileListBlock } from "../../blocks/FileListBlock/config"
 import { ContactBlock } from "../../blocks/ContactBlock/config"
+import { PdfBlock } from "../../blocks/PdfBlock/config"
 import { hero } from "@/heros/config"
 import { slugField } from "payload"
 import { populatePublishedAt } from "../../hooks/populatePublishedAt"
@@ -85,6 +86,7 @@ export const Pages: CollectionConfig<"pages"> = {
                 SlideshowBlock,
                 FileListBlock,
                 ContactBlock,
+                PdfBlock,
               ],
               required: true,
               admin: {

@@ -25,7 +25,20 @@ export const Text: React.FC<
           </span>
         )}
       </Label>
-      <Input defaultValue={defaultValue} id={name} type="text" {...register(name, { required })} />
+      <Input
+        defaultValue={defaultValue}
+        id={name}
+        type="text"
+        {...register(name, {
+          required,
+          pattern: name.toLowerCase().includes("phone")
+            ? {
+                value: /^(\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}$/,
+                message: "Please enter a valid phone number",
+              }
+            : undefined,
+        })}
+      />
       {errors[name] && <Error name={name} />}
     </Width>
   )

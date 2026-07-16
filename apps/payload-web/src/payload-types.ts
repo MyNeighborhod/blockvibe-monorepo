@@ -218,6 +218,7 @@ export interface Page {
     | SlideshowBlock
     | FileListBlock
     | ContactBlock
+    | PdfBlock
   )[];
   meta?: {
     title?: string | null;
@@ -951,6 +952,18 @@ export interface ContactBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "PdfBlock".
+ */
+export interface PdfBlock {
+  pdfFile: number | Media;
+  height: number;
+  title?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'pdfBlock';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "header".
  */
 export interface Header {
@@ -1454,6 +1467,7 @@ export interface PagesSelect<T extends boolean = true> {
         slideshowBlock?: T | SlideshowBlockSelect<T>;
         fileListBlock?: T | FileListBlockSelect<T>;
         contactBlock?: T | ContactBlockSelect<T>;
+        pdfBlock?: T | PdfBlockSelect<T>;
       };
   meta?:
     | T
@@ -1612,6 +1626,17 @@ export interface ContactBlockSelect<T extends boolean = true> {
   mapBoundaryGeoJSON?: T;
   facebookUrl?: T;
   emailAddress?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "PdfBlock_select".
+ */
+export interface PdfBlockSelect<T extends boolean = true> {
+  pdfFile?: T;
+  height?: T;
+  title?: T;
   id?: T;
   blockName?: T;
 }

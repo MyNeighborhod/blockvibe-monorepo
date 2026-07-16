@@ -45,7 +45,7 @@ function richParagraph(text: string): any {
   }
 }
 
-function richHeading(text: string, tag: "h1" | "h2" | "h3" = "h2"): any {
+function richHeading(text: string, tag: "h1" | "h2" | "h3" | "h4" | "h5" | "h6" = "h2"): any {
   return {
     type: "heading",
     children: [
@@ -614,11 +614,43 @@ async function run() {
       confirmationMessage: lexicalRichText([richHeading("Thank you for subscribing!", "h3")]),
       fields: [
         {
+          name: "firstName",
+          blockName: "firstName",
+          blockType: "text",
+          label: "First Name",
+          required: false,
+          width: 50,
+        },
+        {
+          name: "lastName",
+          blockName: "lastName",
+          blockType: "text",
+          label: "Last Name",
+          required: false,
+          width: 50,
+        },
+        {
           name: "email",
           blockName: "email",
           blockType: "email",
           label: "Email Address",
           required: true,
+          width: 100,
+        },
+        {
+          name: "address",
+          blockName: "address",
+          blockType: "text",
+          label: "Address",
+          required: false,
+          width: 100,
+        },
+        {
+          name: "phone",
+          blockName: "phone",
+          blockType: "text",
+          label: "Phone Number",
+          required: false,
           width: 100,
         },
       ],
@@ -979,10 +1011,11 @@ async function run() {
           ],
         },
         {
-          blockName: "Bylaws File",
-          blockType: "fileListBlock",
+          blockName: "Bylaws PDF Viewer",
+          blockType: "pdfBlock",
           title: "Association Bylaws (updated 2026)",
-          files: [{ file: bylawsDoc.id, description: "Proposed and updated amendments for 2026." }],
+          pdfFile: bylawsDoc.id,
+          height: 600,
         },
       ],
       meta: {

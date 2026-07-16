@@ -24,8 +24,10 @@ test.describe("BlockVibe Platform Landing Page E2E Tests", () => {
     const exampleLink = page.locator("a:has-text('Visit Site')")
     await expect(exampleLink).toBeVisible()
 
-    const href = await exampleLink.getAttribute("href")
-    expect(href).toContain(expectedNogExampleHost(baseURL || "http://localhost:3000"))
+    await expect(exampleLink).toHaveAttribute(
+      "href",
+      new RegExp(expectedNogExampleHost(baseURL || "http://localhost:3000")),
+    )
   })
 
   test("3. Submits the Space Request Form successfully", async ({ page }) => {
