@@ -24,7 +24,7 @@ export const SlideshowBlock: React.FC<SlideshowBlockType> = ({ images }) => {
   if (!images || images.length === 0) return null
 
   return (
-    <div className="w-full my-8">
+    <div className="container my-8">
       <div className="relative w-full h-[320px] md:h-[480px] bg-gray-100 rounded-lg overflow-hidden shadow-md">
         {images.map((item, index) => {
           const media = item.image

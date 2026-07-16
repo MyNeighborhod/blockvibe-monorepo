@@ -24,7 +24,7 @@ export const FileListBlock: React.FC<FileListBlockType> = ({ title, files }) => 
   if (!files || files.length === 0) return null
 
   return (
-    <div className="w-full my-8 flex flex-col gap-6">
+    <div className="container my-8 flex flex-col gap-6">
       {title && <h3 className="text-xl font-serif font-semibold text-gray-800">{title}</h3>}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {files.map((item, index) => {
