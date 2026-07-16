@@ -821,6 +821,10 @@ export interface Form {
     };
     [k: string]: unknown;
   } | null;
+  /**
+   * How long to show the confirmation message before the form reappears (in seconds). Set to 0 to keep the message visible permanently.
+   */
+  confirmationMessageDuration?: number | null;
   redirect?: {
     url: string;
   };
@@ -2056,6 +2060,7 @@ export interface FormsSelect<T extends boolean = true> {
   submitButtonLabel?: T;
   confirmationType?: T;
   confirmationMessage?: T;
+  confirmationMessageDuration?: T;
   redirect?:
     | T
     | {

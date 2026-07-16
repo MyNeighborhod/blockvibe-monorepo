@@ -44,7 +44,7 @@ export const RenderBlocks: React.FC<{
 
             if (Block) {
               return (
-                <div className="my-16" id={id ? `block-${id}` : undefined} key={index}>
+                <div className="mb-12 last:mb-0" id={id ? `block-${id}` : undefined} key={index}>
                   {/* @ts-expect-error there may be some mismatch between the expected types here */}
                   <Block {...block} path={`layout.${index}`} disableInnerContainer />
                 </div>

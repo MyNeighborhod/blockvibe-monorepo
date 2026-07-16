@@ -1,25 +1,24 @@
 "use client"
 import React from "react"
 import dynamic from "next/dynamic"
-import type { Form as FormType } from "@payloadcms/plugin-form-builder/types"
 import type { DefaultTypedEditorState } from "@payloadcms/richtext-lexical"
-import { FormBlock } from "@/blocks/Form/Component"
+import { FormBlock, type FormBlockForm } from "@/blocks/Form/Component"
 import { Facebook, Mail } from "lucide-react"
 
 // Dynamically import LeafletMap with SSR disabled to prevent Node window/document errors during Next build
 const LeafletMap = dynamic(() => import("@/components/LeafletMap"), {
   ssr: false,
   loading: () => (
-    <div className="w-full h-[350px] lg:h-[450px] bg-muted rounded-[0.8rem] flex items-center justify-center border border-border">
+    <div className="w-full h-[350px] lg:h-[400px] bg-muted rounded-[0.8rem] flex items-center justify-center border border-border">
       <p className="text-muted-foreground animate-pulse">Loading Map...</p>
     </div>
   ),
 })
 
 export type ContactBlockProps = {
-  newsletterForm: FormType
+  newsletterForm: FormBlockForm
   newsletterIntro?: DefaultTypedEditorState
-  questionForm: FormType
+  questionForm: FormBlockForm
   questionIntro?: DefaultTypedEditorState
   showMap: boolean
   mapLatitude: number
@@ -46,11 +45,11 @@ export const ContactBlock: React.FC<ContactBlockProps> = (props) => {
   } = props
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 pb-8 -mt-4">
       {/* 2-Column Grid matching Weebly layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
         {/* Left Column - Forms (Newsletter + Question Form Stacked) */}
-        <div className="lg:col-span-5 flex flex-col gap-8">
+        <div className="lg:col-span-8 flex flex-col gap-8">
           {newsletterForm && (
             <div className="w-full">
               <FormBlock
@@ -73,7 +72,7 @@ export const ContactBlock: React.FC<ContactBlockProps> = (props) => {
         </div>
 
         {/* Right Column - Map */}
-        <div className="lg:col-span-7">
+        <div className="lg:col-span-4">
           {showMap && (
             <div className="w-full">
               <LeafletMap

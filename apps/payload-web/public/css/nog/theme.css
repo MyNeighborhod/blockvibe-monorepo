@@ -2,6 +2,7 @@
 .theme-nog {
   font-family: var(--font-gentium), serif;
   color: #2a2a2a;
+  --success: #47773e;
 }
 
 /* NOG header is taller; hero sits flush (header floats over it when data-theme="dark") */

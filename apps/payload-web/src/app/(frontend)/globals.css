@@ -34,6 +34,7 @@
 @source inline("bg-error/30");
 @source inline("border-success");
 @source inline("bg-success/30");
+@source inline("text-success");
 @source inline("border-warning");
 @source inline("bg-warning/30");
 
@@ -212,6 +213,14 @@
   body {
     @apply bg-background text-foreground min-h-[100vh] flex flex-col;
   }
+}
+
+.form-confirmation-message {
+  @apply rounded-md border border-success bg-success/30 px-4 py-3 text-foreground;
+}
+
+.form-confirmation-message .payload-richtext :is(h1, h2, h3, h4, p, strong, b) {
+  color: var(--foreground) !important;
 }
 
 html {

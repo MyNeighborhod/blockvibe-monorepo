@@ -1,8 +1,8 @@
 "use client"
-import type { FormFieldBlock, Form as FormType } from "@payloadcms/plugin-form-builder/types"
+import type { Form } from "@/payload-types"
 
 import { useRouter } from "next/navigation"
-import React, { useCallback, useState } from "react"
+import React, { useCallback, useEffect, useState } from "react"
 import { useForm, FormProvider } from "react-hook-form"
 import RichText from "@/components/RichText"
 import { Button } from "@/components/ui/button"
@@ -11,11 +11,22 @@ import type { DefaultTypedEditorState } from "@payloadcms/richtext-lexical"
 import { fields } from "./fields"
 import { getClientSideURL } from "@/utilities/getURL"
 
+export type FormBlockForm = Pick<
+  Form,
+  | "id"
+  | "fields"
+  | "submitButtonLabel"
+  | "confirmationType"
+  | "confirmationMessage"
+  | "confirmationMessageDuration"
+  | "redirect"
+>
+
 export type FormBlockType = {
   blockName?: string
   blockType?: "formBlock"
   enableIntro: boolean
-  form: FormType
+  form: FormBlockForm
   introContent?: DefaultTypedEditorState
 }
 
@@ -27,18 +38,19 @@ export const FormBlock: React.FC<
   const {
     enableIntro,
     form: formFromProps,
-    form: { id: formID, confirmationMessage, confirmationType, redirect, submitButtonLabel } = {},
+    form: { id: formID, confirmationMessage, confirmationMessageDuration, confirmationType, redirect, submitButtonLabel } = {},
     introContent,
   } = props
 
   const formMethods = useForm({
-    defaultValues: formFromProps.fields,
+    defaultValues: {},
   })
   const {
     control,
     formState: { errors },
     handleSubmit,
     register,
+    reset,
   } = formMethods
 
   const [isLoading, setIsLoading] = useState(false)
@@ -46,8 +58,24 @@ export const FormBlock: React.FC<
   const [error, setError] = useState<{ message: string; status?: string } | undefined>()
   const router = useRouter()
 
+  const formElementId = formID != null ? String(formID) : undefined
+
+  useEffect(() => {
+    if (!hasSubmitted || confirmationType !== "message") return
+
+    const durationSeconds = confirmationMessageDuration ?? 5
+    if (durationSeconds <= 0) return
+
+    const timerId = setTimeout(() => {
+      setHasSubmitted(false)
+      reset()
+    }, durationSeconds * 1000)
+
+    return () => clearTimeout(timerId)
+  }, [hasSubmitted, confirmationType, confirmationMessageDuration, reset])
+
   const onSubmit = useCallback(
-    (data: FormFieldBlock[]) => {
+    (data: Record<string, unknown>) => {
       let loadingTimerID: ReturnType<typeof setTimeout>
       const submitForm = async () => {
         setError(undefined)
@@ -120,13 +148,19 @@ export const FormBlock: React.FC<
       )}
       <div className="p-4 lg:p-6 border border-border rounded-[0.8rem]">
         <FormProvider {...formMethods}>
-          {!isLoading && hasSubmitted && confirmationType === "message" && (
-            <RichText data={confirmationMessage} />
+          {!isLoading && hasSubmitted && confirmationType === "message" && confirmationMessage && (
+            <div className="form-confirmation-message" role="status" aria-live="polite">
+              <RichText
+                data={confirmationMessage as DefaultTypedEditorState}
+                enableGutter={false}
+                enableProse={false}
+              />
+            </div>
           )}
           {isLoading && !hasSubmitted && <p>Loading, please wait...</p>}
           {error && <div>{`${error.status || "500"}: ${error.message || ""}`}</div>}
           {!hasSubmitted && (
-            <form id={formID} onSubmit={handleSubmit(onSubmit)}>
+            <form id={formElementId} onSubmit={handleSubmit(onSubmit)}>
               <div className="mb-4 last:mb-0">
                 {formFromProps &&
                   formFromProps.fields &&
@@ -151,7 +185,7 @@ export const FormBlock: React.FC<
                   })}
               </div>
 
-              <Button form={formID} type="submit" variant="default">
+              <Button form={formElementId} type="submit" variant="default">
                 {submitButtonLabel}
               </Button>
             </form>

@@ -39,7 +39,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       }
 
       // Create new Leaflet Map instance
-      const map = leaflet.map(container).setView([latitude, longitude], zoom)
+      const map = leaflet.map(container)
       mapInstanceRef.current = map
 
       // Load OpenStreetMap tiles
@@ -57,7 +57,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       if (boundaryGeoJSON) {
         try {
           const parsedGeoJSON = JSON.parse(boundaryGeoJSON)
-          leaflet
+          const boundaryLayer = leaflet
             .geoJSON(parsedGeoJSON, {
               style: {
                 color: "#ef4444", // Red border (matching Weebly contact style)
@@ -68,9 +68,24 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
               },
             })
             .addTo(map)
+
+          const bounds = boundaryLayer.getBounds()
+          if (bounds.isValid()) {
+            const paddingX = container.offsetWidth * 0.05
+            const paddingY = container.offsetHeight * 0.05
+            map.fitBounds(bounds, {
+              padding: [paddingY, paddingX],
+              maxZoom: 18,
+            })
+          } else {
+            map.setView([latitude, longitude], zoom)
+          }
         } catch (e) {
           console.error("LeafletMap: Failed to parse boundaryGeoJSON:", e)
+          map.setView([latitude, longitude], zoom)
         }
+      } else {
+        map.setView([latitude, longitude], zoom)
       }
     })
 
@@ -84,7 +99,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
   }, [latitude, longitude, zoom, boundaryGeoJSON])
 
   return (
-    <div className="relative w-full h-[350px] lg:h-[450px] rounded-[0.8rem] overflow-hidden border border-border shadow-sm">
+    <div className="relative w-full h-[350px] lg:h-[400px] rounded-[0.8rem] overflow-hidden border border-border shadow-sm">
       <div ref={mapContainerRef} className="w-full h-full z-10" />
     </div>
   )

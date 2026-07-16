@@ -9,7 +9,7 @@ import { searchPlugin } from "@payloadcms/plugin-search"
 import { seoPlugin } from "@payloadcms/plugin-seo"
 import { GenerateTitle, GenerateURL } from "@payloadcms/plugin-seo/types"
 import { FixedToolbarFeature, HeadingFeature, lexicalEditor } from "@payloadcms/richtext-lexical"
-import { Plugin } from "payload"
+import { Plugin, Field } from "payload"
 
 import { Page, Post } from "@/payload-types"
 import { getServerSideURL } from "@/utilities/getURL"
@@ -63,7 +63,7 @@ export const plugins: Plugin[] = [
     },
     formOverrides: {
       fields: ({ defaultFields }) => {
-        return defaultFields.map((field) => {
+        const fieldsWithConfirmationEditor = defaultFields.map((field) => {
           if ("name" in field && field.name === "confirmationMessage") {
             return {
               ...field,
@@ -80,6 +80,34 @@ export const plugins: Plugin[] = [
           }
           return field
         })
+
+        const confirmationMessageIndex = fieldsWithConfirmationEditor.findIndex(
+          (field) => "name" in field && field.name === "confirmationMessage",
+        )
+
+        const confirmationMessageDurationField: Field = {
+          name: "confirmationMessageDuration",
+          type: "number",
+          label: "Confirmation Message Duration",
+          defaultValue: 5,
+          min: 0,
+          admin: {
+            condition: (_data, siblingData) => siblingData?.confirmationType === "message",
+            description:
+              "How long to show the confirmation message before the form reappears (in seconds). Set to 0 to keep the message visible permanently.",
+            step: 1,
+          },
+        }
+
+        if (confirmationMessageIndex === -1) {
+          return [...fieldsWithConfirmationEditor, confirmationMessageDurationField]
+        }
+
+        return [
+          ...fieldsWithConfirmationEditor.slice(0, confirmationMessageIndex + 1),
+          confirmationMessageDurationField,
+          ...fieldsWithConfirmationEditor.slice(confirmationMessageIndex + 1),
+        ]
       },
     },
   }),
