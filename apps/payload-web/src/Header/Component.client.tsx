@@ -47,14 +47,14 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data, tenant }) => {
         )}
         {...(overDarkHero ? { "data-theme": "dark" } : theme ? { "data-theme": theme } : {})}
       >
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center w-full">
           {logoUrl ? (
-            <Link href="/">
+            <Link href="/" className="nog-desktop-logo">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={logoUrl}
                 alt={tenant?.name || "North Of Grand"}
-                className="max-h-28 w-auto object-contain mb-2"
+                className="max-h-28 w-auto object-contain"
                 loading="eager"
               />
             </Link>
@@ -62,15 +62,21 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data, tenant }) => {
             <Link
               href="/"
               className={cn(
-                "font-serif text-3xl font-bold tracking-widest mb-2 no-underline",
+                "nog-desktop-logo font-serif text-3xl font-bold tracking-widest no-underline",
                 overDarkHero ? "text-white" : "text-[#76b3b8]",
               )}
             >
               North Of Grand
             </Link>
           )}
-          <div className="w-full mt-4">
-            <HeaderNav data={data} variant="nog" />
+          <div className="nog-nav-wrap">
+            <HeaderNav
+              data={data}
+              variant="nog"
+              logoUrl={logoUrl}
+              tenantName={tenant?.name}
+              overDarkHero={overDarkHero}
+            />
           </div>
         </div>
       </header>

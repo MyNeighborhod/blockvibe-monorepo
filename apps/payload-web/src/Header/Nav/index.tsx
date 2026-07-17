@@ -1,19 +1,60 @@
 "use client"
 
-import React from "react"
+import React, { useEffect, useState } from "react"
 import Link from "next/link"
-import { SearchIcon } from "lucide-react"
+import { usePathname } from "next/navigation"
+import { Menu, SearchIcon, X } from "lucide-react"
 
 import type { Header as HeaderType } from "@/payload-types"
 
 import { CMSLink } from "@/components/Link"
+import { cn } from "@/utilities/ui"
 
-export const HeaderNav: React.FC<{ data: HeaderType; variant?: "default" | "nog" }> = ({
+type HeaderNavProps = {
+  data: HeaderType
+  variant?: "default" | "nog"
+  logoUrl?: string | null
+  tenantName?: string
+  overDarkHero?: boolean
+}
+
+export const HeaderNav: React.FC<HeaderNavProps> = ({
   data,
   variant = "default",
+  logoUrl,
+  tenantName,
+  overDarkHero = false,
 }) => {
   const navItems = data?.navItems || []
   const isNog = variant === "nog"
+  const pathname = usePathname()
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+
+  useEffect(() => {
+    setIsMenuOpen(false)
+  }, [pathname])
+
+  useEffect(() => {
+    if (!isNog) return
+
+    const mediaQuery = window.matchMedia("(width >= 48rem)")
+    const closeOnDesktop = () => {
+      if (mediaQuery.matches) setIsMenuOpen(false)
+    }
+
+    mediaQuery.addEventListener("change", closeOnDesktop)
+    return () => mediaQuery.removeEventListener("change", closeOnDesktop)
+  }, [isNog])
+
+  useEffect(() => {
+    if (!isMenuOpen) return
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    return () => {
+      document.body.style.overflow = previousOverflow
+    }
+  }, [isMenuOpen])
 
   const links = navItems.map(({ link }, i) =>
     isNog ? (
@@ -33,14 +74,78 @@ export const HeaderNav: React.FC<{ data: HeaderType; variant?: "default" | "nog"
 
   if (isNog) {
     return (
-      <div className="nog-nav-bar">
-        <span className="nog-nav-line" aria-hidden="true" />
-        <nav className="nog-nav">
-          <ul>{links}</ul>
-        </nav>
-        <span className="nog-nav-line" aria-hidden="true" />
-        {search}
-      </div>
+      <>
+        {/* Mobile: hamburger + centered logo */}
+        <div className="nog-mobile-header">
+          <button
+            type="button"
+            className="nog-mobile-menu-trigger"
+            onClick={() => setIsMenuOpen(true)}
+            aria-expanded={isMenuOpen}
+            aria-controls="nog-mobile-drawer"
+            aria-label="Open menu"
+          >
+            <Menu className="h-6 w-6" strokeWidth={1.5} />
+          </button>
+
+          <Link href="/" className="nog-mobile-logo">
+            {logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={logoUrl}
+                alt={tenantName || "North Of Grand"}
+                className="max-h-16 w-auto object-contain"
+                loading="eager"
+              />
+            ) : (
+              <span
+                className={cn(
+                  "font-serif text-xl font-bold tracking-widest no-underline",
+                  overDarkHero ? "text-white" : "text-[#76b3b8]",
+                )}
+              >
+                North Of Grand
+              </span>
+            )}
+          </Link>
+
+          <div className="nog-mobile-header-spacer" aria-hidden="true" />
+        </div>
+
+        {/* Desktop nav */}
+        <div className="nog-nav-bar">
+          <nav className="nog-nav">
+            <ul>{links}</ul>
+          </nav>
+          {search}
+        </div>
+
+        {/* Mobile drawer */}
+        {isMenuOpen && (
+          <div className="nog-mobile-menu">
+            <button
+              type="button"
+              className="nog-mobile-overlay"
+              onClick={() => setIsMenuOpen(false)}
+              aria-label="Close menu"
+            />
+            <nav id="nog-mobile-drawer" className="nog-mobile-drawer" aria-label="Site navigation">
+              <div className="nog-mobile-drawer-header">
+                <button
+                  type="button"
+                  className="nog-mobile-menu-close"
+                  onClick={() => setIsMenuOpen(false)}
+                  aria-label="Close menu"
+                >
+                  <X className="h-6 w-6" strokeWidth={1.5} />
+                </button>
+              </div>
+              <ul>{links}</ul>
+              <div className="nog-mobile-drawer-search">{search}</div>
+            </nav>
+          </div>
+        )}
+      </>
     )
   }
 

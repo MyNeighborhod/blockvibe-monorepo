@@ -134,21 +134,47 @@ body[data-tenant-chrome="nog"] .high-impact-hero {
 
 /* NOG nav bar — side lines, active page, hover (northofgranddsm.org) */
 .theme-nog .nog-nav-bar {
-  display: flex;
+  display: none;
   align-items: center;
+  justify-content: center;
   width: 100%;
   padding: 0.125rem 0;
+  gap: 1rem;
 }
 
-.theme-nog .nog-nav-line {
-  flex: 1 1 0;
-  height: 1px;
-  background-color: #d0d0d0;
-  min-width: 1rem;
+@media (width >= 48rem) {
+  .theme-nog .nog-nav-bar {
+    display: flex;
+  }
 }
 
 .theme-nog .nog-nav {
+  display: flex;
+  align-items: center;
   flex-shrink: 0;
+}
+
+.theme-nog .nog-nav::before,
+.theme-nog .nog-nav::after {
+  content: "";
+  display: block;
+  width: 4.5rem;
+  max-width: 4.5rem;
+  flex: 0 1 4.5rem;
+  min-width: 1rem;
+  height: 1px;
+  background-color: #d0d0d0;
+}
+
+/* Inner gap (toward menu) stays tight; outer ends get extra inset */
+.theme-nog .nog-nav::before {
+  margin-right: 1.75rem;
+  margin-left: 3.5rem;
+}
+
+.theme-nog .nog-nav::after {
+  margin-left: 1.75rem;
+  margin-right: 3.5rem;
 }
 
 .theme-nog .nog-nav ul {
@@ -169,13 +195,155 @@ body[data-tenant-chrome="nog"] .high-impact-hero {
 .theme-nog header nav a.nav-search {
   color: #484848 !important;
   padding: 0.5rem !important;
-  margin-left: 0.25rem;
   text-decoration: none !important;
 }
 
 .theme-nog header nav a.nav-search:hover {
   background-color: #f6f6f6;
   color: #484848 !important;
+}
+
+/* Mobile hamburger nav (northofgranddsm.org) */
+.theme-nog .nog-mobile-header {
+  display: grid;
+  grid-template-columns: 2.5rem 1fr 2.5rem;
+  align-items: center;
+  width: 100%;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+@media (width >= 48rem) {
+  .theme-nog .nog-mobile-header {
+    display: none;
+  }
+}
+
+.theme-nog .nog-desktop-logo {
+  display: none;
+  margin-bottom: 0.5rem;
+}
+
+@media (width >= 48rem) {
+  .theme-nog .nog-desktop-logo {
+    display: block;
+  }
+}
+
+.theme-nog .nog-nav-wrap {
+  width: 100%;
+}
+
+@media (width >= 48rem) {
+  .theme-nog .nog-nav-wrap {
+    margin-top: 1rem;
+  }
+}
+
+.theme-nog .nog-mobile-menu-trigger,
+.theme-nog .nog-mobile-menu-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #484848;
+}
+
+.theme-nog .nog-mobile-logo {
+  display: flex;
+  justify-content: center;
+  text-decoration: none !important;
+}
+
+.theme-nog .nog-mobile-menu {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+}
+
+@media (width >= 48rem) {
+  .theme-nog .nog-mobile-menu {
+    display: none !important;
+  }
+}
+
+.theme-nog .nog-mobile-overlay {
+  position: absolute;
+  inset: 0;
+  border: none;
+  background: rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+}
+
+.theme-nog .nog-mobile-drawer {
+  position: relative;
+  z-index: 1;
+  width: min(18rem, 78vw);
+  height: 100%;
+  background: #fff;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+}
+
+.theme-nog .nog-mobile-drawer-header {
+  display: flex;
+  justify-content: flex-start;
+  padding: 0.75rem 0.75rem 0.25rem;
+}
+
+.theme-nog .nog-mobile-drawer ul {
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+  margin: 0;
+  padding: 0.5rem 0 1rem;
+}
+
+.theme-nog .nog-mobile-drawer li {
+  width: 100%;
+}
+
+.theme-nog .nog-mobile-drawer li:hover,
+.theme-nog .nog-mobile-drawer li:has([aria-current="page"]) {
+  background-color: #f6f6f6;
+}
+
+.theme-nog .nog-mobile-drawer .nav-link {
+  display: block;
+  width: 100%;
+  padding: 0.75rem 1.25rem !important;
+}
+
+.theme-nog .nog-mobile-drawer-search {
+  margin-top: auto;
+  padding: 1rem 1.25rem 1.5rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+[data-theme="dark"] .theme-nog .nog-mobile-header {
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+[data-theme="dark"] .theme-nog .nog-mobile-menu-trigger,
+[data-theme="dark"] .theme-nog .nog-mobile-menu-close {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .theme-nog .nog-mobile-drawer {
+  background: var(--background);
+}
+
+[data-theme="dark"] .theme-nog .nog-mobile-drawer li:hover,
+[data-theme="dark"] .theme-nog .nog-mobile-drawer li:has([aria-current="page"]) {
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+[data-theme="dark"] .theme-nog .nog-mobile-drawer-search {
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 /* Styled horizontal lines */
@@ -232,7 +400,8 @@ body[data-tenant-chrome="nog"] .high-impact-hero {
   color: #ffffff !important;
 }
 
-[data-theme="dark"] .theme-nog .nog-nav-line {
+[data-theme="dark"] .theme-nog .nog-nav::before,
+[data-theme="dark"] .theme-nog .nog-nav::after {
   background-color: rgba(255, 255, 255, 0.35);
 }
 
