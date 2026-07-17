@@ -161,4 +161,9 @@
   & > div {
     height: 100% !important;
   }
+
+  // Payload admin CSS can override Tailwind's `hidden` on file inputs
+  input[type="file"] {
+    display: none !important;
+  }
 }

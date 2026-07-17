@@ -69,8 +69,8 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data, tenant }) => {
               North Of Grand
             </Link>
           )}
-          <div className="w-full border-t border-b border-[#e2e8f0] py-2 mt-4 flex justify-center">
-            <HeaderNav data={data} />
+          <div className="w-full mt-4">
+            <HeaderNav data={data} variant="nog" />
           </div>
         </div>
       </header>

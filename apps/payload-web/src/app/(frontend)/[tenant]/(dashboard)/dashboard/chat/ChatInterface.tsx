@@ -329,7 +329,7 @@ export function ChatInterface({ chatServiceUrl }: ChatInterfaceProps) {
       <form
         onSubmit={handleSend}
         onPaste={handlePaste}
-        className="p-3 border-t border-border/40 bg-card/60 flex items-center gap-2"
+        className="p-3 border-t border-border/40 bg-card/60 flex flex-col gap-2"
       >
         <input
           type="file"
@@ -337,36 +337,40 @@ export function ChatInterface({ chatServiceUrl }: ChatInterfaceProps) {
           onChange={handleFileChange}
           accept="image/*"
           multiple
-          className="hidden"
+          className="sr-only"
+          tabIndex={-1}
         />
 
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={() => fileInputRef.current?.click()}
-          className="text-muted-foreground hover:text-foreground flex-shrink-0"
-          title="Upload image/screenshot"
-        >
-          <Paperclip className="h-5 w-5" />
-        </Button>
-
-        <input
+        <textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ask a question or paste a screenshot (Cmd+V)..."
           disabled={loading || !token}
-          className="flex-1 min-h-[40px] px-3.5 py-2 rounded-lg bg-background border border-border/50 text-sm focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
+          rows={3}
+          className="w-full min-h-[80px] px-3.5 py-2 rounded-lg bg-background border border-border/50 text-sm resize-y focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
         />
 
-        <Button
-          type="submit"
-          size="icon"
-          disabled={loading || (!input.trim() && attachments.length === 0) || !token}
-          className="flex-shrink-0"
-        >
-          <Send className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center justify-between gap-2">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => fileInputRef.current?.click()}
+            className="text-muted-foreground hover:text-foreground flex-shrink-0"
+            title="Upload image/screenshot"
+          >
+            <Paperclip className="h-5 w-5" />
+          </Button>
+
+          <Button
+            type="submit"
+            size="icon"
+            disabled={loading || (!input.trim() && attachments.length === 0) || !token}
+            className="flex-shrink-0"
+          >
+            <Send className="h-4 w-4" />
+          </Button>
+        </div>
       </form>
     </div>
   )

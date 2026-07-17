@@ -1,5 +1,8 @@
+@import url("https://fonts.googleapis.com/css2?family=Gentium+Basic:ital,wght@0,400;0,700;1,400;1,700&display=swap");
+
 /* North Of Grand Theme Custom Overrides */
 .theme-nog {
+  --font-gentium: "Gentium Basic", serif;
   font-family: var(--font-gentium), serif;
   color: #2a2a2a;
   --success: #47773e;
@@ -18,19 +21,41 @@ body[data-tenant-chrome="nog"] .high-impact-hero {
   line-height: 1.88 !important; /* ~34px */
 }
 
-.theme-nog strong,
-.theme-nog b {
+/* Form message blocks and labels use Gentium Basic body styling (northofgranddsm.org) */
+.theme-nog .payload-richtext p,
+.theme-nog .prose p {
+  color: #7b8c89 !important;
+  font-size: 1.125rem !important;
+  line-height: 1.88 !important;
+}
+
+.theme-nog label {
   color: #2a2a2a !important;
+  font-size: 1.125rem !important;
+  line-height: 1.88 !important;
 }
 
 .theme-nog h1,
 .theme-nog h2,
 .theme-nog h3,
 .theme-nog h4,
-.theme-nog .hero h1 {
+.theme-nog .hero h1,
+.theme-nog .payload-richtext :is(h1, h2, h3, h4),
+.theme-nog .prose :is(h1, h2, h3, h4) {
   font-family: var(--font-playfair), serif !important;
   color: #42514c;
   font-weight: 600 !important;
+}
+
+/* Body copy, form labels, and inline messages — matches northofgranddsm.org */
+.theme-nog .payload-richtext :is(p, li, strong, em, a),
+.theme-nog .prose :is(p, li, strong, em, blockquote, a),
+.theme-nog label,
+.theme-nog input,
+.theme-nog textarea,
+.theme-nog select,
+.theme-nog .font-serif {
+  font-family: var(--font-gentium), serif !important;
 }
 
 .theme-nog h1 {
@@ -95,14 +120,62 @@ body[data-tenant-chrome="nog"] .high-impact-hero {
   letter-spacing: 0.1em !important;
   text-transform: uppercase !important;
   text-decoration: none !important;
-  color: #2a2a2a !important;
-  padding: 0.5rem 1rem !important;
+  color: #484848 !important;
+  padding: 0.625rem 0.875rem !important; /* 10px 14px */
   font-weight: 400 !important;
+  display: inline-block;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .theme-nog header nav a:hover,
 .theme-nog header nav a.nav-link:hover {
-  color: #76b3b8 !important;
+  color: #484848 !important;
+}
+
+/* NOG nav bar — side lines, active page, hover (northofgranddsm.org) */
+.theme-nog .nog-nav-bar {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0.125rem 0;
+}
+
+.theme-nog .nog-nav-line {
+  flex: 1 1 0;
+  height: 1px;
+  background-color: #d0d0d0;
+  min-width: 1rem;
+}
+
+.theme-nog .nog-nav {
+  flex-shrink: 0;
+}
+
+.theme-nog .nog-nav ul {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.theme-nog .nog-nav li:hover,
+.theme-nog .nog-nav li:has([aria-current="page"]) {
+  background-color: #f6f6f6;
+}
+
+.theme-nog header nav a.nav-search {
+  color: #484848 !important;
+  padding: 0.5rem !important;
+  margin-left: 0.25rem;
+  text-decoration: none !important;
+}
+
+.theme-nog header nav a.nav-search:hover {
+  background-color: #f6f6f6;
+  color: #484848 !important;
 }
 
 /* Styled horizontal lines */
@@ -156,16 +229,29 @@ body[data-tenant-chrome="nog"] .high-impact-hero {
 
 [data-theme="dark"] .theme-nog header nav a:hover,
 [data-theme="dark"] .theme-nog header nav a.nav-link:hover {
-  color: #76b3b8 !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .theme-nog .nog-nav-line {
+  background-color: rgba(255, 255, 255, 0.35);
+}
+
+[data-theme="dark"] .theme-nog .nog-nav li:hover,
+[data-theme="dark"] .theme-nog .nog-nav li:has([aria-current="page"]) {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+[data-theme="dark"] .theme-nog header nav a.nav-search {
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .theme-nog header nav a.nav-search:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: #ffffff !important;
 }
 
 [data-theme="dark"] .theme-nog header nav svg {
   color: #ffffff !important;
-}
-
-[data-theme="dark"] .theme-nog header .border-t,
-[data-theme="dark"] .theme-nog header .border-b {
-  border-color: rgba(255, 255, 255, 0.35) !important;
 }
 
 [data-theme="dark"] .theme-nog header > div > a.font-serif {

@@ -5,7 +5,6 @@ import { GeistMono } from "geist/font/mono"
 import { GeistSans } from "geist/font/sans"
 import {
   Playfair_Display,
-  Gentium_Book_Plus,
   Montserrat,
   Quicksand,
   Nunito,
@@ -34,12 +33,6 @@ const playfair = Playfair_Display({
   subsets: ["latin"],
   variable: "--font-playfair",
   weight: ["400", "600", "700"],
-})
-
-const gentium = Gentium_Book_Plus({
-  subsets: ["latin"],
-  variable: "--font-gentium",
-  weight: ["400", "700"],
 })
 
 const montserrat = Montserrat({
@@ -88,7 +81,6 @@ export default async function RootLayout({
         GeistSans.variable,
         GeistMono.variable,
         playfair.variable,
-        gentium.variable,
         montserrat.variable,
         quicksand.variable,
         nunito.variable,

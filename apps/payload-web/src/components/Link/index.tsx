@@ -2,7 +2,9 @@
 
 import { Button, type ButtonProps } from "@/components/ui/button"
 import { cn } from "@/utilities/ui"
+import { isNavPathActive } from "@/utilities/isNavPathActive"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import React, { useState, useEffect } from "react"
 
 import type { Page, Post } from "@/payload-types"
@@ -12,6 +14,7 @@ type CMSLinkType = {
   children?: React.ReactNode
   className?: string
   label?: string | null
+  matchActive?: boolean
   newTab?: boolean | null
   reference?: {
     relationTo: "pages" | "posts"
@@ -29,6 +32,7 @@ export const CMSLink: React.FC<CMSLinkType> = (props) => {
     children,
     className,
     label,
+    matchActive,
     newTab,
     reference,
     size: sizeFromProps,
@@ -85,13 +89,23 @@ export const CMSLink: React.FC<CMSLinkType> = (props) => {
 
   if (!resolvedHref) return null
 
+  const pathname = usePathname()
+  const isActive =
+    matchActive && !newTab && isNavPathActive(pathname, resolvedHref)
+
   const size = appearance === "link" ? "clear" : sizeFromProps
   const newTabProps = newTab ? { rel: "noopener noreferrer", target: "_blank" } : {}
+  const linkProps = isActive ? { "aria-current": "page" as const } : {}
 
   /* Ensure we don't break any styles set by richText */
   if (appearance === "inline") {
     return (
-      <Link className={cn(className)} href={resolvedHref || ""} {...newTabProps}>
+      <Link
+        className={cn(className)}
+        href={resolvedHref || ""}
+        {...newTabProps}
+        {...linkProps}
+      >
         {label && label}
         {children && children}
       </Link>
@@ -100,7 +114,7 @@ export const CMSLink: React.FC<CMSLinkType> = (props) => {
 
   return (
     <Button asChild className={className} size={size} variant={appearance}>
-      <Link className={cn(className)} href={resolvedHref || ""} {...newTabProps}>
+      <Link className={cn(className)} href={resolvedHref || ""} {...newTabProps} {...linkProps}>
         {label && label}
         {children && children}
       </Link>
