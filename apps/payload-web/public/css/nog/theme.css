@@ -37,6 +37,35 @@ body[data-tenant-chrome="nog"] .high-impact-hero {
   font-size: 3.75rem !important; /* 60px */
 }
 
+.theme-nog [data-block-name="Home Hero Heading"] .container {
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.theme-nog [data-block-name="Home Hero Heading"] h1 {
+  text-align: center;
+  margin-top: 0.5rem !important;
+  margin-bottom: 1.5rem !important;
+}
+
+.theme-nog [data-block-name="Home Intro Content"] .container {
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.theme-nog [data-block-name="Home Intro Content"] img {
+  max-height: 280px;
+  width: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.theme-nog [data-block-name="Home Intro Content"] h2 {
+  font-size: 1.75rem !important;
+  margin-top: 1rem !important;
+  margin-bottom: 0.75rem !important;
+}
+
 .theme-nog h2 {
   font-size: 2.125rem !important; /* 34px */
   margin-top: 1.5rem !important;

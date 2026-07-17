@@ -11,6 +11,14 @@ import type { DefaultTypedEditorState } from "@payloadcms/richtext-lexical"
 import { fields } from "./fields"
 import { getClientSideURL } from "@/utilities/getURL"
 
+const getFieldWidth = (field: NonNullable<FormBlockForm["fields"]>[number]) => {
+  if ("width" in field && typeof field.width === "number") {
+    return field.width
+  }
+
+  return 100
+}
+
 export type FormBlockForm = Pick<
   Form,
   | "id"
@@ -143,13 +151,13 @@ export const FormBlock: React.FC<
 
   return (
     <div className="container lg:max-w-[48rem]">
-      {enableIntro && introContent && !hasSubmitted && (
+      {enableIntro && introContent && (
         <RichText className="mb-8 lg:mb-12" data={introContent} enableGutter={false} />
       )}
       <div className="p-4 lg:p-6 border border-border rounded-[0.8rem]">
         <FormProvider {...formMethods}>
           {!isLoading && hasSubmitted && confirmationType === "message" && confirmationMessage && (
-            <div className="form-confirmation-message" role="status" aria-live="polite">
+            <div className="form-confirmation-message mb-6" role="status" aria-live="polite">
               <RichText
                 data={confirmationMessage as DefaultTypedEditorState}
                 enableGutter={false}
@@ -157,39 +165,41 @@ export const FormBlock: React.FC<
               />
             </div>
           )}
-          {isLoading && !hasSubmitted && <p>Loading, please wait...</p>}
-          {error && <div>{`${error.status || "500"}: ${error.message || ""}`}</div>}
-          {!hasSubmitted && (
-            <form id={formElementId} onSubmit={handleSubmit(onSubmit)}>
-              <div className="mb-4 last:mb-0">
-                {formFromProps &&
-                  formFromProps.fields &&
-                  formFromProps.fields?.map((field, index) => {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const Field: React.FC<any> = fields?.[field.blockType as keyof typeof fields]
-                    if (Field) {
-                      return (
-                        <div className="mb-6 last:mb-0" key={index}>
-                          <Field
-                            form={formFromProps}
-                            {...field}
-                            {...formMethods}
-                            control={control}
-                            errors={errors}
-                            register={register}
-                          />
-                        </div>
-                      )
-                    }
-                    return null
-                  })}
-              </div>
+          {isLoading && <p className="mb-4">Loading, please wait...</p>}
+          {error && <div className="mb-4">{`${error.status || "500"}: ${error.message || ""}`}</div>}
+          <form id={formElementId} onSubmit={handleSubmit(onSubmit)}>
+            <div className="mb-4 flex flex-wrap gap-y-6 last:mb-0">
+              {formFromProps &&
+                formFromProps.fields &&
+                formFromProps.fields?.map((field, index) => {
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  const Field: React.FC<any> = fields?.[field.blockType as keyof typeof fields]
+                  if (Field) {
+                    return (
+                      <div
+                        className="min-w-0 box-border px-2"
+                        key={index}
+                        style={{ width: `${getFieldWidth(field)}%` }}
+                      >
+                        <Field
+                          form={formFromProps}
+                          {...field}
+                          {...formMethods}
+                          control={control}
+                          errors={errors}
+                          register={register}
+                        />
+                      </div>
+                    )
+                  }
+                  return null
+                })}
+            </div>
 
-              <Button form={formElementId} type="submit" variant="default">
-                {submitButtonLabel}
-              </Button>
-            </form>
-          )}
+            <Button form={formElementId} type="submit" variant="default">
+              {submitButtonLabel}
+            </Button>
+          </form>
         </FormProvider>
       </div>
     </div>

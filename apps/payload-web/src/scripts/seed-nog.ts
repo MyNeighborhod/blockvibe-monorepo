@@ -8,6 +8,7 @@ dotenv.config()
 
 import { getPayload } from "payload"
 import { getNogShowcaseUrl } from "./seed-helpers"
+import { NOG_NEWSLETTER_FORM_TITLE, nogNewsletterFormFields } from "./nog-newsletter-form"
 
 // Helper to construct Lexical Rich Text JSON structure simply
 function lexicalRichText(children: any[]): any {
@@ -45,7 +46,11 @@ function richParagraph(text: string): any {
   }
 }
 
-function richHeading(text: string, tag: "h1" | "h2" | "h3" | "h4" | "h5" | "h6" = "h2"): any {
+function richHeading(
+  text: string,
+  tag: "h1" | "h2" | "h3" | "h4" | "h5" | "h6" = "h2",
+  format: "" | "center" = "",
+): any {
   return {
     type: "heading",
     children: [
@@ -60,7 +65,7 @@ function richHeading(text: string, tag: "h1" | "h2" | "h3" | "h4" | "h5" | "h6" 
       },
     ],
     direction: "ltr",
-    format: "",
+    format,
     indent: 0,
     tag: tag,
     version: 1,
@@ -597,7 +602,7 @@ async function run() {
     collection: "forms",
     where: {
       or: [
-        { title: { equals: "NOG Newsletter Signup Form" } },
+        { title: { equals: NOG_NEWSLETTER_FORM_TITLE } },
         { title: { equals: "NOG General Contact Form" } },
       ],
     },
@@ -608,52 +613,11 @@ async function run() {
   const newsletterForm = await payload.create({
     collection: "forms",
     data: {
-      title: "NOG Newsletter Signup Form",
+      title: NOG_NEWSLETTER_FORM_TITLE,
       submitButtonLabel: "Subscribe to Newsletter",
       confirmationType: "message",
       confirmationMessage: lexicalRichText([richHeading("Thank you for subscribing!", "h3")]),
-      fields: [
-        {
-          name: "firstName",
-          blockName: "firstName",
-          blockType: "text",
-          label: "First Name",
-          required: false,
-          width: 50,
-        },
-        {
-          name: "lastName",
-          blockName: "lastName",
-          blockType: "text",
-          label: "Last Name",
-          required: false,
-          width: 50,
-        },
-        {
-          name: "email",
-          blockName: "email",
-          blockType: "email",
-          label: "Email Address",
-          required: true,
-          width: 100,
-        },
-        {
-          name: "address",
-          blockName: "address",
-          blockType: "text",
-          label: "Address",
-          required: false,
-          width: 100,
-        },
-        {
-          name: "phone",
-          blockName: "phone",
-          blockType: "text",
-          label: "Phone Number",
-          required: false,
-          width: 100,
-        },
-      ],
+      fields: nogNewsletterFormFields,
     },
   })
 
@@ -723,6 +687,19 @@ async function run() {
       },
       layout: [
         {
+          blockName: "Home Hero Heading",
+          blockType: "content",
+          columns: [
+            {
+              type: "text",
+              size: "full",
+              richText: lexicalRichText([
+                richHeading("Our historic neighborhood.", "h1", "center"),
+              ]),
+            },
+          ],
+        },
+        {
           blockName: "Home Intro Content",
           blockType: "content",
           columns: [
@@ -738,7 +715,7 @@ async function run() {
                 richParagraph(
                   "Welcome to the Historic District of North of Grand. The neighborhood is nestled in the heart of Des Moines, Iowa between 31st & 42nd street from Hwy 235 to Grand Ave.",
                 ),
-                richHeading("North of Grand Neighborhood Association", "h1"),
+                richHeading("North of Grand Neighborhood Association", "h2"),
                 richHeading("Mission Statement", "h3"),
                 richParagraph(
                   "Our Mission is to strengthen relationships and improve quality of life for all residents and businesses in the North of Grand neighborhood. We commit to enhancing livability and revitalizing our historic neighborhood through opportunities of civic engagement. We advocate on behalf of North of Grand’s diverse residents as a liaison with local governments to preserve and uphold our community’s vibrant characteristics.",
@@ -882,6 +859,17 @@ async function run() {
         type: "none",
       },
       layout: [
+        {
+          blockName: "Calendar Header",
+          blockType: "content",
+          columns: [
+            {
+              type: "text",
+              size: "full",
+              richText: lexicalRichText([richHeading("Calendar")]),
+            },
+          ],
+        },
         {
           blockName: "Google Calendar Block",
           blockType: "iframeBlock",

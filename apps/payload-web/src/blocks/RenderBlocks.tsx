@@ -37,14 +37,19 @@ export const RenderBlocks: React.FC<{
     return (
       <Fragment>
         {blocks.map((block, index) => {
-          const { blockType, id } = block
+          const { blockType, id, blockName } = block
 
           if (blockType && blockType in blockComponents) {
             const Block = blockComponents[blockType]
 
             if (Block) {
               return (
-                <div className="mb-12 last:mb-0" id={id ? `block-${id}` : undefined} key={index}>
+                <div
+                  className="mb-12 last:mb-0"
+                  data-block-name={blockName || undefined}
+                  id={id ? `block-${id}` : undefined}
+                  key={index}
+                >
                   {/* @ts-expect-error there may be some mismatch between the expected types here */}
                   <Block {...block} path={`layout.${index}`} disableInnerContainer />
                 </div>
