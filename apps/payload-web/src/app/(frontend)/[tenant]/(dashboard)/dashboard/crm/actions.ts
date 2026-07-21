@@ -555,3 +555,114 @@ export async function evaluateRulesAction(tenantId: string | number, rules: any[
   }
 }
 
+export async function getCRMBusinessesAction(tenantId: string | number) {
+  try {
+    const { user } = await getMeUser()
+    if (!user) throw new Error("Unauthorized.")
+
+    const numericTenantId = typeof tenantId === "string" ? parseInt(tenantId, 10) : tenantId
+    if (user.role !== "superadmin" && !getUserTenantIds(user).includes(numericTenantId)) {
+      throw new Error("Unauthorized.")
+    }
+
+    const payload = await getPayload({ config: configPromise })
+    const result = await payload.find({
+      collection: "businesses",
+      where: {
+        tenant: { equals: numericTenantId },
+      },
+      limit: 1000,
+      depth: 1,
+    })
+
+    return {
+      success: true,
+      businesses: result.docs.map((doc) => ({
+        id: doc.id,
+        name: doc.name,
+        email: doc.email,
+        address: doc.address,
+        website: doc.website,
+        about: doc.about,
+        hours: doc.hours || "",
+        appearOnNOG: doc.appearOnNOG || false,
+        logo: doc.logo,
+      })),
+    }
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to retrieve businesses for CRM." }
+  }
+}
+
+export async function toggleBusinessNOGAction(
+  tenantId: string | number,
+  businessId: string | number,
+  appear: boolean
+) {
+  try {
+    const { user } = await getMeUser()
+    if (!user) throw new Error("Unauthorized.")
+
+    const numericTenantId = typeof tenantId === "string" ? parseInt(tenantId, 10) : tenantId
+    if (user.role !== "superadmin" && !getUserTenantIds(user).includes(numericTenantId)) {
+      throw new Error("Unauthorized.")
+    }
+
+    const payload = await getPayload({ config: configPromise })
+    const result = await payload.update({
+      collection: "businesses",
+      id: businessId,
+      data: {
+        appearOnNOG: appear,
+      },
+    })
+
+    return {
+      success: true,
+      business: result,
+    }
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to toggle NOG appearance." }
+  }
+}
+
+export async function deleteCRMBusinessAction(tenantId: string | number, businessId: string | number) {
+  try {
+    const { user } = await getMeUser()
+    if (!user) throw new Error("Unauthorized.")
+
+    const numericTenantId = typeof tenantId === "string" ? parseInt(tenantId, 10) : tenantId
+    if (user.role !== "superadmin" && !getUserTenantIds(user).includes(numericTenantId)) {
+      throw new Error("Unauthorized.")
+    }
+
+    const payload = await getPayload({ config: configPromise })
+    
+    const businessDoc = await payload.findByID({
+      collection: "businesses",
+      id: businessId,
+    })
+
+    if (businessDoc) {
+      await payload.delete({
+        collection: "businesses",
+        id: businessId,
+      })
+
+      const logoId = typeof businessDoc.logo === "object" && businessDoc.logo !== null ? businessDoc.logo.id : businessDoc.logo
+      if (logoId) {
+        await payload.delete({
+          collection: "media",
+          id: logoId,
+        })
+      }
+    }
+
+    return {
+      success: true,
+    }
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to delete business." }
+  }
+}
+

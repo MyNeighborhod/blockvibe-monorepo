@@ -25,6 +25,8 @@ import {
   deleteCRMFieldAction,
   evaluateMailingListEmailsAction,
   evaluateRulesAction,
+  toggleBusinessNOGAction,
+  deleteCRMBusinessAction,
 } from "./actions"
 
 interface CRMField {
@@ -61,10 +63,14 @@ interface CRMTabsProps {
   tenantId: string | number
   initialFields: CRMField[]
   initialLists: MailingList[]
+  initialBusinesses: any[]
 }
 
-export function CRMTabs({ tenantId, initialFields, initialLists }: CRMTabsProps) {
-  const [activeTab, setActiveTab] = useState<"directory" | "lists" | "fields">("directory")
+export function CRMTabs({ tenantId, initialFields, initialLists, initialBusinesses }: CRMTabsProps) {
+  const [activeTab, setActiveTab] = useState<"directory" | "lists" | "fields" | "businesses">("directory")
+
+  // --- Businesses State ---
+  const [businesses, setBusinesses] = useState<any[]>(initialBusinesses)
 
   // --- CRM Fields State ---
   const [fields, setFields] = useState<CRMField[]>(initialFields)
@@ -195,6 +201,30 @@ export function CRMTabs({ tenantId, initialFields, initialLists }: CRMTabsProps)
       setFields((prev) => prev.filter((f) => f.id !== fieldId))
     } else {
       alert(res.error || "Failed to delete field.")
+    }
+  }
+
+  // --- Businesses Handlers ---
+  const handleToggleBusinessNOG = async (businessId: string | number, currentStatus: boolean) => {
+    const res = await toggleBusinessNOGAction(tenantId, businessId, !currentStatus)
+    if (res.success) {
+      setBusinesses((prev) =>
+        prev.map((b) => (b.id === businessId ? { ...b, appearOnNOG: !currentStatus } : b))
+      )
+    } else {
+      alert(res.error || "Failed to update business status.")
+    }
+  }
+
+  const handleDeleteBusiness = async (businessId: string | number) => {
+    if (!confirm("Are you sure you want to delete this business? This will remove it from the public directory and the CRM lists.")) {
+      return
+    }
+    const res = await deleteCRMBusinessAction(tenantId, businessId)
+    if (res.success) {
+      setBusinesses((prev) => prev.filter((b) => b.id !== businessId))
+    } else {
+      alert(res.error || "Failed to delete business.")
     }
   }
 
@@ -365,6 +395,16 @@ export function CRMTabs({ tenantId, initialFields, initialLists }: CRMTabsProps)
           }`}
         >
           Custom Attributes
+        </button>
+        <button
+          onClick={() => setActiveTab("businesses")}
+          className={`px-4 py-2 font-medium text-sm border-b-2 -mb-px transition-colors ${
+            activeTab === "businesses"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          Local Businesses
         </button>
       </div>
 
@@ -619,6 +659,93 @@ export function CRMTabs({ tenantId, initialFields, initialLists }: CRMTabsProps)
                         </td>
                       </tr>
                     ))
+                  )}
+                </tbody>
+              </table>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* --- TAB 4: LOCAL BUSINESSES --- */}
+      {activeTab === "businesses" && (
+        <div className="space-y-6">
+          <Card className="backdrop-blur-md bg-card/60 border border-border/40">
+            <CardHeader>
+              <CardTitle className="font-sans text-xl">Local Businesses Directory</CardTitle>
+              <CardDescription>
+                Review and manage local businesses registered under this neighborhood. Toggle approval to control whether they show up in the public directory list.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <table className="w-full text-sm text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-border/40 bg-muted/20 text-muted-foreground font-medium">
+                    <th className="p-4">Logo</th>
+                    <th className="p-4">Business Name</th>
+                    <th className="p-4">Email</th>
+                    <th className="p-4">Address</th>
+                    <th className="p-4">Website</th>
+                    <th className="p-4">Hours</th>
+                    <th className="p-4">Appear on NOG</th>
+                    <th className="p-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {businesses.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="p-8 text-center text-muted-foreground">
+                        No businesses registered yet.
+                      </td>
+                    </tr>
+                  ) : (
+                    businesses.map((biz) => {
+                      const logoUrl = biz.logo && typeof biz.logo === "object" ? biz.logo.url : null
+                      return (
+                        <tr key={biz.id} className="border-b border-border/20 hover:bg-muted/10 transition-colors">
+                          <td className="p-4">
+                            <div className="w-10 h-10 bg-muted/40 border border-border/40 rounded flex items-center justify-center p-0.5 overflow-hidden">
+                              {logoUrl ? (
+                                <img src={logoUrl} alt="Logo" className="max-w-full max-h-full object-contain" />
+                              ) : (
+                                <span className="text-xs text-muted-foreground">None</span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="p-4 font-semibold text-foreground">{biz.name}</td>
+                          <td className="p-4">{biz.email}</td>
+                          <td className="p-4 text-muted-foreground max-w-xs truncate">{biz.address}</td>
+                          <td className="p-4">
+                            {biz.website ? (
+                              <a href={biz.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">
+                                Visit
+                              </a>
+                            ) : (
+                              "-"
+                            )}
+                          </td>
+                          <td className="p-4 text-muted-foreground text-xs">{biz.hours || "-"}</td>
+                          <td className="p-4">
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                checked={!!biz.appearOnNOG}
+                                onChange={() => handleToggleBusinessNOG(biz.id, !!biz.appearOnNOG)}
+                                className="h-4 w-4 rounded border-border cursor-pointer crm-business-approval-toggle"
+                              />
+                              <span className="text-xs text-muted-foreground">
+                                {biz.appearOnNOG ? "Approved" : "Pending"}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="p-4 text-right">
+                            <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10" onClick={() => handleDeleteBusiness(biz.id)}>
+                              Delete
+                            </Button>
+                          </td>
+                        </tr>
+                      )
+                    })
                   )}
                 </tbody>
               </table>

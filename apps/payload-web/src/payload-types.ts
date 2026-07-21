@@ -80,6 +80,7 @@ export interface Config {
     broadcasts: Broadcast;
     'crm-fields': CrmField;
     'mailing-lists': MailingList;
+    businesses: Business;
     redirects: Redirect;
     forms: Form;
     'form-submissions': FormSubmission;
@@ -110,6 +111,7 @@ export interface Config {
     broadcasts: BroadcastsSelect<false> | BroadcastsSelect<true>;
     'crm-fields': CrmFieldsSelect<false> | CrmFieldsSelect<true>;
     'mailing-lists': MailingListsSelect<false> | MailingListsSelect<true>;
+    businesses: BusinessesSelect<false> | BusinessesSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     forms: FormsSelect<false> | FormsSelect<true>;
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
@@ -1213,6 +1215,24 @@ export interface CrmField {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "businesses".
+ */
+export interface Business {
+  id: number;
+  tenant?: (number | null) | Tenant;
+  name: string;
+  address: string;
+  website: string;
+  about: string;
+  email: string;
+  hours?: string | null;
+  logo: number | Media;
+  appearOnNOG?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "redirects".
  */
 export interface Redirect {
@@ -1453,6 +1473,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'mailing-lists';
         value: number | MailingList;
+      } | null)
+    | ({
+        relationTo: 'businesses';
+        value: number | Business;
       } | null)
     | ({
         relationTo: 'redirects';
@@ -2049,6 +2073,23 @@ export interface MailingListsSelect<T extends boolean = true> {
   type?: T;
   members?: T;
   rules?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "businesses_select".
+ */
+export interface BusinessesSelect<T extends boolean = true> {
+  tenant?: T;
+  name?: T;
+  address?: T;
+  website?: T;
+  about?: T;
+  email?: T;
+  hours?: T;
+  logo?: T;
+  appearOnNOG?: T;
   updatedAt?: T;
   createdAt?: T;
 }

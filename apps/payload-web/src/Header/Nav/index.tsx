@@ -56,15 +56,26 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
     }
   }, [isMenuOpen])
 
-  const links = navItems.map(({ link }, i) =>
+  const links = [
+    ...navItems.map(({ link }, i) =>
+      isNog ? (
+        <li key={i}>
+          <CMSLink {...link} appearance="inline" className="nav-link" matchActive />
+        </li>
+      ) : (
+        <CMSLink key={i} {...link} appearance="link" />
+      ),
+    ),
     isNog ? (
-      <li key={i}>
-        <CMSLink {...link} appearance="inline" className="nav-link" matchActive />
+      <li key="businesses">
+        <Link href="/businesses" className="nav-link">BUSINESSES</Link>
       </li>
     ) : (
-      <CMSLink key={i} {...link} appearance="link" />
+      <Link key="businesses" href="/businesses" className="text-sm font-medium text-muted-foreground hover:text-foreground">
+        Businesses
+      </Link>
     ),
-  )
+  ]
 
   const search = (
     <Link href="/search" className="nav-search shrink-0" aria-label="Search">

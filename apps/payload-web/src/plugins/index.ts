@@ -132,6 +132,7 @@ export const plugins: Plugin[] = [
       broadcasts: {},
       "crm-fields": {},
       "mailing-lists": {},
+      businesses: {},
       header: {
         isGlobal: true,
       },

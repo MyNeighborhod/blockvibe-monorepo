@@ -7,6 +7,8 @@ import configPromise from "@payload-config"
 import { InviteModal } from "./InviteModal"
 import { CRMTabs } from "./CRMTabs"
 
+import { getCRMBusinessesAction } from "./actions"
+
 type Args = {
   params: Promise<{
     tenant: string
@@ -68,6 +70,9 @@ export default async function CRMDashboard({ params }: Args) {
     rules: doc.rules || [],
   }))
 
+  const businessesRes = await getCRMBusinessesAction(tenant.id)
+  const initialBusinesses = businessesRes.success && businessesRes.businesses ? businessesRes.businesses : []
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -86,6 +91,7 @@ export default async function CRMDashboard({ params }: Args) {
         tenantId={tenant.id}
         initialFields={fields as any}
         initialLists={lists as any}
+        initialBusinesses={initialBusinesses as any}
       />
     </div>
   )
