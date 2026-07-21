@@ -2,8 +2,10 @@ import React from "react"
 import { getTenantBySlug } from "@/utilities/getGlobals"
 import { notFound, redirect } from "next/navigation"
 import { getMeUser } from "@/utilities/getMeUser"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { getPayload } from "payload"
+import configPromise from "@payload-config"
 import { InviteModal } from "./InviteModal"
+import { CRMTabs } from "./CRMTabs"
 
 type Args = {
   params: Promise<{
@@ -29,6 +31,43 @@ export default async function CRMDashboard({ params }: Args) {
     notFound()
   }
 
+  // Fetch initial fields and mailing lists server-side
+  const payload = await getPayload({ config: configPromise })
+  
+  const fieldsResult = await payload.find({
+    collection: "crm-fields",
+    where: {
+      tenant: { equals: tenant.id },
+    },
+    limit: 100,
+  })
+
+  const listsResult = await payload.find({
+    collection: "mailing-lists",
+    where: {
+      tenant: { equals: tenant.id },
+    },
+    limit: 100,
+    depth: 1,
+  })
+
+  const fields = fieldsResult.docs.map((doc) => ({
+    id: doc.id,
+    label: doc.label,
+    key: doc.key,
+    fieldType: doc.fieldType,
+    options: doc.options || [],
+  }))
+
+  const lists = listsResult.docs.map((doc) => ({
+    id: doc.id,
+    name: doc.name,
+    description: doc.description,
+    type: doc.type,
+    members: doc.members || [],
+    rules: doc.rules || [],
+  }))
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -37,43 +76,17 @@ export default async function CRMDashboard({ params }: Args) {
             Resident Directory
           </h1>
           <p className="text-muted-foreground">
-            Manage neighborhood residents, business logs, and registration tags.
+            Manage neighborhood residents, mailing lists, and custom attributes.
           </p>
         </div>
         <InviteModal tenantId={tenant.id} />
       </div>
 
-      <Card className="backdrop-blur-md bg-card/60 border border-border/40">
-        <CardHeader>
-          <CardTitle className="font-sans">Directory List</CardTitle>
-          <CardDescription>Step 2: Contacts Collection & Directory List</CardDescription>
-        </CardHeader>
-        <CardContent className="py-12 flex flex-col items-center justify-center text-center">
-          <div className="h-12 w-12 rounded-full bg-primary/10 text-primary flex items-center justify-center mb-4">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-            </svg>
-          </div>
-          <h3 className="text-lg font-semibold text-foreground">CRM Feature Coming Soon</h3>
-          <p className="text-sm text-muted-foreground max-w-sm mt-1">
-            This workspace will host the interactive contacts lookup, pagination grid, and search
-            filters in the next implementation step.
-          </p>
-        </CardContent>
-      </Card>
+      <CRMTabs
+        tenantId={tenant.id}
+        initialFields={fields as any}
+        initialLists={lists as any}
+      />
     </div>
   )
 }

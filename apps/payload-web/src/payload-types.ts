@@ -78,6 +78,8 @@ export interface Config {
     invites: Invite;
     'tenant-email-quotas': TenantEmailQuota;
     broadcasts: Broadcast;
+    'crm-fields': CrmField;
+    'mailing-lists': MailingList;
     redirects: Redirect;
     forms: Form;
     'form-submissions': FormSubmission;
@@ -106,6 +108,8 @@ export interface Config {
     invites: InvitesSelect<false> | InvitesSelect<true>;
     'tenant-email-quotas': TenantEmailQuotasSelect<false> | TenantEmailQuotasSelect<true>;
     broadcasts: BroadcastsSelect<false> | BroadcastsSelect<true>;
+    'crm-fields': CrmFieldsSelect<false> | CrmFieldsSelect<true>;
+    'mailing-lists': MailingListsSelect<false> | MailingListsSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     forms: FormsSelect<false> | FormsSelect<true>;
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
@@ -490,6 +494,22 @@ export interface User {
    * Checked if the user opted out of neighborhood emails.
    */
   unsubscribed?: boolean | null;
+  /**
+   * The primary type of community member.
+   */
+  memberType?: ('residential' | 'business' | 'other') | null;
+  /**
+   * Dynamic custom attributes defined for this resident.
+   */
+  customAttributes?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   tenants?:
     | {
         tenant: number | Tenant;
@@ -1130,6 +1150,64 @@ export interface Broadcast {
    * The user who drafted and sent this announcement.
    */
   sender: number | User;
+  /**
+   * The mailing list targeted by this broadcast (if applicable).
+   */
+  mailingList?: (number | null) | MailingList;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "mailing-lists".
+ */
+export interface MailingList {
+  id: number;
+  tenant?: (number | null) | Tenant;
+  name: string;
+  description?: string | null;
+  type: 'static' | 'dynamic';
+  /**
+   * Select members to include in this list.
+   */
+  members?: (number | User)[] | null;
+  /**
+   * Rules for dynamically including members (e.g. memberType = business).
+   */
+  rules?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "crm-fields".
+ */
+export interface CrmField {
+  id: number;
+  tenant?: (number | null) | Tenant;
+  label: string;
+  /**
+   * The unique key (camelCase) used for database queries (e.g. hasDog, membershipTier).
+   */
+  key: string;
+  fieldType: 'text' | 'number' | 'checkbox' | 'select';
+  /**
+   * List of options for the dropdown selector.
+   */
+  options?:
+    | {
+        value: string;
+        id?: string | null;
+      }[]
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1367,6 +1445,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'broadcasts';
         value: number | Broadcast;
+      } | null)
+    | ({
+        relationTo: 'crm-fields';
+        value: number | CrmField;
+      } | null)
+    | ({
+        relationTo: 'mailing-lists';
+        value: number | MailingList;
       } | null)
     | ({
         relationTo: 'redirects';
@@ -1803,6 +1889,8 @@ export interface UsersSelect<T extends boolean = true> {
   isNeighbor?: T;
   household?: T;
   unsubscribed?: T;
+  memberType?: T;
+  customAttributes?: T;
   tenants?:
     | T
     | {
@@ -1928,6 +2016,39 @@ export interface BroadcastsSelect<T extends boolean = true> {
   failedEmails?: T;
   jobId?: T;
   sender?: T;
+  mailingList?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "crm-fields_select".
+ */
+export interface CrmFieldsSelect<T extends boolean = true> {
+  tenant?: T;
+  label?: T;
+  key?: T;
+  fieldType?: T;
+  options?:
+    | T
+    | {
+        value?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "mailing-lists_select".
+ */
+export interface MailingListsSelect<T extends boolean = true> {
+  tenant?: T;
+  name?: T;
+  description?: T;
+  type?: T;
+  members?: T;
+  rules?: T;
   updatedAt?: T;
   createdAt?: T;
 }

@@ -87,6 +87,26 @@ export const Users: CollectionConfig = {
         description: "Checked if the user opted out of neighborhood emails.",
       },
     },
+    {
+      name: "memberType",
+      type: "select",
+      defaultValue: "residential",
+      options: [
+        { label: "Residential Member", value: "residential" },
+        { label: "Business Member", value: "business" },
+        { label: "Other", value: "other" },
+      ],
+      admin: {
+        description: "The primary type of community member.",
+      },
+    },
+    {
+      name: "customAttributes",
+      type: "json",
+      admin: {
+        description: "Dynamic custom attributes defined for this resident.",
+      },
+    },
   ],
   timestamps: true,
 }

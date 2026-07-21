@@ -4,6 +4,10 @@ import { getPayload } from "payload"
 import configPromise from "@payload-config"
 import { headers } from "next/headers"
 import crypto from "crypto"
+import { getMeUser } from "@/utilities/getMeUser"
+import { getUserTenantIds } from "@/access/roles"
+import { evaluateMailingList, compileRulesToQuery } from "@/utilities/crmEvaluator"
+
 
 export async function sendInviteAction(name: string, email: string, tenantId: string | number) {
   try {
@@ -151,3 +155,403 @@ export async function sendInviteAction(name: string, email: string, tenantId: st
     return { success: false, error: err.message || "Failed to send invitation." }
   }
 }
+
+export async function getResidentsAction(
+  tenantId: string | number,
+  search?: string,
+  type?: string,
+  limit: number = 10,
+  page: number = 1
+) {
+  try {
+    const { user } = await getMeUser()
+    if (!user) throw new Error("Unauthorized.")
+
+    const numericTenantId = typeof tenantId === "string" ? parseInt(tenantId, 10) : tenantId
+    if (user.role !== "superadmin" && !getUserTenantIds(user).includes(numericTenantId)) {
+      throw new Error("Unauthorized access to tenant directory.")
+    }
+
+    const payload = await getPayload({ config: configPromise })
+
+    const whereQuery: any = {
+      "tenants.tenant": {
+        equals: numericTenantId,
+      },
+    }
+
+    if (type && type !== "all") {
+      whereQuery.memberType = {
+        equals: type,
+      }
+    }
+
+    if (search) {
+      whereQuery.or = [
+        { name: { contains: search } },
+        { email: { contains: search } },
+        { household: { contains: search } },
+      ]
+    }
+
+    const result = await payload.find({
+      collection: "users",
+      where: whereQuery,
+      limit,
+      page,
+      sort: "name",
+    })
+
+    return {
+      success: true,
+      docs: result.docs.map((doc) => ({
+        id: doc.id,
+        name: doc.name,
+        email: doc.email,
+        role: doc.role,
+        status: doc.status,
+        isNeighbor: (doc as any).isNeighbor,
+        household: (doc as any).household,
+        memberType: (doc as any).memberType || "residential",
+        customAttributes: (doc as any).customAttributes,
+        unsubscribed: doc.unsubscribed,
+      })),
+      totalDocs: result.totalDocs,
+      totalPages: result.totalPages,
+      page: result.page,
+    }
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to fetch residents." }
+  }
+}
+
+export async function updateResidentAction(
+  userId: string | number,
+  tenantId: string | number,
+  data: {
+    name?: string
+    memberType?: "residential" | "business" | "other"
+    household?: string
+    customAttributes?: any
+  }
+) {
+  try {
+    const { user } = await getMeUser()
+    if (!user) throw new Error("Unauthorized.")
+
+    const numericTenantId = typeof tenantId === "string" ? parseInt(tenantId, 10) : tenantId
+    if (user.role !== "superadmin" && !getUserTenantIds(user).includes(numericTenantId)) {
+      throw new Error("Unauthorized.")
+    }
+
+    const payload = await getPayload({ config: configPromise })
+
+    // Check if target user belongs to this tenant
+    const targetUser = await payload.findByID({
+      collection: "users",
+      id: userId,
+    })
+
+    const targetUserTenantIds = targetUser.tenants?.map((t: any) =>
+      typeof t.tenant === "object" && t.tenant !== null ? t.tenant.id : t.tenant
+    ) || []
+
+    if (!targetUserTenantIds.includes(numericTenantId)) {
+      throw new Error("User does not belong to this neighborhood.")
+    }
+
+    const updated = await payload.update({
+      collection: "users",
+      id: userId,
+      data: {
+        name: data.name,
+        memberType: data.memberType,
+        household: data.household,
+        customAttributes: data.customAttributes,
+      },
+    })
+
+    return { success: true, user: updated }
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to update resident." }
+  }
+}
+
+export async function getMailingListsAction(tenantId: string | number) {
+  try {
+    const { user } = await getMeUser()
+    if (!user) throw new Error("Unauthorized.")
+
+    const numericTenantId = typeof tenantId === "string" ? parseInt(tenantId, 10) : tenantId
+    if (user.role !== "superadmin" && !getUserTenantIds(user).includes(numericTenantId)) {
+      throw new Error("Unauthorized.")
+    }
+
+    const payload = await getPayload({ config: configPromise })
+    const result = await payload.find({
+      collection: "mailing-lists",
+      where: {
+        tenant: { equals: numericTenantId },
+      },
+      limit: 100,
+      depth: 1,
+    })
+
+    return { success: true, docs: result.docs }
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to fetch mailing lists." }
+  }
+}
+
+export async function saveMailingListAction(
+  tenantId: string | number,
+  listData: {
+    id?: string | number
+    name: string
+    description?: string
+    type: "static" | "dynamic"
+    members?: (string | number)[]
+    rules?: any
+  }
+) {
+  try {
+    const { user } = await getMeUser()
+    if (!user) throw new Error("Unauthorized.")
+
+    const numericTenantId = typeof tenantId === "string" ? parseInt(tenantId, 10) : tenantId
+    if (user.role !== "superadmin" && !getUserTenantIds(user).includes(numericTenantId)) {
+      throw new Error("Unauthorized.")
+    }
+
+    const payload = await getPayload({ config: configPromise })
+
+    const payloadData: any = {
+      name: listData.name,
+      description: listData.description,
+      type: listData.type,
+      tenant: numericTenantId,
+    }
+
+    if (listData.type === "static") {
+      payloadData.members = listData.members || []
+      payloadData.rules = null
+    } else {
+      payloadData.rules = listData.rules || []
+      payloadData.members = []
+    }
+
+    let result
+    if (listData.id) {
+      result = await payload.update({
+        collection: "mailing-lists",
+        id: listData.id,
+        data: payloadData,
+      })
+    } else {
+      result = await payload.create({
+        collection: "mailing-lists",
+        data: payloadData,
+      })
+    }
+
+    return { success: true, list: result }
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to save mailing list." }
+  }
+}
+
+export async function deleteMailingListAction(tenantId: string | number, listId: string | number) {
+  try {
+    const { user } = await getMeUser()
+    if (!user) throw new Error("Unauthorized.")
+
+    const numericTenantId = typeof tenantId === "string" ? parseInt(tenantId, 10) : tenantId
+    if (user.role !== "superadmin" && !getUserTenantIds(user).includes(numericTenantId)) {
+      throw new Error("Unauthorized.")
+    }
+
+    const payload = await getPayload({ config: configPromise })
+    await payload.delete({
+      collection: "mailing-lists",
+      id: listId,
+    })
+
+    return { success: true }
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to delete mailing list." }
+  }
+}
+
+export async function getCRMFieldsAction(tenantId: string | number) {
+  try {
+    const { user } = await getMeUser()
+    if (!user) throw new Error("Unauthorized.")
+
+    const numericTenantId = typeof tenantId === "string" ? parseInt(tenantId, 10) : tenantId
+    if (user.role !== "superadmin" && !getUserTenantIds(user).includes(numericTenantId)) {
+      throw new Error("Unauthorized.")
+    }
+
+    const payload = await getPayload({ config: configPromise })
+    const result = await payload.find({
+      collection: "crm-fields",
+      where: {
+        tenant: { equals: numericTenantId },
+      },
+      limit: 100,
+    })
+
+    return { success: true, docs: result.docs }
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to fetch custom fields." }
+  }
+}
+
+export async function saveCRMFieldAction(
+  tenantId: string | number,
+  fieldData: {
+    id?: string | number
+    label: string
+    key: string
+    fieldType: "text" | "number" | "checkbox" | "select"
+    options?: { value: string }[]
+  }
+) {
+  try {
+    const { user } = await getMeUser()
+    if (!user) throw new Error("Unauthorized.")
+
+    const numericTenantId = typeof tenantId === "string" ? parseInt(tenantId, 10) : tenantId
+    if (user.role !== "superadmin" && !getUserTenantIds(user).includes(numericTenantId)) {
+      throw new Error("Unauthorized.")
+    }
+
+    const payload = await getPayload({ config: configPromise })
+
+    const payloadData: any = {
+      label: fieldData.label,
+      key: fieldData.key,
+      fieldType: fieldData.fieldType,
+      tenant: numericTenantId,
+    }
+
+    if (fieldData.fieldType === "select") {
+      payloadData.options = fieldData.options || []
+    } else {
+      payloadData.options = []
+    }
+
+    let result
+    if (fieldData.id) {
+      result = await payload.update({
+        collection: "crm-fields",
+        id: fieldData.id,
+        data: payloadData,
+      })
+    } else {
+      result = await payload.create({
+        collection: "crm-fields",
+        data: payloadData,
+      })
+    }
+
+    return { success: true, field: result }
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to save custom field." }
+  }
+}
+
+export async function deleteCRMFieldAction(tenantId: string | number, fieldId: string | number) {
+  try {
+    const { user } = await getMeUser()
+    if (!user) throw new Error("Unauthorized.")
+
+    const numericTenantId = typeof tenantId === "string" ? parseInt(tenantId, 10) : tenantId
+    if (user.role !== "superadmin" && !getUserTenantIds(user).includes(numericTenantId)) {
+      throw new Error("Unauthorized.")
+    }
+
+    const payload = await getPayload({ config: configPromise })
+    await payload.delete({
+      collection: "crm-fields",
+      id: fieldId,
+    })
+
+    return { success: true }
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to delete custom field." }
+  }
+}
+
+export async function evaluateMailingListEmailsAction(tenantId: string | number, listId: string | number) {
+  try {
+    const { user } = await getMeUser()
+    if (!user) throw new Error("Unauthorized.")
+
+    const numericTenantId = typeof tenantId === "string" ? parseInt(tenantId, 10) : tenantId
+    if (user.role !== "superadmin" && !getUserTenantIds(user).includes(numericTenantId)) {
+      throw new Error("Unauthorized.")
+    }
+
+    const users = await evaluateMailingList(listId, numericTenantId)
+
+    return {
+      success: true,
+      emails: users.map((u) => u.email),
+      members: users.map((u) => ({
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        memberType: (u as any).memberType || "residential",
+      })),
+    }
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to evaluate mailing list." }
+  }
+}
+
+export async function evaluateRulesAction(tenantId: string | number, rules: any[]) {
+  try {
+    const { user } = await getMeUser()
+    if (!user) throw new Error("Unauthorized.")
+
+    const numericTenantId = typeof tenantId === "string" ? parseInt(tenantId, 10) : tenantId
+    if (user.role !== "superadmin" && !getUserTenantIds(user).includes(numericTenantId)) {
+      throw new Error("Unauthorized.")
+    }
+
+    const payload = await getPayload({ config: configPromise })
+    const rulesQuery = compileRulesToQuery(rules)
+
+    const finalQuery: any = {
+      and: [
+        {
+          "tenants.tenant": { equals: numericTenantId },
+        },
+        {
+          unsubscribed: { not_equals: true },
+        },
+        rulesQuery,
+      ],
+    }
+
+    const usersResult = await payload.find({
+      collection: "users",
+      where: finalQuery,
+      limit: 1000,
+    })
+
+    return {
+      success: true,
+      members: usersResult.docs.map((u) => ({
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        memberType: (u as any).memberType || "residential",
+      })),
+    }
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to evaluate rules." }
+  }
+}
+

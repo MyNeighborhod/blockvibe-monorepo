@@ -18,6 +18,8 @@ import { Tenants } from "./collections/Tenants"
 import { Invites } from "./collections/Invites"
 import { TenantEmailQuotas } from "./collections/TenantEmailQuotas"
 import { Broadcasts } from "./collections/Broadcasts"
+import { CRMFields } from "./collections/CRMFields"
+import { MailingLists } from "./collections/MailingLists"
 import { nodemailerAdapter } from "@payloadcms/email-nodemailer"
 
 const filename = fileURLToPath(import.meta.url)
@@ -96,6 +98,8 @@ export default buildConfig({
     Invites,
     TenantEmailQuotas,
     Broadcasts,
+    CRMFields,
+    MailingLists,
   ],
   cors: [getServerSideURL()].filter(Boolean),
   globals: [],

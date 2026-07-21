@@ -83,6 +83,7 @@ export async function sendBroadcastAction(
   message: string,
   tenantId: string | number,
   delivery: EmailDeliveryMethod = "ses",
+  mailingListId?: string | number,
 ) {
   try {
     if (!recipientEmails || recipientEmails.length === 0) {
@@ -201,6 +202,7 @@ export async function sendBroadcastAction(
         sentCount: 0,
         failedCount: 0,
         failedEmails: [],
+        mailingList: mailingListId ? (typeof mailingListId === "string" ? parseInt(mailingListId, 10) : mailingListId) : undefined,
       },
       user: senderUser,
     })
