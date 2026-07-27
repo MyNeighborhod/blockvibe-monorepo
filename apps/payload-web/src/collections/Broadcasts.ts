@@ -114,6 +114,14 @@ export const Broadcasts: CollectionConfig = {
         description: "The user who drafted and sent this announcement.",
       },
     },
+    {
+      name: "mailingList",
+      type: "relationship",
+      relationTo: "mailing-lists",
+      admin: {
+        description: "The mailing list targeted by this broadcast (if applicable).",
+      },
+    },
   ],
   timestamps: true,
 }

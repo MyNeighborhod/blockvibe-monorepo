@@ -102,14 +102,21 @@ describe("Middleware Multi-Tenant Routing", () => {
       expect(res?.url.pathname).toBe("/nog/contact")
     })
 
-    it("rewrites custom domains to full hostname (e.g. www.northofgranddsm.org)", () => {
+    it("rewrites custom NOG domains to nog tenant slug", () => {
       const req = createMockRequest(
-        "https://www.northofgranddsm.org/posts/my-post",
+        "https://www.northofgranddsm.org/contact",
         "www.northofgranddsm.org",
       )
       const res = middleware(req) as any
       expect(res?.type).toBe("rewrite")
-      expect(res?.url.pathname).toBe("/www.northofgranddsm.org/posts/my-post")
+      expect(res?.url.pathname).toBe("/nog/contact")
+    })
+
+    it("rewrites northofgranddsm.org apex to nog tenant slug", () => {
+      const req = createMockRequest("https://northofgranddsm.org/home", "northofgranddsm.org")
+      const res = middleware(req) as any
+      expect(res?.type).toBe("rewrite")
+      expect(res?.url.pathname).toBe("/nog/home")
     })
   })
 })

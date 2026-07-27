@@ -57,6 +57,21 @@ export default async function EmailDashboard({ params }: Args) {
 
   const emailAccount = await getEmailAccountForTenant(tenant.id)
 
+  const mailingListsResult = await payload.find({
+    collection: "mailing-lists",
+    where: {
+      tenant: { equals: tenant.id },
+    },
+    limit: 100,
+  })
+
+  const mailingLists = mailingListsResult.docs.map((doc) => ({
+    id: doc.id,
+    name: doc.name,
+    type: doc.type,
+    description: doc.description,
+  }))
+
   const broadcastsResult = await payload.find({
     collection: "broadcasts",
     where: {
@@ -86,6 +101,7 @@ export default async function EmailDashboard({ params }: Args) {
         tenantId={tenant.id}
         gmailConnected={isEmailAccountConnected(emailAccount)}
         defaultDelivery={(tenant.emailDeliveryDefault as EmailDeliveryMethod) || "ses"}
+        mailingLists={mailingLists as any}
       />
 
       <BroadcastStatusLog broadcasts={broadcastsResult.docs} />

@@ -15,6 +15,7 @@ import {
   CardFooter,
 } from "@/components/ui/card"
 import { sendBroadcastAction, uploadBroadcastImageAction } from "./actions"
+import { evaluateMailingListEmailsAction } from "../crm/actions"
 import { DEFAULT_BROADCAST_MESSAGE_HTML } from "./broadcastDefaults"
 import { RichTextEditor } from "@/components/RichTextEditor"
 
@@ -27,11 +28,19 @@ interface Resident {
   role?: string | null
 }
 
+interface MailingListOption {
+  id: string | number
+  name: string
+  type: "static" | "dynamic"
+  description?: string | null
+}
+
 interface BroadcastFormProps {
   residents: Resident[]
   tenantId: string | number
   gmailConnected: boolean
   defaultDelivery: EmailDeliveryMethod
+  mailingLists: MailingListOption[]
 }
 
 export function BroadcastForm({
@@ -39,6 +48,7 @@ export function BroadcastForm({
   tenantId,
   gmailConnected,
   defaultDelivery,
+  mailingLists,
 }: BroadcastFormProps) {
   const router = useRouter()
   const [subject, setSubject] = useState("")
@@ -48,6 +58,32 @@ export function BroadcastForm({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+
+  const [selectedListId, setSelectedListId] = useState<string | number | "individual">("individual")
+  const [listLoading, setListLoading] = useState(false)
+
+  const handleListChange = async (val: string) => {
+    setSelectedListId(val)
+    if (val === "individual") {
+      setSelectedEmails([])
+      return
+    }
+
+    setListLoading(true)
+    setError(null)
+    try {
+      const res = await evaluateMailingListEmailsAction(tenantId, val)
+      if (res.success && res.emails) {
+        setSelectedEmails(res.emails)
+      } else {
+        setError(res.error || "Failed to evaluate mailing list.")
+      }
+    } catch (err: any) {
+      setError(err.message || "Failed to fetch list members.")
+    } finally {
+      setListLoading(false)
+    }
+  }
 
   const handleUploadImage = async (file: File): Promise<string> => {
     const formData = new FormData()
@@ -83,7 +119,14 @@ export function BroadcastForm({
     setSuccess(null)
 
     try {
-      const res = await sendBroadcastAction(selectedEmails, subject, message, tenantId, delivery)
+      const res = await sendBroadcastAction(
+        selectedEmails,
+        subject,
+        message,
+        tenantId,
+        delivery,
+        selectedListId !== "individual" ? selectedListId : undefined
+      )
       if (res.success) {
         const count = res.count
         if ("queued" in res && res.queued) {
@@ -135,6 +178,24 @@ export function BroadcastForm({
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="space-y-2 pb-2 border-b border-border/40">
+              <Label htmlFor="target-list" className="text-sm font-semibold">Target Audience</Label>
+              <select
+                id="target-list"
+                value={selectedListId}
+                onChange={(e) => handleListChange(e.target.value)}
+                className="w-full p-2 text-sm bg-background border border-border rounded-lg"
+              >
+                <option value="individual">Individual Selection</option>
+                {mailingLists?.map((list) => (
+                  <option key={list.id} value={list.id}>
+                    Mailing List: {list.name} ({list.type})
+                  </option>
+                ))}
+              </select>
+              {listLoading && <p className="text-xs text-muted-foreground animate-pulse">Evaluating list members...</p>}
+            </div>
+
             <div className="flex items-center justify-between pb-2 border-b border-border/40">
               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 {selectedEmails.length} selected / {residents.length} total

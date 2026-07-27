@@ -1,13 +1,15 @@
 /**
- * Restructure the NOG home page to match the original site layout.
+ * Restructure and update the NOG home page to match the original site layout and latest upcoming events.
  *
  * Usage: pnpm exec tsx src/scripts/update-nog-home-page.ts
  */
 import dotenv from "dotenv"
-dotenv.config()
+
+if (!process.env.DATABASE_URL) {
+  dotenv.config()
+}
 
 import { getPayload } from "payload"
-import configPromise from "@payload-config"
 import { lexicalRichText, richHeading, richParagraph } from "./seed-helpers"
 
 function buildHomeIntroLayout(homePhotoId: number) {
@@ -56,8 +58,61 @@ function buildHomeIntroLayout(homePhotoId: number) {
   ]
 }
 
+function buildUpcomingEventsLayout() {
+  return {
+    blockName: "Upcoming Events Content",
+    blockType: "content" as const,
+    columns: [
+      {
+        type: "text" as const,
+        size: "full" as const,
+        richText: lexicalRichText([
+          richHeading("Upcoming Events:", "h2"),
+          richHeading("2026 Summer Scavenger Hunt:", "h3"),
+          richParagraph(
+            "Throughout the months of June and July, keep an eye out for each of the following things in the North of Grand (NOG) Neighborhood. For each item in the photo sheet, enter the location of where you found that item. We're pretty flexible on the location descriptions. • Some are easier to find than others. • All can be seen from the sidewalk. • When you find an item, fill in the location on your entry",
+          ),
+          richHeading("Submitting Your Entry:", "h3"),
+          richParagraph(
+            "Submit your entry by July 31st to be entered into drawings for NoG Swag and donated prizes from NoG Businesses",
+          ),
+          richParagraph("Entries can be submitted in one of the following ways:"),
+          richParagraph("• tinyurl.com/nogsummerscavengerhunt2026"),
+          richParagraph(
+            "• Paper copy (and then send a picture of your filled in map to northofgrandpresident@gmail.com)",
+          ),
+          richParagraph(
+            "• DM NOG Neighborhood Association on Facebook to have a paper copy dropped off at your home in the NOG neighborhood",
+          ),
+          richParagraph(
+            "• Email NOG Neighborhood Association to have a paper copy dropped off at your home in the NOG neighborhood",
+          ),
+          richHeading("Prize Entries:", "h3"),
+          richParagraph("• 1-4 items found and recorded: 1 entry into the drawings"),
+          richParagraph("• 5-8 items found and recorded: 2 entries into the drawings"),
+          richParagraph(
+            "• 9-12 items found and recorded: 3 entries into the drawings *Only one prize per person",
+          ),
+          richHeading("Neighborhood Night Out: Tuesday, August 4th", "h3"),
+          richParagraph("Boesen the Florist Parking Lot 6-8pm"),
+          richParagraph("Snacks! Games! Music! Raffle Prizes"),
+          richParagraph("Come hang out with your neighbors"),
+          richHeading("NoG Quarterly Meeting: Sunday, August 16th", "h3"),
+          richParagraph("Price Chopper Cafe: 4-5:30pm"),
+          richParagraph("More information to come"),
+          richHeading("NoG Blood Drive: Friday, September 25th", "h3"),
+          richParagraph("Price Chopper Parking lot 2-6pm"),
+          richParagraph("Appointment Sign up link"),
+        ]),
+      },
+    ],
+  }
+}
+
 async function main() {
-  const payload = await getPayload({ config: configPromise })
+  const configPromise = (await import("../payload.config")).default
+  const config = await configPromise
+  const payload = await getPayload({ config })
 
   const tenants = await payload.find({
     collection: "tenants",
@@ -85,10 +140,6 @@ async function main() {
   }
 
   const existingLayout = page.layout || []
-  const upcomingEventsBlock = existingLayout.find(
-    (block) => block.blockName === "Upcoming Events Content",
-  )
-
   const introBlock = existingLayout.find((block) => block.blockName === "Home Intro Content")
   const mediaId =
     introBlock?.blockType === "content"
@@ -106,10 +157,7 @@ async function main() {
     throw new Error("Could not find home photo media on the existing home page")
   }
 
-  const layout = [
-    ...buildHomeIntroLayout(homePhotoId),
-    ...(upcomingEventsBlock ? [upcomingEventsBlock] : []),
-  ]
+  const layout = [...buildHomeIntroLayout(homePhotoId), buildUpcomingEventsLayout()]
 
   await payload.update({
     collection: "pages",
@@ -118,7 +166,7 @@ async function main() {
     context: { disableRevalidate: true },
   })
 
-  payload.logger.info(`Updated NOG home page layout (id: ${page.id})`)
+  payload.logger.info(`Updated NOG home page layout with latest upcoming events (id: ${page.id})`)
   process.exit(0)
 }
 

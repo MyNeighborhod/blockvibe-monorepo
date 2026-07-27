@@ -130,6 +130,9 @@ export const plugins: Plugin[] = [
       search: {},
       invites: {},
       broadcasts: {},
+      "crm-fields": {},
+      "mailing-lists": {},
+      businesses: {},
       header: {
         isGlobal: true,
       },

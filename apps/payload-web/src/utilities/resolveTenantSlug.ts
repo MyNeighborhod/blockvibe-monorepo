@@ -1,9 +1,21 @@
 const PLATFORM_DOMAIN = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || "blockvibe.org"
 const STAGING_DOMAIN = process.env.NEXT_PUBLIC_STAGING_DOMAIN || "staging.blockvibe.org"
 
+/** Hostnames that resolve to the `nog` tenant (custom domains + subdomain). */
+const NOG_HOSTS = new Set([
+  "northofgranddsm.org",
+  "www.northofgranddsm.org",
+  `nog.${PLATFORM_DOMAIN}`,
+  `nog.${STAGING_DOMAIN}`,
+])
+
 /** Hostname → tenant slug used in routes and database lookups. */
 export function resolveTenantSlugFromHost(hostname: string): string {
   const host = hostname.split(":")[0]
+
+  if (NOG_HOSTS.has(host)) {
+    return "nog"
+  }
 
   // 1. Staging Domain: staging.blockvibe.org
   if (host === STAGING_DOMAIN) {
