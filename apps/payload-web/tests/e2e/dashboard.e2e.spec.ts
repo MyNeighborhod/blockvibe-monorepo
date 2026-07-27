@@ -59,11 +59,11 @@ test.describe("Frontend Tenant Dashboard & Auth E2E Tests", () => {
     // Assert Navbar contains logout
     await expect(page.locator("button:has-text('Sign Out')")).toBeVisible()
 
-    // Navigate to CRM Stub
+    // Navigate to CRM
     await page.click("a:has-text('Directory (CRM)')")
     await page.waitForURL("**/dashboard/crm")
     await expect(page.locator("h1:has-text('Resident Directory')")).toBeVisible()
-    await expect(page.locator("text=CRM Feature Coming Soon")).toBeVisible()
+    await expect(page.locator("button:has-text('Resident Directory')")).toBeVisible()
 
     // Navigate to Email Stub
     await page.click("a:has-text('Email Broadcaster')")
