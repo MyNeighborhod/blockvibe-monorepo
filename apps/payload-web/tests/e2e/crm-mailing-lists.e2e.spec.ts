@@ -61,6 +61,9 @@ test.describe("CRM Mailing Lists and Custom Attributes E2E Flow", () => {
       throw new Error("TENANT_NOG_USERNAME or TENANT_NOG_PASSWORD not defined in env")
     }
 
+    // Setup dialog auto-accept for deletions
+    adminPage.on("dialog", (dialog) => dialog.accept())
+
     // 1. Log in as NOG Admin
     await adminPage.goto("/login")
     await adminPage.fill("input[type='email']", adminEmail)
@@ -73,6 +76,29 @@ test.describe("CRM Mailing Lists and Custom Attributes E2E Flow", () => {
     await adminPage.waitForURL("**/dashboard/crm")
     await expect(adminPage.locator("h1:has-text('Resident Directory')")).toBeVisible()
 
+    // Pre-cleanup custom field and mailing list if left over from previous runs
+    await adminPage.click("button:has-text('Custom Attributes')")
+    const preFieldDelete = adminPage.locator("tr:has-text('Has Pet') button:has-text('Delete')")
+    const preFieldCount = await preFieldDelete.count()
+    for (let i = 0; i < preFieldCount; i++) {
+      const btn = preFieldDelete.first()
+      if (await btn.isVisible().catch(() => false)) {
+        await btn.click()
+        await adminPage.waitForTimeout(500)
+      }
+    }
+
+    await adminPage.click("button:has-text('Mailing Lists')")
+    const preListDelete = adminPage.locator("div:has-text('NOG Pet Owners') button:has-text('Delete')")
+    const preListCount = await preListDelete.count()
+    for (let i = 0; i < preListCount; i++) {
+      const btn = preListDelete.first()
+      if (await btn.isVisible().catch(() => false)) {
+        await btn.click()
+        await adminPage.waitForTimeout(500)
+      }
+    }
+
     // 3. Create Custom CRM Field
     await adminPage.click("button:has-text('Custom Attributes')")
     await adminPage.click("button:has-text('Add Custom Field')")
@@ -81,7 +107,7 @@ test.describe("CRM Mailing Lists and Custom Attributes E2E Flow", () => {
     await adminPage.click("button:has-text('Save Field')")
 
     // Verify custom field was saved and appears in the list
-    await expect(adminPage.locator("td:has-text('Has Pet')")).toBeVisible()
+    await expect(adminPage.locator("td:has-text('Has Pet')").first()).toBeVisible()
 
     // 4. Update Resident Profile with custom attribute
     await adminPage.click("button:has-text('Resident Directory')")
@@ -94,7 +120,7 @@ test.describe("CRM Mailing Lists and Custom Attributes E2E Flow", () => {
     await adminPage.click("tr:has-text('eugen8@gmail.com') button:has-text('Edit')")
     
     // Toggle the new dynamic "Has Pet" checkbox
-    const customCheckbox = adminPage.locator("input[id='custom-hasPet']")
+    const customCheckbox = adminPage.locator("input[id='custom-hasPet']").first()
     await expect(customCheckbox).toBeVisible()
     if (!(await customCheckbox.isChecked())) {
       await customCheckbox.check()
@@ -131,6 +157,31 @@ test.describe("CRM Mailing Lists and Custom Attributes E2E Flow", () => {
     // Check that Eugen's checkbox is checked
     const checkbox = adminPage.locator("input[id='resident-checkbox-eugen8@gmail.com']")
     await expect(checkbox).toBeChecked()
+
+    // 7. Self-Cleaning Step: Remove test-created custom field and mailing list via UI
+    await adminPage.goto("/dashboard/crm")
+
+    await adminPage.click("button:has-text('Custom Attributes')")
+    const postFieldDelete = adminPage.locator("tr:has-text('Has Pet') button:has-text('Delete')")
+    const postFieldCount = await postFieldDelete.count()
+    for (let i = 0; i < postFieldCount; i++) {
+      const btn = postFieldDelete.first()
+      if (await btn.isVisible().catch(() => false)) {
+        await btn.click()
+        await adminPage.waitForTimeout(500)
+      }
+    }
+
+    await adminPage.click("button:has-text('Mailing Lists')")
+    const postListDelete = adminPage.locator("div:has-text('NOG Pet Owners') button:has-text('Delete')")
+    const postListCount = await postListDelete.count()
+    for (let i = 0; i < postListCount; i++) {
+      const btn = postListDelete.first()
+      if (await btn.isVisible().catch(() => false)) {
+        await btn.click()
+        await adminPage.waitForTimeout(500)
+      }
+    }
 
     await adminPage.close()
     await adminContext.close()

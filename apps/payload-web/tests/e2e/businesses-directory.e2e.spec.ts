@@ -131,6 +131,9 @@ test.describe("Business Directory & CRM Broadcaster E2E Flow", () => {
       throw new Error("TENANT_NOG_USERNAME or TENANT_NOG_PASSWORD not defined in env")
     }
 
+    // Auto-accept confirmation dialogs for UI cleanup
+    page.on("dialog", (dialog) => dialog.accept())
+
     await page.goto("/login")
     await page.fill("input[type='email']", adminEmail)
     await page.fill("input[type='password']", adminPassword)
@@ -143,18 +146,28 @@ test.describe("Business Directory & CRM Broadcaster E2E Flow", () => {
     await page.click("button:has-text('Local Businesses')")
     
     // Find the new business row and toggle the checkbox to approve it
-    const approveToggle = page.locator("tr:has-text('Green Meadows Cafe') input.crm-business-approval-toggle")
+    const approveToggle = page.locator("tr:has-text('Green Meadows Cafe') input.crm-business-approval-toggle").first()
     await expect(approveToggle).toBeVisible()
-    await approveToggle.click()
-    await expect(approveToggle).toBeChecked()
+    if (!(await approveToggle.isChecked())) {
+      await approveToggle.click()
+      await expect(approveToggle).toBeChecked()
+    }
 
     // 6. Verify that it is now visible publicly
     await page.goto("/businesses")
-    await expect(page.locator("h3:has-text('Green Meadows Cafe')")).toBeVisible()
+    await expect(page.locator("h3:has-text('Green Meadows Cafe')").first()).toBeVisible()
 
     // 7. Go back to CRM and Create Mailing List
     await page.goto("/dashboard/crm")
     await page.click("button:has-text('Mailing Lists')")
+
+    // Pre-clean mailing list if already exists
+    const preListDelete = page.locator("div:has-text('NOG Businesses') button:has-text('Delete')").first()
+    if (await preListDelete.isVisible().catch(() => false)) {
+      await preListDelete.click()
+      await page.waitForTimeout(500)
+    }
+
     await page.click("button:has-text('Create Mailing List')")
 
     await page.fill("input[id='listName']", "NOG Businesses")
@@ -173,7 +186,7 @@ test.describe("Business Directory & CRM Broadcaster E2E Flow", () => {
     await page.click("button:has-text('Save List')")
     await expect(page.locator("h3:has-text('NOG Businesses')")).toBeVisible()
 
-    // 6. Go to Email Broadcaster and target the list
+    // 8. Go to Email Broadcaster and target the list
     await page.click("a:has-text('Email Broadcaster')")
     await page.waitForURL("**/dashboard/email")
 
@@ -187,7 +200,7 @@ test.describe("Business Directory & CRM Broadcaster E2E Flow", () => {
     // Select Platform (SES) to ensure mail delivery is tested
     await page.locator('input[name="delivery"]').first().check()
 
-    // 7. Compose and send communication
+    // 9. Compose and send communication
     await page.fill("input[id='broadcast-subject']", "Welcome Local Businesses")
     const editor = page.locator("[id='broadcast-message']")
     await editor.focus()
@@ -205,6 +218,30 @@ test.describe("Business Directory & CRM Broadcaster E2E Flow", () => {
         "text=/Communication sent successfully|Broadcast queued/i",
       ),
     ).toBeVisible()
+
+    // 10. Self-Cleaning Step: Remove test-created business and mailing list via UI
+    await page.goto("/dashboard/crm")
+    await page.click("button:has-text('Local Businesses')")
+    const postBizDelete = page.locator("tr:has-text('Green Meadows Cafe') button:has-text('Delete')")
+    const bizCount = await postBizDelete.count()
+    for (let i = 0; i < bizCount; i++) {
+      const btn = postBizDelete.first()
+      if (await btn.isVisible().catch(() => false)) {
+        await btn.click()
+        await page.waitForTimeout(500)
+      }
+    }
+
+    await page.click("button:has-text('Mailing Lists')")
+    const postListDelete = page.locator("div:has-text('NOG Businesses') button:has-text('Delete')")
+    const listCount = await postListDelete.count()
+    for (let i = 0; i < listCount; i++) {
+      const btn = postListDelete.first()
+      if (await btn.isVisible().catch(() => false)) {
+        await btn.click()
+        await page.waitForTimeout(500)
+      }
+    }
 
     await page.close()
     await context.close()
