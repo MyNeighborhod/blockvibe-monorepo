@@ -76,7 +76,6 @@ export const FormBlock: React.FC<
 
     const timerId = setTimeout(() => {
       setHasSubmitted(false)
-      reset()
     }, durationSeconds * 1000)
 
     return () => clearTimeout(timerId)
@@ -127,6 +126,7 @@ export const FormBlock: React.FC<
 
           setIsLoading(false)
           setHasSubmitted(true)
+          reset()
 
           if (confirmationType === "redirect" && redirect) {
             const { url } = redirect

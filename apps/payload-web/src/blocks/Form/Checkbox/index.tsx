@@ -16,7 +16,8 @@ export const Checkbox: React.FC<
     register: UseFormRegister<FieldValues>
   }
 > = ({ name, defaultValue, errors, label, register, required, width }) => {
-  const { setValue } = useFormContext()
+  const { setValue, watch } = useFormContext()
+  const checked = watch(name) === true
 
   register(name, {
     required: required ? "This field is required" : false,
@@ -27,11 +28,11 @@ export const Checkbox: React.FC<
     <Width width={width}>
       <div className="flex items-center gap-2">
         <CheckboxUi
-          defaultChecked={defaultValue}
+          checked={checked}
           id={name}
           name={name}
-          onCheckedChange={(checked) => {
-            setValue(name, checked === true, { shouldDirty: true, shouldValidate: true })
+          onCheckedChange={(value) => {
+            setValue(name, value === true, { shouldDirty: true, shouldValidate: true })
           }}
         />
         <Label htmlFor={name}>

@@ -47,7 +47,7 @@ chmod -R a+rX /var/www/blockvibe/media
 
 cat << 'EOF' > /etc/caddy/Caddyfile
 # Automatic HTTPS via Let's Encrypt (HTTP-01 challenge).
-info.blockvibe.org, nog.blockvibe.org, beaverdale.blockvibe.org, oakwood.blockvibe.org, woodland-dsm.blockvibe.org, twin-suns.blockvibe.org {
+info.blockvibe.org, nog.blockvibe.org, beaverdale.blockvibe.org, oakwood.blockvibe.org, woodland-dsm.blockvibe.org, twin-suns.blockvibe.org, northofgranddsm.org, www.northofgranddsm.org {
 	handle /media/* {
 		root * /var/www/blockvibe
 		file_server

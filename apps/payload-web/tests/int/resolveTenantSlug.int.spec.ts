@@ -29,6 +29,11 @@ describe("resolveTenantSlugFromHost", () => {
     expect(resolveTenantSlugFromHost("nog.staging.blockvibe.org")).toBe("nog")
     expect(resolveTenantSlugFromHost("beaverdale.staging.blockvibe.org")).toBe("beaverdale")
   })
+
+  it("maps North of Grand custom domains to nog", () => {
+    expect(resolveTenantSlugFromHost("www.northofgranddsm.org")).toBe("nog")
+    expect(resolveTenantSlugFromHost("northofgranddsm.org")).toBe("nog")
+  })
 })
 
 describe("template chrome selection", () => {

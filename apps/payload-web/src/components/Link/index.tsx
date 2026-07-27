@@ -81,8 +81,13 @@ export const CMSLink: React.FC<CMSLinkType> = (props) => {
       } else if (currentHost.endsWith(platformDomain)) {
         resolvedHref = `${protocol}//${tenantSlug}.${platformDomain}`
       } else {
-        // Fallback for custom domains or default domains
-        resolvedHref = `${protocol}//${tenantSlug}.${platformDomain}`
+        // Custom domain (e.g. www.northofgranddsm.org) — keep user on current host
+        try {
+          const url = new URL(rawHref)
+          resolvedHref = `${protocol}//${currentHost}${currentPort ? `:${currentPort}` : ""}${url.pathname}${url.search}${url.hash}`
+        } catch {
+          resolvedHref = rawHref
+        }
       }
     }
   }
