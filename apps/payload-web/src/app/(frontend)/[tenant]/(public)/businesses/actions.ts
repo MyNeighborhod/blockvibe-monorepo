@@ -107,7 +107,8 @@ const registerBusinessSchema = z.object({
     .transform((val) => sanitizeInput(val || "logo.png")),
   logoMime: z
     .string()
-    .transform((val) => (val || "image/png").toLowerCase())
+    .optional()
+    .transform((val) => (val && val.trim() ? val.trim().toLowerCase() : "image/png"))
     .pipe(
       z.enum(["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"], {
         message: "Invalid image format. Allowed formats: PNG, JPG, WEBP, GIF.",
