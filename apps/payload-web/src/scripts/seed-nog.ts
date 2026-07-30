@@ -1361,14 +1361,6 @@ async function run() {
               url: "/admin",
             },
           },
-          {
-            link: {
-              type: "custom",
-              label: "Real Website Reference",
-              newTab: true,
-              url: "https://www.northofgranddsm.org/",
-            },
-          },
         ],
       },
     }),
