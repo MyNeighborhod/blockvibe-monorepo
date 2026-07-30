@@ -19,6 +19,9 @@ Self-hosted deployment on a single AWS EC2 instance: Next.js + Payload + Postgre
 
 See also: [infra/README.md](../../infra/README.md) · [src/scripts/README.md](../../src/scripts/README.md) (seeding) · **[production-flows.md](production-flows.md)** (day-to-day prod workflows) · **[email architecture](../email/architecture.md)** (SES + Gmail OAuth + Lambda worker)
 
+> [!IMPORTANT]
+> **PRODUCTION CARE WARNING:** The North of Grand tenant (`nog` - `northofgrandneighborhood.org` & `northofgranddsm.org`) is a **real live production website** with real community members and data. Exercise the highest care during deployments, migrations, and database scripts. Always take a snapshot (`./infra/snapshot-prod-db.sh`) before modifying production data.
+
 ---
 
 ## Production flows (summary)

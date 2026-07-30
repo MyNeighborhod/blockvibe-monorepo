@@ -20,6 +20,8 @@ import { mergeOpenGraph } from "@/utilities/mergeOpenGraph"
 import { draftMode, headers } from "next/headers"
 import { getTenantBySlug } from "@/utilities/getGlobals"
 import { isNorthOfGrandTenant } from "@/utilities/resolveTenantSlug"
+import { NogJsonLd } from "@/components/NogJsonLd"
+import { RedirectNoticeBanner } from "@/components/RedirectNoticeBanner"
 
 import "../globals.css"
 import "leaflet/dist/leaflet.css"
@@ -97,12 +99,24 @@ export default async function RootLayout({
             }
           `}</style>
         </noscript>
-        <link href="/favicon.ico" rel="icon" sizes="32x32" />
-        <link href="/favicon.svg" rel="icon" type="image/svg+xml" />
+        {useNogChrome ? (
+          <>
+            <link href="/favicon-nog.png" rel="icon" type="image/png" />
+            <link href="/favicon-nog.png" rel="shortcut icon" type="image/png" />
+            <link href="/favicon-nog.png" rel="apple-touch-icon" />
+            <NogJsonLd />
+          </>
+        ) : (
+          <>
+            <link href="/favicon.ico" rel="icon" sizes="32x32" />
+            <link href="/favicon.svg" rel="icon" type="image/svg+xml" />
+          </>
+        )}
         {hasCustomCss && <link href={`/css/${cssSlug}/theme.css`} rel="stylesheet" />}
       </head>
       <body className={cn(themeClass)} data-tenant-chrome={useNogChrome ? "nog" : undefined}>
         <Providers theme={(tenant.template || "auto") as any}>
+          {useNogChrome && <RedirectNoticeBanner />}
           <AdminBar
             adminBarProps={{
               preview: isEnabled,

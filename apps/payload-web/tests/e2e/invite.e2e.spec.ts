@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test"
 import "dotenv/config"
-import { getTenantURL } from "../helpers/tenantUrl"
+import { getTenantURL, isRemoteTestEnv } from "../helpers/tenantUrl"
 
 test.describe("User Invite & Acceptance Staging Flow E2E (Failing TDD Spec)", () => {
   let nogBaseURL: string
@@ -41,7 +41,7 @@ test.describe("User Invite & Acceptance Staging Flow E2E (Failing TDD Spec)", ()
 
     // Fill in invite details
     const inviteeName = "Invited Resident"
-    const inviteeEmail = `invited_${Date.now()}@nog.blockvibe.org`
+    const inviteeEmail = isRemoteTestEnv() ? "eugen8@gmail.com" : `invited_${Date.now()}@nog.blockvibe.org`
     await adminPage.fill("input[name='inviteName']", inviteeName)
     await adminPage.fill("input[name='inviteEmail']", inviteeEmail)
 

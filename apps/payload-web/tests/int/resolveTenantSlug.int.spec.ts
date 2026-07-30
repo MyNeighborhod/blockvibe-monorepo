@@ -33,6 +33,8 @@ describe("resolveTenantSlugFromHost", () => {
   it("maps North of Grand custom domains to nog", () => {
     expect(resolveTenantSlugFromHost("www.northofgranddsm.org")).toBe("nog")
     expect(resolveTenantSlugFromHost("northofgranddsm.org")).toBe("nog")
+    expect(resolveTenantSlugFromHost("www.northofgrandneighborhood.org")).toBe("nog")
+    expect(resolveTenantSlugFromHost("northofgrandneighborhood.org")).toBe("nog")
   })
 })
 

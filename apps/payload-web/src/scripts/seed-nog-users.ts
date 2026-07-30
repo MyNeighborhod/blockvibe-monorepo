@@ -87,41 +87,7 @@ async function run() {
     },
   })
 
-  payload.logger.info(`Creating John Neighbor: ${nogNeighborEmail}`)
-  await payload.create({
-    collection: "users",
-    overrideAccess: true,
-    context: { isSeeding: true },
-    data: {
-      name: "John Neighbor",
-      email: nogNeighborEmail,
-      password: nogNeighborPassword,
-      role: "contributor",
-      status: "approved",
-      isNeighbor: true,
-      household: "John & Johanna Household",
-      tenants: [{ tenant: nogTenant.id }],
-    },
-  })
-
-  payload.logger.info(`Creating Johanna Neighbor: ${nogNeighborJohannaEmail}`)
-  await payload.create({
-    collection: "users",
-    overrideAccess: true,
-    context: { isSeeding: true },
-    data: {
-      name: "Johanna Neighbor",
-      email: nogNeighborJohannaEmail,
-      password: nogNeighborJohannaPassword,
-      role: "contributor",
-      status: "approved",
-      isNeighbor: true,
-      household: "John & Johanna Household",
-      tenants: [{ tenant: nogTenant.id }],
-    },
-  })
-
-  payload.logger.info("NOG users seeded successfully.")
+  payload.logger.info("NOG production users configured successfully.")
   process.exit(0)
 }
 

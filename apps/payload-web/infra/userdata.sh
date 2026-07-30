@@ -47,7 +47,7 @@ chmod -R a+rX /var/www/blockvibe/media
 
 cat << 'EOF' > /etc/caddy/Caddyfile
 # Automatic HTTPS via Let's Encrypt (HTTP-01 challenge).
-info.blockvibe.org, nog.blockvibe.org, beaverdale.blockvibe.org, oakwood.blockvibe.org, woodland-dsm.blockvibe.org, twin-suns.blockvibe.org, northofgranddsm.org, www.northofgranddsm.org {
+blockvibe.org, nog.blockvibe.org, beaverdale.blockvibe.org, oakwood.blockvibe.org, woodland-dsm.blockvibe.org, twin-suns.blockvibe.org, www.northofgranddsm.org {
 	handle /media/* {
 		root * /var/www/blockvibe
 		file_server
@@ -56,6 +56,14 @@ info.blockvibe.org, nog.blockvibe.org, beaverdale.blockvibe.org, oakwood.blockvi
 	handle {
 		reverse_proxy 127.0.0.1:3000
 	}
+}
+
+northofgranddsm.org {
+	redir https://www.northofgranddsm.org{uri} 301
+}
+
+northofgrandneighborhood.org, www.northofgrandneighborhood.org {
+	redir https://www.northofgranddsm.org{uri}?from_old_domain=1 301
 }
 EOF
 

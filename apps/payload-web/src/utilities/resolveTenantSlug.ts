@@ -5,6 +5,8 @@ const STAGING_DOMAIN = process.env.NEXT_PUBLIC_STAGING_DOMAIN || "staging.blockv
 const NOG_HOSTS = new Set([
   "northofgranddsm.org",
   "www.northofgranddsm.org",
+  "northofgrandneighborhood.org",
+  "www.northofgrandneighborhood.org",
   `nog.${PLATFORM_DOMAIN}`,
   `nog.${STAGING_DOMAIN}`,
 ])

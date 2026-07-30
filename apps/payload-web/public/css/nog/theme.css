@@ -1,10 +1,15 @@
 @import url("https://fonts.googleapis.com/css2?family=Gentium+Basic:ital,wght@0,400;0,700;1,400;1,700&display=swap");
 
 /* North Of Grand Theme Custom Overrides */
+body[data-tenant-chrome="nog"],
 .theme-nog {
+  --background: #ffffff;
+  --card: #ffffff;
+  --popover: #ffffff;
   --font-gentium: "Gentium Basic", serif;
   font-family: var(--font-gentium), serif;
   color: #2a2a2a;
+  background-color: #ffffff;
   --success: #47773e;
 }
 
@@ -189,7 +194,7 @@ body[data-tenant-chrome="nog"] .high-impact-hero {
 
 .theme-nog .nog-nav li:hover,
 .theme-nog .nog-nav li:has([aria-current="page"]) {
-  background-color: #f6f6f6;
+  background-color: #f8f8f8;
 }
 
 .theme-nog header nav a.nav-search {

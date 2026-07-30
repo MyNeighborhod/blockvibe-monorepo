@@ -29,8 +29,18 @@ Related docs:
 | --- | ----------- | ------- |
 | `https://info.blockvibe.org` | `default` | Platform landing, legal pages, space request form |
 | `https://nog.blockvibe.org` | `nog` | NOG neighborhood site + tenant dashboard |
+| `https://northofgrandneighborhood.org` | `nog` | Primary production domain for North of Grand |
+| `https://northofgranddsm.org` | `nog` | Production custom domain for North of Grand |
 
-Other subdomains in `infra/Caddyfile` may exist but are not part of the primary prod verification set.
+> [!IMPORTANT]
+> **CRITICAL PRODUCTION WARNING:** The `nog` tenant (`northofgrandneighborhood.org` & `northofgranddsm.org`) is a **real production website** serving live community members, actual CRM contacts, neighborhood bylaws, and public data. The highest level of care must be exercised when deploying code updates or modifying production data. Never run destructive database resets (`push-db-to-prod.sh`, raw `TRUNCATE`/`DELETE` queries, or unverified seed wipes) against production without an explicit database snapshot (`snapshot-prod-db.sh`) and careful review.
+>
+> **PRODUCTION EMAIL VALIDATION RULE:** When running automated validation or testing email broadcasting, invitation, or CRM delivery against production, ONLY `eugen8@gmail.com` may be targeted as the recipient. E2E tests and manual sanity checks MUST NEVER send emails to real community residents or external email addresses.
+>
+> **NEW TENANT OPENGRAPH & BRANDING CHECKLIST:** When launching a new tenant or domain, ALWAYS verify:
+> 1. **SMS & Social Link Sharing:** Text the URL to test that social preview cards display the tenant's custom logo/banner (e.g., `/og-nog.png`), NOT generic template placeholders (`website-template-OG.webp`).
+> 2. **Meta Titles & Descriptions:** Ensure default page titles and meta descriptions resolve to the tenant's actual organization name instead of template fallback strings.
+> 3. **Smart Domain Redirects:** Use `?from_old_domain=1` strictly for old domain redirects so apex domain redirects never trigger notice banners.
 
 ---
 

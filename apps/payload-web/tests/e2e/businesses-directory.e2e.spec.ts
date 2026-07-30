@@ -9,7 +9,7 @@ import config from "../../src/payload.config.js"
 test.describe("Business Directory & CRM Broadcaster E2E Flow", () => {
   let nogBaseURL: string
   const isLocal = !isRemoteTestEnv()
-  const testEmail = "cafe@greenmeadows.org"
+  const testEmail = "eugen8@gmail.com"
   const mockLogoPath = path.join("/tmp", "test-logo.png")
 
   test.beforeAll(({ baseURL }) => {

@@ -895,7 +895,7 @@ async function run() {
               link: {
                 type: "custom",
                 label: "View Facebook Page",
-                url: "https://www.facebook.com/North.of.Grand.DSM/?viewas=100000686899395",
+                url: "https://www.facebook.com/North.of.Grand.DSM/",
                 appearance: "default",
               },
             },

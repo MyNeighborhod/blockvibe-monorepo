@@ -36,6 +36,85 @@ export async function getBusinessesAction(tenantId: string | number, approvedOnl
   }
 }
 
+import { z } from "zod"
+
+/** Helper to sanitize text fields: strip HTML tags, remove control characters/null bytes, and trim whitespace */
+function sanitizeInput(str: string): string {
+  if (typeof str !== "string") return ""
+  return str
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "") // Remove ASCII control characters
+    .replace(/<[^>]*>?/gm, "") // Strip HTML tags
+    .trim()
+}
+
+/** Zod Schema for Backend Business Registration Validation & Sanitization */
+const registerBusinessSchema = z.object({
+  name: z
+    .string()
+    .transform(sanitizeInput)
+    .pipe(
+      z
+        .string()
+        .min(2, "Business name must be at least 2 characters.")
+        .max(120, "Business name must be 120 characters or less.")
+    ),
+  address: z
+    .string()
+    .transform(sanitizeInput)
+    .pipe(
+      z
+        .string()
+        .min(5, "Address must be at least 5 characters.")
+        .max(250, "Address must be 250 characters or less.")
+    ),
+  website: z
+    .string()
+    .transform(sanitizeInput)
+    .transform((val) => (val.startsWith("http://") || val.startsWith("https://") ? val : `https://${val}`))
+    .pipe(
+      z
+        .string()
+        .max(250, "Website URL must be 250 characters or less.")
+        .url("Please enter a valid website URL.")
+    ),
+  about: z
+    .string()
+    .transform(sanitizeInput)
+    .pipe(
+      z
+        .string()
+        .min(10, "About description must be at least 10 characters.")
+        .max(1500, "About description must be 1500 characters or less.")
+    ),
+  email: z
+    .string()
+    .transform(sanitizeInput)
+    .pipe(
+      z
+        .string()
+        .email("Please enter a valid email address.")
+        .max(250, "Email must be 250 characters or less.")
+    )
+    .transform((val) => val.toLowerCase()),
+  hours: z
+    .string()
+    .optional()
+    .transform((val) => sanitizeInput(val || ""))
+    .pipe(z.string().max(150, "Hours description must be 150 characters or less.")),
+  logoName: z
+    .string()
+    .optional()
+    .transform((val) => sanitizeInput(val || "logo.png")),
+  logoMime: z
+    .string()
+    .transform((val) => (val || "image/png").toLowerCase())
+    .pipe(
+      z.enum(["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"], {
+        message: "Invalid image format. Allowed formats: PNG, JPG, WEBP, GIF.",
+      })
+    ),
+})
+
 export async function registerBusinessAction(
   tenantId: string | number,
   data: {
@@ -54,21 +133,36 @@ export async function registerBusinessAction(
     const numericTenantId = typeof tenantId === "string" ? parseInt(tenantId, 10) : tenantId
     const payload = await getPayload({ config: configPromise })
 
-    // 1. Create Media document for Logo
+    // 1. Zod Backend Schema Validation & Sanitization
+    const parseResult = registerBusinessSchema.safeParse(data)
+    if (!parseResult.success) {
+      const firstIssue = parseResult.error.issues[0]
+      throw new Error(firstIssue?.message || "Invalid registration input.")
+    }
+
+    const { name, address, website, about, email, hours, logoName, logoMime } = parseResult.data
+
     // Decode base64 image data (remove data prefix if present)
-    const base64Data = data.logoBase64.replace(/^data:image\/\w+;base64,/, "")
+    const base64Data = (data.logoBase64 || "").replace(/^data:image\/\w+;base64,/, "")
     const buffer = Buffer.from(base64Data, "base64")
-    
+
+    // Limit maximum logo upload size to 5MB
+    const MAX_FILE_SIZE = 5 * 1024 * 1024
+    if (buffer.length === 0 || buffer.length > MAX_FILE_SIZE) {
+      throw new Error("Logo image is required and file size must not exceed 5MB.")
+    }
+
+    // 2. Create Media document for Logo
     const mediaDoc = await payload.create({
       collection: "media",
       data: {
-        alt: `${data.name} Logo`,
+        alt: `${name} Logo`,
         tenant: numericTenantId,
       },
       file: {
-        name: data.logoName,
+        name: logoName,
         data: buffer,
-        mimetype: data.logoMime,
+        mimetype: logoMime,
         size: buffer.length,
       },
     })
@@ -77,18 +171,18 @@ export async function registerBusinessAction(
       throw new Error("Failed to create media logo document.")
     }
 
-    // 2. Create Business record
+    // 3. Create Business record (hardcode appearOnNOG: false for admin vetting)
     const businessDoc = await payload.create({
       collection: "businesses",
       data: {
-        name: data.name,
-        address: data.address,
-        website: data.website,
-        about: data.about,
-        email: data.email,
-        hours: data.hours || "",
+        name,
+        address,
+        website,
+        about,
+        email,
+        hours,
         logo: mediaDoc.id,
-        appearOnNOG: false,
+        appearOnNOG: false, // Strict vetting guard: Unapproved business NEVER appears publicly
         tenant: numericTenantId,
       },
     })
