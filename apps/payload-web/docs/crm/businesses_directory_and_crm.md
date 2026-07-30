@@ -2,6 +2,15 @@
 
 This feature adds a tenant-specific **Local Businesses Directory**, a public **Self-Registration Intake Form**, and integrates them with the **CRM Admin Dashboard** and **Email Broadcaster**.
 
+## 🚨 HIGHEST PRIORITY TODO: Business Directory Redesign (The Avenues DSM Style)
+> **Feedback from Lu:** *"I would like to be able to include an image of the business, logo, etc. as well as location, contact info, and a link to their website. The Avenues site is a good example. It doesn't have to be that elaborate. https://www.theavenuesdsm.com/businesses/ ---- next task will be to implement that similar look and feel."*
+>
+> **Requirements to Implement:**
+> - [ ] **Rich Visual Directory Cards:** Hero image / cover photo support alongside the uploaded business logo (e.g. "world" logo).
+> - [ ] **Full Location & Contact Info:** Street address, Google Maps direction link, phone number, email contact button, operating hours, and website link button.
+> - [ ] **Category Filtering Pills:** Filter businesses by category (Dining & Drinks, Retail & Shopping, Professional Services, Non-Profit, Health & Wellness, etc.).
+> - [ ] **Business Detail View:** Clickable cards opening a dedicated business detail view / modal featuring full description, photo gallery, map, and social links.
+
 ---
 
 ## 1. Architectural Overview
