@@ -181,7 +181,7 @@ test.describe("Business Directory & CRM Broadcaster E2E Flow", () => {
 
     // Verify dynamic preview list shows our Cafe
     await page.waitForTimeout(500)
-    await expect(page.locator(".preview-member-item:has-text('cafe@greenmeadows.org')")).toBeVisible()
+    await expect(page.locator(`.preview-member-item:has-text('${testEmail}')`)).toBeVisible()
 
     await page.click("button:has-text('Save List')")
     await expect(page.locator("h3:has-text('NOG Businesses')")).toBeVisible()
