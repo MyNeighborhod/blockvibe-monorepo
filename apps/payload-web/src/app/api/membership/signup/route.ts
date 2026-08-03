@@ -40,6 +40,7 @@ export async function POST(req: Request) {
         data: {
           email: normalizedEmail,
           name,
+          password: `P@ss-${Math.random().toString(36).slice(-8)}${Date.now()}`,
           role: "contributor",
           status: "pending",
           isNeighbor: true,

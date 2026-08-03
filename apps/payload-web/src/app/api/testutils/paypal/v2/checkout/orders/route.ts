@@ -10,12 +10,6 @@ export async function POST(req: Request) {
     intent: body.intent || "CAPTURE",
     status: "CREATED",
     purchase_units: body.purchase_units || [],
-    links: [
-      {
-        href: `https://localhost:3000/api/testutils/paypal/checkoutnow?token=${mockOrderId}`,
-        rel: "approve",
-        method: "GET",
-      },
-    ],
+    links: [],
   })
 }
