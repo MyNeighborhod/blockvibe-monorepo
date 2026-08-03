@@ -69,7 +69,9 @@ export async function POST(req: Request) {
     // Calculate charge amount
     let chargeAmount = 0
     if (intent === "donation") {
-      chargeAmount = parseFloat(customAmount) || 50
+      chargeAmount = customAmount !== undefined && customAmount !== null && customAmount !== ""
+        ? parseFloat(customAmount)
+        : 10
     } else {
       chargeAmount = customAmount ? parseFloat(customAmount) : await paymentService.getDuesAmount(tier, businessTierSlug)
     }

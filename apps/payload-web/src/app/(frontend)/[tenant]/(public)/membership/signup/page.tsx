@@ -527,7 +527,7 @@ function MembershipForm() {
                       type="button"
                       onClick={() => {
                         setIsCustomDonation(true)
-                        if (customAmount === 10) setCustomAmount("")
+                        if (customAmount === 10) setCustomAmount(0)
                       }}
                       className={`p-4 rounded-xl border-2 font-bold transition-all text-center ${
                         isCustomDonation || (Number(customAmount) !== 10 && customAmount !== "")
@@ -537,7 +537,7 @@ function MembershipForm() {
                     >
                       <div className="text-2xl font-extrabold">Other Amount</div>
                       <div className="text-xs font-normal text-slate-500 dark:text-slate-400 mt-0.5">
-                        Enter custom donation
+                        Enter custom donation (or $0 for merch only)
                       </div>
                     </button>
                   </div>
@@ -545,7 +545,7 @@ function MembershipForm() {
                   {(isCustomDonation || (Number(customAmount) !== 10 && customAmount !== "")) && (
                     <div className="pt-2">
                       <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
-                        Enter Custom Amount ($)
+                        Enter Custom Amount ($) — Enter 0 if ordering merchandise only
                       </label>
                       <div className="relative rounded-xl shadow-sm">
                         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
@@ -553,14 +553,14 @@ function MembershipForm() {
                         </div>
                         <input
                           type="number"
-                          min="1"
+                          min="0"
                           step="1"
                           value={customAmount}
                           onChange={(e) => {
                             const val = e.target.value
-                            setCustomAmount(val === "" ? "" : Math.max(1, Number(val)))
+                            setCustomAmount(val === "" ? "" : Math.max(0, Number(val)))
                           }}
-                          placeholder="e.g. 25"
+                          placeholder="e.g. 0 or 25"
                           className="w-full pl-9 pr-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white font-bold text-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                         />
                       </div>
