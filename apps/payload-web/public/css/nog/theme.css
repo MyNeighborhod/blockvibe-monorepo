@@ -50,6 +50,8 @@ body[data-tenant-chrome="nog"] .high-impact-hero {
   font-family: var(--font-playfair), serif !important;
   color: #42514c;
   font-weight: 600 !important;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 /* Body copy, form labels, and inline messages — matches northofgranddsm.org */
@@ -88,6 +90,7 @@ body[data-tenant-chrome="nog"] .high-impact-hero {
   width: 100%;
   object-fit: cover;
   object-position: center;
+  border-radius: 1rem;
 }
 
 .theme-nog [data-block-name="Home Intro Content"] h2 {
@@ -106,6 +109,41 @@ body[data-tenant-chrome="nog"] .high-impact-hero {
   font-size: 1.5rem !important;
   margin-top: 1.25rem !important;
   margin-bottom: 0.75rem !important;
+}
+
+/* Mobile typography scale for screens <= 768px (iPhone SE, mobile devices) */
+@media (max-width: 48rem) {
+  .theme-nog h1,
+  .theme-nog [data-block-name="Home Hero Heading"] h1 {
+    font-size: 2.25rem !important; /* 36px on mobile */
+    line-height: 1.2 !important;
+    margin-bottom: 1rem !important;
+  }
+
+  .theme-nog h2,
+  .theme-nog [data-block-name="Home Intro Content"] h2 {
+    font-size: 1.5rem !important; /* 24px on mobile */
+    line-height: 1.3 !important;
+    margin-top: 1rem !important;
+    margin-bottom: 0.75rem !important;
+  }
+
+  .theme-nog h3 {
+    font-size: 1.25rem !important;
+    line-height: 1.35 !important;
+  }
+
+  .theme-nog p,
+  .theme-nog div.paragraph,
+  .theme-nog .payload-richtext p,
+  .theme-nog .prose p {
+    font-size: 1rem !important; /* 16px on mobile */
+    line-height: 1.6 !important;
+  }
+
+  .theme-nog [data-block-name="Home Intro Content"] img {
+    max-height: 220px;
+  }
 }
 
 .theme-nog a {
