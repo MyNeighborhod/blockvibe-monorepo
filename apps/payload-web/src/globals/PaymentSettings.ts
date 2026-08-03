@@ -31,8 +31,9 @@ export const PaymentSettings: GlobalConfig = {
     {
       name: "paypalEnvironment",
       type: "select",
-      defaultValue: "sandbox",
+      defaultValue: "mock",
       options: [
+        { label: "Mock Fake Server (Local Testing)", value: "mock" },
         { label: "Sandbox (Testing)", value: "sandbox" },
         { label: "Live (Production)", value: "live" },
       ],

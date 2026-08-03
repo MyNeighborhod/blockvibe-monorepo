@@ -52,5 +52,5 @@ export interface ProcessedPaymentResult {
 export interface PayPalCredentials {
   clientId: string
   clientSecret: string
-  environment: "sandbox" | "live"
+  environment: "sandbox" | "live" | "mock"
 }

@@ -2519,7 +2519,7 @@ export interface PaymentSetting {
   /**
    * PayPal API environment endpoint.
    */
-  paypalEnvironment?: ('sandbox' | 'live') | null;
+  paypalEnvironment?: ('mock' | 'sandbox' | 'live') | null;
   individualDuesAmount?: number | null;
   householdDuesAmount?: number | null;
   enablePayPal?: boolean | null;
