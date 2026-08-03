@@ -1,53 +1,45 @@
 #!/bin/bash
 set -e
 
-# Usage: ./infra/deploy.sh [--skip-media] [--staging]
-# Media files live on the EC2 EBS volume (not in the Docker image). Use --skip-media for
-# code-only deploys when public/media has not changed.
-SKIP_MEDIA=0
+# BlockVibe Multi-Tenant Web Application Automated Deployment Script
+# Usage: ./infra/deploy.sh [--staging] [--skip-media]
+
 STAGING=0
+SKIP_MEDIA=0
+
 for arg in "$@"; do
   case "$arg" in
-    --skip-media) SKIP_MEDIA=1 ;;
     --staging) STAGING=1 ;;
+    --skip-media) SKIP_MEDIA=1 ;;
   esac
 done
 
-# Get the directory of this script
 INFRA_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 PROJECT_DIR="$( dirname "$INFRA_DIR" )"
 
 cd "$INFRA_DIR"
 
-# 1. Retrieve the public IP dynamically from Terraform outputs
+# 1. Obtain EC2 Server Public IP via Terraform
 echo "Fetching server IP from Terraform..."
 IP=$(terraform output -raw instance_public_ip 2>/dev/null || echo "")
 
 if [ -z "$IP" ] || [[ "$IP" == *"No outputs found"* ]] || [[ "$IP" == *"not found"* ]]; then
   echo "Error: Could not retrieve instance_public_ip from terraform outputs."
-  echo "Make sure you have run 'terraform apply' first inside the 'infra/' directory."
+  echo "Ensure terraform has been applied: cd infra && terraform apply"
   exit 1
 fi
 
-# 2. Resolve SSH key path
 SSH_KEY="$HOME/.ssh/blockvibe_id_rsa"
 if [ ! -f "$SSH_KEY" ]; then
   SSH_KEY="$INFRA_DIR/id_rsa"
 fi
 
-if [ ! -f "$SSH_KEY" ]; then
-  echo "Error: SSH private key not found at $HOME/.ssh/blockvibe_id_rsa or $INFRA_DIR/id_rsa"
-  exit 1
-fi
-
-# 3. Define target parameters dynamically based on environment
 IMAGE_TAG="latest"
 ARCHIVE_NAME="app.tar.gz"
 REMOTE_DIR="/home/ubuntu/app"
 REMOTE_MEDIA_DIR="/var/www/blockvibe/media"
 ENV_SOURCE=".env.production"
 COMPOSE_SOURCE="docker-compose.yml"
-ENV_LABEL="Production"
 
 if [ "$STAGING" -eq 1 ]; then
   IMAGE_TAG="staging"
@@ -56,52 +48,36 @@ if [ "$STAGING" -eq 1 ]; then
   REMOTE_MEDIA_DIR="/var/www/blockvibe/media-staging/media"
   ENV_SOURCE=".env.staging"
   COMPOSE_SOURCE="docker-compose.staging.yml"
-  ENV_LABEL="Staging"
 fi
 
 echo "--------------------------------------------------------"
-echo "Deploying to ($ENV_LABEL): $IP"
+echo "Deployment Target: $IP (${STAGING:+STAGING}${STAGING:-PRODUCTION})"
 echo "Using SSH Key: $SSH_KEY"
-echo "Staging Mode: $STAGING"
 echo "--------------------------------------------------------"
 
-# 4. Build the application Docker container locally
+# 2. Build application Docker container locally
 cd "$PROJECT_DIR/../.."
-echo "Building Docker image locally for target platform linux/amd64 (tag: $IMAGE_TAG)..."
-echo "(This compilation happens inside Docker on your localhost to prevent crashing the weak EC2 instance)"
+echo "Building Docker image locally for linux/amd64 (tag: $IMAGE_TAG)..."
 
-# Build for linux/amd64 to ensure compatibility with EC2, even if building on Apple Silicon macOS
 BUILD_SERVER_URL=""
 if [ -f "$PROJECT_DIR/$ENV_SOURCE" ]; then
   BUILD_SERVER_URL=$(grep -E '^NEXT_PUBLIC_SERVER_URL=' "$PROJECT_DIR/$ENV_SOURCE" | head -1 | cut -d= -f2- | tr -d '"' | tr -d "'")
 fi
-if [ -z "$BUILD_SERVER_URL" ]; then
-  echo "WARNING: NEXT_PUBLIC_SERVER_URL not found in $ENV_SOURCE; Docker build may bake wrong public URL."
-fi
+
 docker build --platform linux/amd64 --pull=false \
   ${BUILD_SERVER_URL:+--build-arg NEXT_PUBLIC_SERVER_URL="$BUILD_SERVER_URL"} \
   -t blockvibe-app:$IMAGE_TAG -f apps/payload-web/Dockerfile .
 
-# 5. Save and compress Docker image
+# 3. Export image to compressed tarball
 echo "Saving and compressing Docker image (blockvibe-app:$IMAGE_TAG -> $ARCHIVE_NAME)..."
 docker save blockvibe-app:$IMAGE_TAG | gzip > $ARCHIVE_NAME
 echo "✓ Image compressed successfully. Size:" $(du -sh $ARCHIVE_NAME | cut -f1)
 
-# Preflight: tools required for deploy
-for cmd in docker rsync scp ssh; do
-  if ! command -v "$cmd" >/dev/null 2>&1; then
-    echo "Error: '$cmd' is required but not installed."
-    exit 1
-  fi
-done
-
-# 6. Upload files to EC2
-echo "Uploading application files to EC2..."
-# Create deployment directory on remote
+# 4. Create deployment directory on remote
 ssh -i "$SSH_KEY" ubuntu@$IP "mkdir -p $REMOTE_DIR && sudo mkdir -p $REMOTE_MEDIA_DIR && sudo chown -R 1001:1001 $REMOTE_MEDIA_DIR"
 
 # Upload docker-compose config
-scp -i "$SSH_KEY" "$PROJECT_DIR/$COMPOSE_SOURCE" ubuntu@$IP:$REMOTE_DIR/docker-compose.yml
+scp -i "$SSH_KEY" "$PROJECT_DIR/$COMPOSE_SOURCE" ubuntu@$IP:$REMOTE_DIR/$COMPOSE_SOURCE
 
 # Upload Caddy reverse-proxy config (enables HTTPS)
 echo "Uploading Caddyfile..."
@@ -140,9 +116,12 @@ scp -i "$SSH_KEY" $ARCHIVE_NAME ubuntu@$IP:/home/ubuntu/$ARCHIVE_NAME
 rm $ARCHIVE_NAME
 echo "✓ Local cleanup complete."
 
-# 7. Load image and boot containers on EC2
+# 5. Prune old images and load image with Blue-Green hot-swap on EC2
 echo "Loading image and restarting containers on the remote EC2 instance..."
 ssh -i "$SSH_KEY" ubuntu@$IP "
+  echo 'Pruning old unused Docker images...' &&
+  sudo docker image prune -af 2>/dev/null || true
+
   echo 'Loading Docker image...' &&
   sudo docker load -i /home/ubuntu/$ARCHIVE_NAME &&
   rm /home/ubuntu/$ARCHIVE_NAME &&
@@ -152,18 +131,28 @@ ssh -i "$SSH_KEY" ubuntu@$IP "
   sudo chmod -R a+rX $REMOTE_MEDIA_DIR &&
   cd $REMOTE_DIR &&
 
-  sudo docker compose -f $COMPOSE_SOURCE up -d db-staging
+  DB_SERVICE=\"db-staging\"
+  DEFAULT_PORT=3001
+  ALT_PORT=3002
 
-  ACTIVE_PORT=3001
-  if sudo grep -q '127.0.0.1:3001' /etc/caddy/Caddyfile 2>/dev/null; then
-    ACTIVE_PORT=3001
+  if [ \"$STAGING\" -eq 0 ]; then
+    DB_SERVICE=\"db\"
+    DEFAULT_PORT=3000
+    ALT_PORT=3001
+  fi
+
+  sudo docker compose -f $COMPOSE_SOURCE up -d \$DB_SERVICE
+
+  ACTIVE_PORT=\$DEFAULT_PORT
+  if sudo grep -q \"127.0.0.1:\$DEFAULT_PORT\" /etc/caddy/Caddyfile 2>/dev/null; then
+    ACTIVE_PORT=\$DEFAULT_PORT
     NEW_SERVICE=\"payload_green\"
-    NEW_PORT=3002
+    NEW_PORT=\$ALT_PORT
     OLD_SERVICE=\"payload_blue\"
   else
-    ACTIVE_PORT=3002
+    ACTIVE_PORT=\$ALT_PORT
     NEW_SERVICE=\"payload_blue\"
-    NEW_PORT=3001
+    NEW_PORT=\$DEFAULT_PORT
     OLD_SERVICE=\"payload_green\"
   fi
 
@@ -182,18 +171,18 @@ ssh -i "$SSH_KEY" ubuntu@$IP "
 
   echo \"Hot-swapping Caddy upstream to port \$NEW_PORT...\"
   sudo cp /tmp/Caddyfile /etc/caddy/Caddyfile
-  sudo sed -i \"s/127.0.0.1:3001/127.0.0.1:\$NEW_PORT/g\" /etc/caddy/Caddyfile
+  sudo sed -i \"s/127.0.0.1:\$ACTIVE_PORT/127.0.0.1:\$NEW_PORT/g\" /etc/caddy/Caddyfile
   sudo systemctl reload caddy
 
-  echo \"✓ Staging hot-swap complete! Stopping previous service \$OLD_SERVICE...\"
+  echo \"✓ Hot-swap complete! Stopping previous service \$OLD_SERVICE...\"
   sudo docker compose -f $COMPOSE_SOURCE stop \$OLD_SERVICE
 "
 
-echo "--------------------------------------------------------"
 DOMAIN=$(cd "$INFRA_DIR" && terraform output -raw domain_url 2>/dev/null | sed -E 's|https?://||' || echo "$IP")
 if [ "$STAGING" -eq 1 ]; then
-  echo "Staging Deployment successful! Visit your app at: https://staging.blockvibe.org"
-else
-  echo "Production Deployment successful! Visit your app at: https://$DOMAIN"
+  DOMAIN="staging.$DOMAIN"
 fi
+
+echo "--------------------------------------------------------"
+echo "Deployment successful! Visit your app at: https://$DOMAIN"
 echo "--------------------------------------------------------"
