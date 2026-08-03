@@ -39,26 +39,26 @@ test.describe("Payment Settings Admin E2E Workflow", () => {
 
     // 1. Navigate to Payment Settings Global in Admin
     await page.goto("/admin/globals/payment-settings")
-    await page.waitForLoadState("networkidle")
+    await page.waitForLoadState("domcontentloaded")
 
-    // Locate paymentSupportEmail input field
-    const emailInput = page.locator('input[name="paymentSupportEmail"]')
+    // Locate paymentSupportEmail input field across Payload versions
+    const emailInput = page
+      .locator('#field-paymentSupportEmail, input[name="paymentSupportEmail"], input[type="email"]')
+      .first()
     await expect(emailInput).toBeVisible({ timeout: 15000 })
 
     // Fill in test support email
     await emailInput.fill(testSupportEmail)
 
     // Click Save
-    const saveButton = page.locator('button:has-text("Save"), button#action-save').first()
+    const saveButton = page.locator('button:has-text("Save"), button#action-save, button[type="submit"]').first()
     await saveButton.click()
-
-    // Wait for save confirmation Toast or URL
-    await page.waitForTimeout(2000)
+    await page.waitForTimeout(2500)
 
     try {
       // 2. Navigate to public signup page and verify dynamic setting
       await page.goto("/membership/signup")
-      await page.waitForLoadState("networkidle")
+      await page.waitForLoadState("domcontentloaded")
 
       // Verify the updated test email appears on public frontend
       const emailLink = page.locator(`a[href="mailto:${testSupportEmail}"]`)
@@ -67,15 +67,17 @@ test.describe("Payment Settings Admin E2E Workflow", () => {
     } finally {
       // 3. Cleanup: Restore original payment support email to leave DB clean
       await page.goto("/admin/globals/payment-settings")
-      await page.waitForLoadState("networkidle")
+      await page.waitForLoadState("domcontentloaded")
 
-      const cleanupEmailInput = page.locator('input[name="paymentSupportEmail"]')
+      const cleanupEmailInput = page
+        .locator('#field-paymentSupportEmail, input[name="paymentSupportEmail"], input[type="email"]')
+        .first()
       await expect(cleanupEmailInput).toBeVisible({ timeout: 15000 })
       await cleanupEmailInput.fill(originalEmail)
 
-      const cleanupSaveButton = page.locator('button:has-text("Save"), button#action-save').first()
+      const cleanupSaveButton = page.locator('button:has-text("Save"), button#action-save, button[type="submit"]').first()
       await cleanupSaveButton.click()
-      await page.waitForTimeout(2000)
+      await page.waitForTimeout(2500)
     }
   })
 })

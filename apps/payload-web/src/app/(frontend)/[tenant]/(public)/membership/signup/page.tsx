@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, Suspense } from "react"
+import React, { useState, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 
 function MembershipForm() {
@@ -15,6 +15,18 @@ function MembershipForm() {
   )
   const [memberCategory, setMemberCategory] = useState<"residential" | "business">("residential")
   const [customAmount, setCustomAmount] = useState<number | string>(50)
+  const [paymentSupportEmail, setPaymentSupportEmail] = useState("northofgrandpresident@gmail.com")
+
+  useEffect(() => {
+    fetch("/api/payment-settings")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.paymentSupportEmail) {
+          setPaymentSupportEmail(data.paymentSupportEmail)
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   // Merchandise Add-ons
   const [includeTshirt, setIncludeTshirt] = useState(false)
@@ -596,10 +608,10 @@ function MembershipForm() {
                     <div>
                       Feel free to email the North of Grand President at{" "}
                       <a
-                        href="mailto:northofgrandpresident@gmail.com"
+                        href={`mailto:${paymentSupportEmail}`}
                         className="font-bold text-indigo-600 dark:text-indigo-400 underline hover:text-indigo-700"
                       >
-                        northofgrandpresident@gmail.com
+                        {paymentSupportEmail}
                       </a>
                       .
                     </div>
