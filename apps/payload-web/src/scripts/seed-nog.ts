@@ -1400,6 +1400,21 @@ async function run() {
     }),
   ])
 
+  try {
+    await payload.updateGlobal({
+      slug: "payment-settings" as any,
+      data: {
+        paypalEnvironment: "sandbox",
+        individualDuesAmount: 10,
+        householdDuesAmount: 20,
+        enablePayPal: true,
+        enableCheckPayment: true,
+      },
+    })
+  } catch (err) {
+    payload.logger.warn("Could not seed payment-settings global:", err)
+  }
+
   payload.logger.info("Tenant and Platform Seeded Successfully with custom pages and live assets!")
   process.exit(0)
 }
