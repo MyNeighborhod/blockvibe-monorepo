@@ -15,7 +15,8 @@ function MembershipForm() {
     urlIntent === "renewal" || urlIntent === "donation" ? urlIntent : "new"
   )
   const [memberCategory, setMemberCategory] = useState<"residential" | "business">("residential")
-  const [customAmount, setCustomAmount] = useState<number | string>(50)
+  const [customAmount, setCustomAmount] = useState<number | string>(10)
+  const [isCustomDonation, setIsCustomDonation] = useState(false)
   const [paymentSupportEmail, setPaymentSupportEmail] = useState("northofgrandpresident@gmail.com")
   const [enableBusinessMemberships, setEnableBusinessMemberships] = useState(false)
 
@@ -457,26 +458,78 @@ function MembershipForm() {
                   </div>
                 )
               ) : (
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">
-                    Select Donation Amount ($)
-                  </label>
-                  <div className="grid grid-cols-4 gap-3 mb-4">
-                    {[15, 25, 50, 100].map((amt) => (
-                      <button
-                        key={amt}
-                        type="button"
-                        onClick={() => setCustomAmount(amt)}
-                        className={`py-3 rounded-xl border-2 font-bold transition-all ${
-                          Number(customAmount) === amt
-                            ? "border-blue-600 bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400"
-                            : "border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300"
-                        }`}
-                      >
-                        ${amt}
-                      </button>
-                    ))}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
+                      Select Donation Amount ($)
+                    </label>
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 dark:bg-blue-950/80 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                      🔒 One-Time Payment (No recurring fees)
+                    </span>
                   </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsCustomDonation(false)
+                        setCustomAmount(10)
+                      }}
+                      className={`p-4 rounded-xl border-2 font-bold transition-all text-center ${
+                        !isCustomDonation && Number(customAmount) === 10
+                          ? "border-blue-600 bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 shadow-sm"
+                          : "border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-slate-300"
+                      }`}
+                    >
+                      <div className="text-2xl font-extrabold">$10</div>
+                      <div className="text-xs font-normal text-slate-500 dark:text-slate-400 mt-0.5">
+                        Standard Contribution
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsCustomDonation(true)
+                        if (customAmount === 10) setCustomAmount("")
+                      }}
+                      className={`p-4 rounded-xl border-2 font-bold transition-all text-center ${
+                        isCustomDonation || (Number(customAmount) !== 10 && customAmount !== "")
+                          ? "border-blue-600 bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 shadow-sm"
+                          : "border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-slate-300"
+                      }`}
+                    >
+                      <div className="text-2xl font-extrabold">Other Amount</div>
+                      <div className="text-xs font-normal text-slate-500 dark:text-slate-400 mt-0.5">
+                        Enter custom donation
+                      </div>
+                    </button>
+                  </div>
+
+                  {(isCustomDonation || (Number(customAmount) !== 10 && customAmount !== "")) && (
+                    <div className="pt-2">
+                      <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">
+                        Enter Custom Amount ($)
+                      </label>
+                      <div className="relative rounded-xl shadow-sm">
+                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                          <span className="text-slate-500 dark:text-slate-400 font-bold text-lg">$</span>
+                        </div>
+                        <input
+                          type="number"
+                          min="1"
+                          step="1"
+                          value={customAmount}
+                          onChange={(e) => {
+                            const val = e.target.value
+                            setCustomAmount(val === "" ? "" : Math.max(1, Number(val)))
+                          }}
+                          placeholder="e.g. 25"
+                          className="w-full pl-9 pr-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white font-bold text-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 

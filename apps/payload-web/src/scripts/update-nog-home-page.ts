@@ -102,7 +102,9 @@ function buildUpcomingEventsLayout() {
           richParagraph("More information to come"),
           richHeading("NoG Blood Drive: Friday, September 25th", "h3"),
           richParagraph("Price Chopper Parking lot 2-6pm"),
-          richParagraph("Appointment Sign up link"),
+          richParagraph(
+            "Appointment Sign up link: http://lifeserve-donor.prod.forcytesp.com/schedule-donation?date=2026-09-25&operation_id=546346&operation_type=drives",
+          ),
         ]),
       },
     ],
