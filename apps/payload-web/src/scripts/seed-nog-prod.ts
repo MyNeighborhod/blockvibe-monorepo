@@ -248,41 +248,7 @@ async function run() {
       collection: "broadcasts",
       where: { tenant: { equals: tenant.id } },
     })
-
-    // Find all users linked to this tenant and remove the association first
-    console.log("Finding tenant users...")
-    const usersToUpdate = await payload.find({
-      collection: "users",
-      where: {
-        "tenants.tenant": { equals: tenant.id },
-      },
-      limit: 1000,
-    })
-
-    console.log(`Updating ${usersToUpdate.docs.length} users to remove tenant mapping...`)
-    for (const user of usersToUpdate.docs) {
-      const updatedTenants = (user.tenants || [])
-        .map((t: any) =>
-          typeof t.tenant === "object" && t.tenant !== null ? t.tenant.id : t.tenant,
-        )
-        .filter((id) => id !== tenant.id)
-
-      await payload.update({
-        collection: "users",
-        id: user.id,
-        context: { isSeeding: true },
-        data: {
-          tenants: updatedTenants.map((id) => ({ tenant: id })),
-        },
-      })
-    }
-
-    console.log("Deleting tenant...")
-    await payload.delete({
-      collection: "tenants",
-      id: tenant.id,
-    })
-    payload.logger.info(`Old NOG Tenant ID ${tenant.id} cleaned.`)
+    payload.logger.info(`Existing NOG Tenant ID ${tenant.id} cleaned.`)
   }
 
   // 2. Fetch media assets from the live site
@@ -351,16 +317,21 @@ async function run() {
   ])
 
   // 3. Create Tenant
-  payload.logger.info("Creating NOG Tenant...")
-  const tenant = await payload.create({
-    collection: "tenants",
-    data: {
-      name: "North Of Grand Des Moines",
-      slug: "nog",
-      domain: "www.northofgranddsm.org",
-      template: "light",
-    },
-  })
+  let tenant: any
+  if (existingTenants.docs.length > 0) {
+    tenant = existingTenants.docs[0]
+  } else {
+    payload.logger.info("Creating NOG Tenant...")
+    tenant = await payload.create({
+      collection: "tenants",
+      data: {
+        name: "North Of Grand Des Moines",
+        slug: "nog",
+        domain: "www.northofgranddsm.org",
+        template: "light",
+      },
+    })
+  }
 
   // Ensure Default Platform Tenant exists
   const defaultTenants = await payload.find({
@@ -1415,7 +1386,7 @@ async function run() {
     payload.logger.warn({ err }, "Could not seed payment-settings global")
   }
 
-  payload.logger.info("Tenant NOG Production Seeded Successfully!")
+  payload.logger.info("Tenant and Platform Seeded Successfully with custom pages and live assets!")
   process.exit(0)
 }
 
