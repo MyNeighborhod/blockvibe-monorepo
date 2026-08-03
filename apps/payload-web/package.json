@@ -14,6 +14,8 @@
     "db:restore:local": "tsx src/scripts/restore_local_db.ts",
     "db:push:prod": "./infra/push-db-to-prod.sh",
     "seed:default-platform": "tsx src/scripts/seed-default-platform.ts",
+    "seed:nog-staging": "tsx src/scripts/seed-nog-staging.ts",
+    "seed:nog-prod": "tsx src/scripts/seed-nog-prod.ts",
     "seed:nog-users": "tsx src/scripts/seed-nog-users.ts",
     "seed:prod-content": "./infra/seed-prod-content.sh",
     "generate:importmap": "cross-env NODE_OPTIONS=--no-deprecation payload generate:importmap",

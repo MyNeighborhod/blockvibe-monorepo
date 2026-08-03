@@ -83,9 +83,9 @@ export NODE_OPTIONS=--no-deprecation
 echo "Using database: postgres://postgres:***@127.0.0.1:${LOCAL_DB_PORT}/${DB_NAME}"
 
 echo "--------------------------------------------------------"
-echo "1. Seeding NOG Tenant and Platform Pages"
+echo "1. Seeding NOG Tenant and Platform Pages (Staging)"
 echo "--------------------------------------------------------"
-pnpm exec tsx src/scripts/seed-nog.ts
+pnpm exec tsx src/scripts/seed-nog-staging.ts
 
 echo "--------------------------------------------------------"
 echo "2. Seeding Beaverdale Tenant"
