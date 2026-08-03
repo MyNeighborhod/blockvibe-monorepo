@@ -1412,7 +1412,7 @@ async function run() {
       },
     })
   } catch (err) {
-    payload.logger.warn("Could not seed payment-settings global:", err)
+    payload.logger.warn({ err }, "Could not seed payment-settings global")
   }
 
   payload.logger.info("Tenant NOG Production Seeded Successfully!")
