@@ -81,6 +81,8 @@ export interface Config {
     'crm-fields': CrmField;
     'mailing-lists': MailingList;
     businesses: Business;
+    memberships: Membership;
+    payments: Payment;
     redirects: Redirect;
     forms: Form;
     'form-submissions': FormSubmission;
@@ -112,6 +114,8 @@ export interface Config {
     'crm-fields': CrmFieldsSelect<false> | CrmFieldsSelect<true>;
     'mailing-lists': MailingListsSelect<false> | MailingListsSelect<true>;
     businesses: BusinessesSelect<false> | BusinessesSelect<true>;
+    memberships: MembershipsSelect<false> | MembershipsSelect<true>;
+    payments: PaymentsSelect<false> | PaymentsSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     forms: FormsSelect<false> | FormsSelect<true>;
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
@@ -127,8 +131,12 @@ export interface Config {
     defaultIDType: number;
   };
   fallbackLocale: null;
-  globals: {};
-  globalsSelect: {};
+  globals: {
+    'payment-settings': PaymentSetting;
+  };
+  globalsSelect: {
+    'payment-settings': PaymentSettingsSelect<false> | PaymentSettingsSelect<true>;
+  };
   locale: null;
   widgets: {
     collections: CollectionsWidget;
@@ -475,6 +483,10 @@ export interface Category {
  */
 export interface User {
   id: number;
+  /**
+   * Immutable ULID account identifier used for CRM, email, and payment services.
+   */
+  accountId?: string | null;
   name?: string | null;
   /**
    * Access level control for user permissions.
@@ -1232,6 +1244,81 @@ export interface Business {
   createdAt: string;
 }
 /**
+ * Community member subscription and annual dues status tracking.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "memberships".
+ */
+export interface Membership {
+  id: number;
+  /**
+   * ULID account identifier matching User record.
+   */
+  accountId: string;
+  /**
+   * Associated User account.
+   */
+  user: number | User;
+  tier: 'individual' | 'household';
+  status: 'active' | 'pending' | 'expired';
+  /**
+   * Set to true when dues threshold ($X/yr) is met.
+   */
+  isAnnualPayingMember?: boolean | null;
+  /**
+   * Total dues amount paid within the last 365 days.
+   */
+  totalPaidCurrentYear?: number | null;
+  /**
+   * Expiration date for annual membership.
+   */
+  validUntil?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Payment transaction ledger for auto and manual payments.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payments".
+ */
+export interface Payment {
+  id: number;
+  /**
+   * ULID transaction identifier.
+   */
+  paymentId: string;
+  /**
+   * ULID account identifier matching User/Membership record.
+   */
+  accountId: string;
+  user: number | User;
+  provider: 'paypal' | 'check' | 'cash' | 'manual' | 'other';
+  /**
+   * PayPal Order/Capture ID, or paper Check Number.
+   */
+  providerTransactionId?: string | null;
+  /**
+   * Transaction amount in USD.
+   */
+  amount: number;
+  currency?: string | null;
+  status: 'completed' | 'pending' | 'failed' | 'refunded';
+  paidAt: string;
+  /**
+   * Optional notes (e.g. check details, bank memo, manual override reason).
+   */
+  notes?: string | null;
+  /**
+   * Admin user who recorded manual check/cash payment.
+   */
+  recordedBy?: (number | null) | User;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "redirects".
  */
@@ -1477,6 +1564,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'businesses';
         value: number | Business;
+      } | null)
+    | ({
+        relationTo: 'memberships';
+        value: number | Membership;
+      } | null)
+    | ({
+        relationTo: 'payments';
+        value: number | Payment;
       } | null)
     | ({
         relationTo: 'redirects';
@@ -1907,6 +2002,7 @@ export interface CategoriesSelect<T extends boolean = true> {
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
+  accountId?: T;
   name?: T;
   role?: T;
   status?: T;
@@ -2090,6 +2186,42 @@ export interface BusinessesSelect<T extends boolean = true> {
   hours?: T;
   logo?: T;
   appearOnNOG?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "memberships_select".
+ */
+export interface MembershipsSelect<T extends boolean = true> {
+  accountId?: T;
+  user?: T;
+  tier?: T;
+  status?: T;
+  isAnnualPayingMember?: T;
+  totalPaidCurrentYear?: T;
+  validUntil?: T;
+  phone?: T;
+  address?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payments_select".
+ */
+export interface PaymentsSelect<T extends boolean = true> {
+  paymentId?: T;
+  accountId?: T;
+  user?: T;
+  provider?: T;
+  providerTransactionId?: T;
+  amount?: T;
+  currency?: T;
+  status?: T;
+  paidAt?: T;
+  notes?: T;
+  recordedBy?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2369,6 +2501,47 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payment-settings".
+ */
+export interface PaymentSetting {
+  id: number;
+  /**
+   * Client ID from PayPal Developer Portal.
+   */
+  paypalClientId?: string | null;
+  /**
+   * Client Secret from PayPal Developer Portal.
+   */
+  paypalClientSecret?: string | null;
+  /**
+   * PayPal API environment endpoint.
+   */
+  paypalEnvironment?: ('sandbox' | 'live') | null;
+  individualDuesAmount?: number | null;
+  householdDuesAmount?: number | null;
+  enablePayPal?: boolean | null;
+  enableCheckPayment?: boolean | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payment-settings_select".
+ */
+export interface PaymentSettingsSelect<T extends boolean = true> {
+  paypalClientId?: T;
+  paypalClientSecret?: T;
+  paypalEnvironment?: T;
+  individualDuesAmount?: T;
+  householdDuesAmount?: T;
+  enablePayPal?: T;
+  enableCheckPayment?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

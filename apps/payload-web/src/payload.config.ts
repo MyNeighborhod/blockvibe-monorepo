@@ -21,6 +21,9 @@ import { Broadcasts } from "./collections/Broadcasts"
 import { CRMFields } from "./collections/CRMFields"
 import { MailingLists } from "./collections/MailingLists"
 import { Businesses } from "./collections/Businesses"
+import { Memberships } from "./collections/Memberships"
+import { Payments } from "./collections/Payments"
+import { PaymentSettings } from "./globals/PaymentSettings"
 import { nodemailerAdapter } from "@payloadcms/email-nodemailer"
 
 const filename = fileURLToPath(import.meta.url)
@@ -102,9 +105,11 @@ export default buildConfig({
     CRMFields,
     MailingLists,
     Businesses,
+    Memberships,
+    Payments,
   ],
   cors: [getServerSideURL()].filter(Boolean),
-  globals: [],
+  globals: [PaymentSettings],
   plugins,
   secret: process.env.PAYLOAD_SECRET,
   sharp,

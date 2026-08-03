@@ -131,6 +131,9 @@ importers:
       tailwind-merge:
         specifier: ^3.4.0
         version: 3.6.0
+      ulid:
+        specifier: ^3.0.2
+        version: 3.0.2
       zod:
         specifier: ^3.23.8
         version: 3.25.76
@@ -188,7 +191,7 @@ importers:
         version: 9.39.4(jiti@2.7.0)
       eslint-config-next:
         specifier: 16.2.6
-        version: 16.2.6(eslint@9.39.4(jiti@2.7.0))(typescript@5.7.3)
+        version: 16.2.6(@typescript-eslint/parser@8.61.0(eslint@9.39.4(jiti@2.7.0))(typescript@5.7.3))(eslint@9.39.4(jiti@2.7.0))(typescript@5.7.3)
       eslint-config-prettier:
         specifier: ^10.1.8
         version: 10.1.8(eslint@9.39.4(jiti@2.7.0))
@@ -273,7 +276,7 @@ importers:
         version: 9.39.4(jiti@2.7.0)
       eslint-config-next:
         specifier: '>=14.0.0'
-        version: 16.2.6(@typescript-eslint/parser@8.61.0(eslint@9.39.4(jiti@2.7.0))(typescript@5.7.3))(eslint@9.39.4(jiti@2.7.0))(typescript@5.7.3)
+        version: 16.2.6(eslint@9.39.4(jiti@2.7.0))(typescript@5.7.3)
       eslint-config-prettier:
         specifier: '>=9.0.0'
         version: 10.1.8(eslint@9.39.4(jiti@2.7.0))
@@ -5971,6 +5974,10 @@ packages:
   uint8array-extras@1.5.0:
     resolution: {integrity: sha512-rvKSBiC5zqCCiDZ9kAOszZcDvdAHwwIKJG33Ykj43OKcWsnmcBRL09YTU4nOeHZ8Y2a7l1MgTd08SBe9A8Qj6A==}
     engines: {node: '>=18'}
+
+  ulid@3.0.2:
+    resolution: {integrity: sha512-yu26mwteFYzBAot7KVMqFGCVpsF6g8wXfJzQUHvu1no3+rRRSFcSV2nKeYvNPLD2J4b08jYBDhHUjeH0ygIl9w==}
+    hasBin: true
 
   unbox-primitive@1.1.0:
     resolution: {integrity: sha512-nWJ91DjeOkej/TA8pXQ3myruKpKEYgqvpw9lz4OPHj/NWFNluYrjbz9j01CJ8yKQd2g4jFoOkINCTW2I5LEEyw==}
@@ -12422,6 +12429,8 @@ snapshots:
     optional: true
 
   uint8array-extras@1.5.0: {}
+
+  ulid@3.0.2: {}
 
   unbox-primitive@1.1.0:
     dependencies:

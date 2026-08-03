@@ -34,6 +34,16 @@ export const Users: CollectionConfig = {
   },
   fields: [
     {
+      name: "accountId",
+      type: "text",
+      unique: true,
+      index: true,
+      admin: {
+        description: "Immutable ULID account identifier used for CRM, email, and payment services.",
+        readOnly: true,
+      },
+    },
+    {
       name: "name",
       type: "text",
     },

@@ -1,6 +1,8 @@
 import type { CollectionBeforeChangeHook } from "payload"
 import { isSuperAdmin, getUserTenantIds } from "../../access/roles"
 
+import { ulid } from "ulid"
+
 export const usersBeforeChangeHook: CollectionBeforeChangeHook = async ({
   data,
   req,
@@ -8,6 +10,11 @@ export const usersBeforeChangeHook: CollectionBeforeChangeHook = async ({
   originalDoc,
 }) => {
   const { user, payload } = req
+
+  // Auto-assign accountId ULID if missing
+  if (!data.accountId) {
+    data.accountId = ulid()
+  }
 
   // Allow bypass for seed scripts
   if (req.context?.isSeeding) {
