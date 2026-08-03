@@ -26,6 +26,36 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [forgotMessage, setForgotMessage] = useState<string | null>(null)
+
+  const handleForgotPassword = async () => {
+    setError(null)
+    setForgotMessage(null)
+
+    if (!email || !email.trim()) {
+      setError("Please enter your email address above, then click 'Forgot Password?' to receive your reset link.")
+      return
+    }
+
+    setLoading(true)
+    try {
+      const response = await fetch("/api/users/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
+      })
+
+      if (response.ok) {
+        setForgotMessage("Password reset email sent! Please check your inbox for instructions to set your new password.")
+      } else {
+        setForgotMessage("If an account exists with that email address, a password reset link has been sent to your inbox.")
+      }
+    } catch {
+      setForgotMessage("If an account exists with that email address, a password reset link has been sent to your inbox.")
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -95,6 +125,14 @@ export default function LoginPage() {
                 {error}
               </div>
             )}
+            {forgotMessage && (
+              <div
+                role="status"
+                className="p-3.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-sm font-medium leading-normal"
+              >
+                {forgotMessage}
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="email">Email address</Label>
               <Input
@@ -110,6 +148,13 @@ export default function LoginPage() {
             <div className="space-y-2">
               <div className="flex justify-between items-center">
                 <Label htmlFor="password">Password</Label>
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  className="text-xs text-primary hover:underline font-semibold"
+                >
+                  Forgot Password?
+                </button>
               </div>
               <div className="relative">
                 <Input

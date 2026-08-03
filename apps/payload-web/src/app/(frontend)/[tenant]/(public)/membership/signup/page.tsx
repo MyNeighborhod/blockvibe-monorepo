@@ -48,6 +48,8 @@ function MembershipForm() {
     tier: "individual", // 'individual' | 'household' | 'business'
     businessTierSlug: "local-sponsor", // 'local-sponsor' | 'community-champion'
     paymentMethod: "paypal", // 'paypal' | 'check'
+    agreeEmails: true,
+    password: "",
   })
 
   const [loading, setLoading] = useState(false)
@@ -343,6 +345,40 @@ function MembershipForm() {
                       className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                     />
                   </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                      Account Password (Optional)
+                    </label>
+                    <input
+                      type="password"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      placeholder="Choose password (or reset anytime via email)"
+                      className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <label className="flex items-start space-x-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name="agreeEmails"
+                      checked={formData.agreeEmails}
+                      onChange={(e) => setFormData({ ...formData, agreeEmails: e.target.checked })}
+                      className="w-5 h-5 mt-0.5 text-indigo-600 rounded focus:ring-indigo-500"
+                    />
+                    <div className="text-xs text-slate-600 dark:text-slate-400">
+                      <span className="font-semibold text-slate-800 dark:text-slate-200">
+                        I agree to receive neighborhood email updates, newsletters, and announcements.
+                      </span>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                        (Transactional emails like payment receipts and account confirmations will always be sent.)
+                      </div>
+                    </div>
+                  </label>
                 </div>
               </div>
 

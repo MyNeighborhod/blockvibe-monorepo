@@ -18,6 +18,8 @@ export async function POST(req: Request) {
       paymentMethod = "paypal",
       intent = "new", // 'new' | 'renewal' | 'donation'
       customAmount,
+      agreeEmails = true,
+      password: customPassword,
     } = body
 
     if (!email || !name) {
@@ -43,11 +45,20 @@ export async function POST(req: Request) {
         data: {
           email: normalizedEmail,
           name,
-          password: `P@ss-${Math.random().toString(36).slice(-8)}${Date.now()}`,
+          password: customPassword && customPassword.trim() ? customPassword.trim() : `P@ss-${Math.random().toString(36).slice(-8)}${Date.now()}`,
           role: "neighbor",
           status: "pending",
           isNeighbor: true,
           memberType: memberCategory === "business" ? "business" : "residential",
+          unsubscribed: agreeEmails === false,
+        },
+      })
+    } else {
+      await payload.update({
+        collection: "users",
+        id: userRecord.id,
+        data: {
+          unsubscribed: agreeEmails === false,
         },
       })
     }
