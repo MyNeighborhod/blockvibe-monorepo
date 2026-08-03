@@ -146,6 +146,48 @@ body[data-tenant-chrome="nog"] .high-impact-hero {
   }
 }
 
+/* Styled Editorial Lists & Auto-Linked URLs */
+.theme-nog .payload-richtext ul,
+.theme-nog .prose ul {
+  list-style: none !important;
+  padding-left: 0 !important;
+  margin-top: 1rem !important;
+  margin-bottom: 1.5rem !important;
+}
+
+.theme-nog .payload-richtext li,
+.theme-nog .prose li {
+  position: relative;
+  padding-left: 1.5rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.65;
+}
+
+.theme-nog .payload-richtext li::before,
+.theme-nog .prose li::before {
+  content: "•";
+  position: absolute;
+  left: 0.25rem;
+  color: #76b3b8;
+  font-weight: bold;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.theme-nog .payload-richtext a,
+.theme-nog .prose a {
+  color: #0a5c54 !important;
+  font-weight: 600;
+  text-decoration: underline !important;
+  text-underline-offset: 4px;
+  transition: color 0.2s ease;
+}
+
+.theme-nog .payload-richtext a:hover,
+.theme-nog .prose a:hover {
+  color: #063934 !important;
+}
+
 .theme-nog a {
   /* color: #0a3840; */
   text-decoration: underline;

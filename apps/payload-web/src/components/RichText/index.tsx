@@ -35,9 +35,57 @@ const internalDocToHref = ({ linkNode }: { linkNode: SerializedLinkNode }) => {
   return relationTo === "posts" ? `/posts/${slug}` : `/${slug}`
 }
 
+function renderAutoLinkedText(text: string) {
+  if (!text) return null
+  const urlRegex = /(https?:\/\/[^\s]+|tinyurl\.com\/[^\s]+|www\.[^\s]+|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g
+  const parts: React.ReactNode[] = []
+  let lastIndex = 0
+  let match: RegExpExecArray | null = null
+
+  while ((match = urlRegex.exec(text)) !== null) {
+    const matchedStr = match[0]
+    const matchIndex = match.index
+
+    if (matchIndex > lastIndex) {
+      parts.push(text.substring(lastIndex, matchIndex))
+    }
+
+    let href = matchedStr
+    if (matchedStr.includes("@") && !matchedStr.startsWith("http")) {
+      href = `mailto:${matchedStr}`
+    } else if (!matchedStr.startsWith("http://") && !matchedStr.startsWith("https://")) {
+      href = `https://${matchedStr}`
+    }
+
+    parts.push(
+      <a
+        key={matchIndex}
+        href={href}
+        target={href.startsWith("mailto:") ? undefined : "_blank"}
+        rel={href.startsWith("mailto:") ? undefined : "noopener noreferrer"}
+        className="text-[#0a5c54] dark:text-emerald-400 font-semibold underline underline-offset-4 hover:text-emerald-600 transition-colors cursor-pointer"
+      >
+        {matchedStr}
+      </a>,
+    )
+
+    lastIndex = urlRegex.lastIndex
+  }
+
+  if (lastIndex < text.length) {
+    parts.push(text.substring(lastIndex))
+  }
+
+  return parts.length > 0 ? <>{parts}</> : text
+}
+
 const jsxConverters: JSXConvertersFunction<NodeTypes> = ({ defaultConverters }) => ({
   ...defaultConverters,
   ...LinkJSXConverter({ internalDocToHref }),
+  text: ({ node }) => {
+    if (!node.text) return null
+    return renderAutoLinkedText(node.text)
+  },
   blocks: {
     banner: ({ node }) => <BannerBlock className="col-start-2 mb-4" {...node.fields} />,
     mediaBlock: ({ node }) => (
