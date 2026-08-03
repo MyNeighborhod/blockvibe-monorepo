@@ -103,7 +103,7 @@ export default function MembershipLandingPage() {
             <div className="bg-slate-50 dark:bg-slate-700/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-600 text-center space-y-4">
               <div className="relative w-full h-56 rounded-xl overflow-hidden bg-slate-200 dark:bg-slate-600">
                 <Image
-                  src="/media/nog/img-7286_orig-1.jpg"
+                  src="/media/nog/img-7444_orig-1.jpg"
                   alt="North of Grand Merch T-Shirt"
                   fill
                   className="object-cover"
@@ -133,7 +133,7 @@ export default function MembershipLandingPage() {
             <div className="bg-slate-50 dark:bg-slate-700/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-600 text-center space-y-4">
               <div className="relative w-full h-56 rounded-xl overflow-hidden bg-slate-200 dark:bg-slate-600">
                 <Image
-                  src="/media/nog/img-7444_orig-1.jpg"
+                  src="/media/nog/img-7286_orig-1.jpg"
                   alt="North of Grand Merch Mug"
                   fill
                   className="object-cover"
