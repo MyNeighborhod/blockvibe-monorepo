@@ -320,11 +320,11 @@ function MembershipForm() {
 
             <div>
               <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">
-                Select Payment Method
+                Choose How to Pay Dues / Donate
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <label
-                  className={`p-4 rounded-xl border-2 cursor-pointer flex items-center gap-3 transition-all ${
+                  className={`p-4 rounded-xl border-2 cursor-pointer flex items-start gap-3 transition-all ${
                     formData.paymentMethod === "paypal"
                       ? "border-blue-600 bg-blue-50/50 dark:bg-blue-950/30"
                       : "border-slate-200 dark:border-slate-700"
@@ -336,17 +336,20 @@ function MembershipForm() {
                     value="paypal"
                     checked={formData.paymentMethod === "paypal"}
                     onChange={handleChange}
+                    className="mt-1"
                   />
                   <div>
-                    <div className="font-bold text-slate-900 dark:text-white">PayPal / Card</div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400">
-                      Online instant payment
+                    <div className="font-bold text-slate-900 dark:text-white">
+                      Credit / Debit Card or PayPal
+                    </div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                      Pay online instantly via PayPal (accepts all major Credit Cards, Debit Cards, or PayPal balance).
                     </div>
                   </div>
                 </label>
 
                 <label
-                  className={`p-4 rounded-xl border-2 cursor-pointer flex items-center gap-3 transition-all ${
+                  className={`p-4 rounded-xl border-2 cursor-pointer flex items-start gap-3 transition-all ${
                     formData.paymentMethod === "check"
                       ? "border-emerald-600 bg-emerald-50/50 dark:bg-emerald-950/30"
                       : "border-slate-200 dark:border-slate-700"
@@ -358,11 +361,14 @@ function MembershipForm() {
                     value="check"
                     checked={formData.paymentMethod === "check"}
                     onChange={handleChange}
+                    className="mt-1"
                   />
                   <div>
-                    <div className="font-bold text-slate-900 dark:text-white">Paper Check / Cash</div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400">
-                      Mail check or pay at meeting
+                    <div className="font-bold text-slate-900 dark:text-white">
+                      I will pay cash / check / other ways later
+                    </div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                      Become a member now without paying upfront. Creates your account profile & ULID immediately.
                     </div>
                   </div>
                 </label>
@@ -377,8 +383,12 @@ function MembershipForm() {
               {loading
                 ? "Processing..."
                 : intent === "donation"
-                ? `Donate $${customAmount} via ${formData.paymentMethod === "paypal" ? "PayPal" : "Check"}`
-                : `Proceed to Payment (${intent === "renewal" ? "Renew" : "Join"})`}
+                ? formData.paymentMethod === "check"
+                  ? "Pledge Donation (Pay Offline Later)"
+                  : `Donate $${customAmount} via PayPal / Credit Card`
+                : formData.paymentMethod === "check"
+                ? "Register Member Profile Now (Pay Offline Later)"
+                : `Proceed to Online Checkout (${intent === "renewal" ? "Renew" : "Join"})`}
             </button>
           </form>
         ) : (
