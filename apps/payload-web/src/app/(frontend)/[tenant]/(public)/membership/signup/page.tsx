@@ -587,6 +587,24 @@ function MembershipForm() {
                     </div>
                   </label>
                 </div>
+
+                {/* Support Email Notice */}
+                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-700/40 border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-400 flex items-start space-x-3">
+                  <span className="text-lg">✉️</span>
+                  <div>
+                    <span className="font-bold text-slate-900 dark:text-white">Need help or running into payment issues?</span>
+                    <div>
+                      Feel free to email the North of Grand President at{" "}
+                      <a
+                        href="mailto:northofgrandpresident@gmail.com"
+                        className="font-bold text-indigo-600 dark:text-indigo-400 underline hover:text-indigo-700"
+                      >
+                        northofgrandpresident@gmail.com
+                      </a>
+                      .
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Order Total & Submit Button */}

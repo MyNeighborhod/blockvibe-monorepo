@@ -13,6 +13,15 @@ export const PaymentSettings: GlobalConfig = {
   },
   fields: [
     {
+      name: "paymentSupportEmail",
+      type: "email",
+      defaultValue: "northofgrandpresident@gmail.com",
+      label: "Payment Support Email",
+      admin: {
+        description: "Email address displayed on payment pages for member support inquiries.",
+      },
+    },
+    {
       name: "paypalClientId",
       type: "text",
       label: "PayPal Client ID",

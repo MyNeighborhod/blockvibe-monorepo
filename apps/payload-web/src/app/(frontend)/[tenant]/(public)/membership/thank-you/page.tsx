@@ -83,14 +83,25 @@ export default function MembershipThankYouPage({
           <div className="mb-8 p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-left text-sm text-amber-900 dark:text-amber-200">
             <h4 className="font-bold mb-1">Check Payment Instructions:</h4>
             <p>
-              Please mail your paper check (payable to <strong>Community Association</strong>) to:
+              Please mail your paper check (payable to <strong>North of Grand Neighborhood Association</strong>) to our treasurer.
             </p>
-            <p className="font-semibold mt-1">100 Community Way, Neighborhood Office</p>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
               Include your Account ID (<code>{accountId}</code>) in the memo line. An admin will mark your membership active upon receipt.
             </p>
           </div>
         )}
+
+        {/* Support Email Notice */}
+        <div className="mb-8 p-4 rounded-xl bg-slate-50 dark:bg-slate-700/40 border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-400 text-center">
+          Questions or issues with your payment or receipt? Email the North of Grand President at{" "}
+          <a
+            href="mailto:northofgrandpresident@gmail.com"
+            className="font-bold text-indigo-600 dark:text-indigo-400 underline hover:text-indigo-700"
+          >
+            northofgrandpresident@gmail.com
+          </a>
+          .
+        </div>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link

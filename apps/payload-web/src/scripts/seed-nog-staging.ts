@@ -1377,6 +1377,7 @@ async function run() {
       slug: "payment-settings" as any,
       data: {
         paypalEnvironment: "sandbox",
+        paymentSupportEmail: "northofgrandpresident@gmail.com",
         personalDuesFrequency: "annual",
         individualDuesAmount: 10,
         householdDuesAmount: 20,
