@@ -1,9 +1,10 @@
 services:
-  payload-staging:
+  payload_blue:
     image: blockvibe-app:staging
+    container_name: payload_blue_staging
     restart: always
     ports:
-      - "127.0.0.1:3001:3000" # Bind host 3001 to container 3000 (proxied via Caddy)
+      - "127.0.0.1:3001:3000" # Bind to port 3001 for Staging Blue instance
     volumes:
       - /var/www/blockvibe/media-staging/media:/app/apps/payload-web/public/media
     depends_on:
@@ -11,10 +12,28 @@ services:
     env_file:
       - .env
     environment:
+      - APP_INSTANCE_COLOR=BLUE
+      - DATABASE_URL=postgres://${DB_USER:-postgres}:${DB_PASSWORD:-localhost}@db-staging:5432/${DB_NAME:-blockvibe-staging}
+
+  payload_green:
+    image: blockvibe-app:staging
+    container_name: payload_green_staging
+    restart: always
+    ports:
+      - "127.0.0.1:3002:3000" # Bind to port 3002 for Staging Green instance
+    volumes:
+      - /var/www/blockvibe/media-staging/media:/app/apps/payload-web/public/media
+    depends_on:
+      - db-staging
+    env_file:
+      - .env
+    environment:
+      - APP_INSTANCE_COLOR=GREEN
       - DATABASE_URL=postgres://${DB_USER:-postgres}:${DB_PASSWORD:-localhost}@db-staging:5432/${DB_NAME:-blockvibe-staging}
 
   db-staging:
     image: postgres:16-alpine
+    container_name: blockvibe_db_staging
     env_file:
       - .env
     environment:

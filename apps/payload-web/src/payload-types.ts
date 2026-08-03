@@ -1244,7 +1244,7 @@ export interface Business {
   createdAt: string;
 }
 /**
- * Community member subscription and annual dues status tracking.
+ * Community member subscription and dues status tracking.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "memberships".
@@ -1259,10 +1259,16 @@ export interface Membership {
    * Associated User account.
    */
   user: number | User;
-  tier: 'individual' | 'household';
+  memberCategory: 'residential' | 'business';
+  tier: 'individual' | 'household' | 'business';
+  /**
+   * Slug of selected business tier (e.g. bronze, sponsor, gold).
+   */
+  businessTierSlug?: string | null;
+  recurringFrequency?: ('annual' | 'monthly' | 'one_time') | null;
   status: 'active' | 'pending' | 'expired';
   /**
-   * Set to true when dues threshold ($X/yr) is met.
+   * Set to true when required dues threshold is met.
    */
   isAnnualPayingMember?: boolean | null;
   /**
@@ -1270,7 +1276,7 @@ export interface Membership {
    */
   totalPaidCurrentYear?: number | null;
   /**
-   * Expiration date for annual membership.
+   * Expiration date for membership status.
    */
   validUntil?: string | null;
   phone?: string | null;
@@ -2196,7 +2202,10 @@ export interface BusinessesSelect<T extends boolean = true> {
 export interface MembershipsSelect<T extends boolean = true> {
   accountId?: T;
   user?: T;
+  memberCategory?: T;
   tier?: T;
+  businessTierSlug?: T;
+  recurringFrequency?: T;
   status?: T;
   isAnnualPayingMember?: T;
   totalPaidCurrentYear?: T;
@@ -2509,6 +2518,10 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
 export interface PaymentSetting {
   id: number;
   /**
+   * Email address displayed on payment pages for member support inquiries.
+   */
+  paymentSupportEmail?: string | null;
+  /**
    * Client ID from PayPal Developer Portal.
    */
   paypalClientId?: string | null;
@@ -2520,8 +2533,20 @@ export interface PaymentSetting {
    * PayPal API environment endpoint.
    */
   paypalEnvironment?: ('mock' | 'sandbox' | 'live') | null;
+  personalDuesFrequency?: ('annual' | 'monthly') | null;
   individualDuesAmount?: number | null;
   householdDuesAmount?: number | null;
+  businessTiers?:
+    | {
+        name: string;
+        slug: string;
+        description?: string | null;
+        amount: number;
+        frequency?: ('yearly' | 'monthly' | 'one_time') | null;
+        active?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
   enablePayPal?: boolean | null;
   enableCheckPayment?: boolean | null;
   updatedAt?: string | null;
@@ -2532,11 +2557,24 @@ export interface PaymentSetting {
  * via the `definition` "payment-settings_select".
  */
 export interface PaymentSettingsSelect<T extends boolean = true> {
+  paymentSupportEmail?: T;
   paypalClientId?: T;
   paypalClientSecret?: T;
   paypalEnvironment?: T;
+  personalDuesFrequency?: T;
   individualDuesAmount?: T;
   householdDuesAmount?: T;
+  businessTiers?:
+    | T
+    | {
+        name?: T;
+        slug?: T;
+        description?: T;
+        amount?: T;
+        frequency?: T;
+        active?: T;
+        id?: T;
+      };
   enablePayPal?: T;
   enableCheckPayment?: T;
   updatedAt?: T;

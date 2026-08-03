@@ -151,13 +151,42 @@ ssh -i "$SSH_KEY" ubuntu@$IP "
   sudo chown -R 1001:1001 $REMOTE_MEDIA_DIR &&
   sudo chmod -R a+rX $REMOTE_MEDIA_DIR &&
   cd $REMOTE_DIR &&
-  echo 'Starting containers via Docker Compose...' &&
-  sudo docker compose down &&
-  sudo docker compose up -d &&
 
-  echo 'Updating Caddy reverse-proxy...' &&
-  sudo cp /tmp/Caddyfile /etc/caddy/Caddyfile &&
+  sudo docker compose -f $COMPOSE_SOURCE up -d db-staging
+
+  ACTIVE_PORT=3001
+  if sudo grep -q '127.0.0.1:3001' /etc/caddy/Caddyfile 2>/dev/null; then
+    ACTIVE_PORT=3001
+    NEW_SERVICE=\"payload_green\"
+    NEW_PORT=3002
+    OLD_SERVICE=\"payload_blue\"
+  else
+    ACTIVE_PORT=3002
+    NEW_SERVICE=\"payload_blue\"
+    NEW_PORT=3001
+    OLD_SERVICE=\"payload_green\"
+  fi
+
+  echo \"Current active port: \$ACTIVE_PORT. Starting \$NEW_SERVICE on port \$NEW_PORT...\"
+  sudo docker compose -f $COMPOSE_SOURCE up -d \$NEW_SERVICE
+
+  echo \"Warming up Next.js on port \$NEW_PORT...\"
+  for i in \$(seq 1 30); do
+    STATUS=\$(curl -s -o /null -w '%{http_code}' http://127.0.0.1:\$NEW_PORT/ || true)
+    if [ \"\$STATUS\" -eq 200 ] || [ \"\$STATUS\" -eq 302 ]; then
+      echo \"✓ New instance on port \$NEW_PORT is healthy (HTTP \$STATUS)!\"
+      break
+    fi
+    sleep 1
+  done
+
+  echo \"Hot-swapping Caddy upstream to port \$NEW_PORT...\"
+  sudo cp /tmp/Caddyfile /etc/caddy/Caddyfile
+  sudo sed -i \"s/127.0.0.1:3001/127.0.0.1:\$NEW_PORT/g\" /etc/caddy/Caddyfile
   sudo systemctl reload caddy
+
+  echo \"✓ Staging hot-swap complete! Stopping previous service \$OLD_SERVICE...\"
+  sudo docker compose -f $COMPOSE_SOURCE stop \$OLD_SERVICE
 "
 
 echo "--------------------------------------------------------"

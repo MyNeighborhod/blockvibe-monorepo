@@ -8,12 +8,39 @@ import "./index.scss"
 const baseClass = "before-dashboard"
 
 const BeforeDashboard: React.FC = () => {
+  const instanceColor = process.env.APP_INSTANCE_COLOR || "LOCAL / STANDALONE"
+  const isBlue = instanceColor.toUpperCase() === "BLUE"
+  const isGreen = instanceColor.toUpperCase() === "GREEN"
+
   return (
     <div className={baseClass}>
       <Banner className={`${baseClass}__banner`} type="success">
         <h4>Welcome to your dashboard!</h4>
       </Banner>
-      <div style={{ marginTop: "16px", marginBottom: "24px" }}>
+
+      {/* Active Server Instance Badge for Admins */}
+      <div style={{ marginTop: "12px", marginBottom: "16px" }}>
+        <div
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "8px",
+            padding: "8px 14px",
+            backgroundColor: isBlue ? "#1e3a8a" : isGreen ? "#064e3b" : "#1f2937",
+            color: isBlue ? "#93c5fd" : isGreen ? "#6ee7b7" : "#e5e7eb",
+            border: `1px solid ${isBlue ? "#3b82f6" : isGreen ? "#10b981" : "#4b5563"}`,
+            borderRadius: "8px",
+            fontSize: "13px",
+            fontWeight: "700",
+            letterSpacing: "0.5px",
+          }}
+        >
+          <span style={{ fontSize: "16px" }}>⚡</span>
+          <span>Active Server Instance: <strong>{instanceColor}</strong></span>
+        </div>
+      </div>
+
+      <div style={{ marginTop: "8px", marginBottom: "24px" }}>
         <Link
           href="/dashboard"
           style={{
@@ -90,15 +117,6 @@ const BeforeDashboard: React.FC = () => {
           Commit and push your changes to the repository to trigger a redeployment of your project.
         </li>
       </ul>
-      {"Pro Tip: This block is a "}
-      <a
-        href="https://payloadcms.com/docs/custom-components/overview"
-        rel="noopener noreferrer"
-        target="_blank"
-      >
-        custom component
-      </a>
-      , you can remove it at any time by updating your <strong>payload.config</strong>.
     </div>
   )
 }
