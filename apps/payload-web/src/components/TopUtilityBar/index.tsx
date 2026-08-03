@@ -42,13 +42,13 @@ export function TopUtilityBar({ overDarkHero = false, className }: TopUtilityBar
 
   const textColor = overDarkHero
     ? "text-white/90 hover:text-white"
-    : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+    : "text-[#484848] hover:text-slate-900 dark:text-slate-300 dark:hover:text-white"
   const dividerColor = overDarkHero ? "text-white/40" : "text-slate-300 dark:text-slate-600"
 
   return (
     <div
       className={cn(
-        "flex items-center gap-2.5 text-xs font-semibold uppercase tracking-wider select-none",
+        "flex items-center gap-2 text-xs font-semibold uppercase tracking-wider select-none",
         className,
       )}
     >
@@ -56,7 +56,7 @@ export function TopUtilityBar({ overDarkHero = false, className }: TopUtilityBar
         <>
           <Link
             href="/dashboard"
-            className={cn("transition-colors flex items-center gap-1.5", textColor)}
+            className={cn("transition-colors flex items-center gap-1.5 no-underline", textColor)}
           >
             <span className="w-4 h-4 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[9px] font-bold">
               {user.name ? user.name[0].toUpperCase() : user.email[0].toUpperCase()}
@@ -67,21 +67,18 @@ export function TopUtilityBar({ overDarkHero = false, className }: TopUtilityBar
           <button
             type="button"
             onClick={handleLogout}
-            className={cn("transition-colors cursor-pointer bg-transparent border-0 p-0 font-semibold", textColor)}
+            className={cn("transition-colors cursor-pointer bg-transparent border-0 p-0 font-semibold no-underline", textColor)}
           >
             Logout
           </button>
         </>
       ) : (
         <>
-          <Link href="/login" className={cn("transition-colors", textColor)}>
+          <Link href="/login" className={cn("transition-colors no-underline", textColor)}>
             Login
           </Link>
           <span className={dividerColor}>|</span>
-          <Link
-            href="/membership/signup"
-            className={cn("transition-colors text-indigo-600 dark:text-indigo-400 font-bold", overDarkHero && "text-white font-bold")}
-          >
+          <Link href="/membership/signup" className={cn("transition-colors no-underline", textColor)}>
             Sign Up
           </Link>
         </>
