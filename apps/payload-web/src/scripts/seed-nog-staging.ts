@@ -746,7 +746,7 @@ async function run() {
                 richParagraph("Entries can be submitted in one of the following ways:"),
                 richParagraph("• tinyurl.com/nogsummerscavengerhunt2026"),
                 richParagraph(
-                  "• Paper copy (and then send a picture of your filled in map to info@northofgranddsm.org)",
+                  "• Paper copy (and then send a picture of your filled in map to northofgrandpresident@gmail.com)",
                 ),
                 richParagraph(
                   "• DM NOG Neighborhood Association on Facebook to have a paper copy dropped off at your home in the NOG neighborhood",

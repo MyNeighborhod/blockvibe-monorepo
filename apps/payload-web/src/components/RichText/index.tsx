@@ -1,3 +1,4 @@
+import React from "react"
 import { MediaBlock } from "@/blocks/MediaBlock/Component"
 import {
   DefaultNodeTypes,
@@ -37,36 +38,47 @@ const internalDocToHref = ({ linkNode }: { linkNode: SerializedLinkNode }) => {
 
 function renderAutoLinkedText(text: string) {
   if (!text) return null
-  const urlRegex = /(https?:\/\/[^\s]+|tinyurl\.com\/[^\s]+|www\.[^\s]+|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g
+  const urlRegex = /(https?:\/\/[^\s]+|tinyurl\.com\/[^\s]+|www\.[^\s]+|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}[^\s]*)/g
   const parts: React.ReactNode[] = []
   let lastIndex = 0
   let match: RegExpExecArray | null = null
 
   while ((match = urlRegex.exec(text)) !== null) {
-    const matchedStr = match[0]
+    const rawMatch = match[0]
     const matchIndex = match.index
 
     if (matchIndex > lastIndex) {
       parts.push(text.substring(lastIndex, matchIndex))
     }
 
-    let href = matchedStr
-    if (matchedStr.includes("@") && !matchedStr.startsWith("http")) {
-      href = `mailto:${matchedStr}`
-    } else if (!matchedStr.startsWith("http://") && !matchedStr.startsWith("https://")) {
-      href = `https://${matchedStr}`
+    // Strip trailing punctuation like ), ., ,, ;, :
+    let cleanStr = rawMatch
+    let trailingPunct = ""
+    const punctMatch = rawMatch.match(/([),.;:]+)$/)
+    if (punctMatch) {
+      trailingPunct = punctMatch[1]
+      cleanStr = rawMatch.slice(0, -trailingPunct.length)
+    }
+
+    let href = cleanStr
+    if (cleanStr.includes("@") && !cleanStr.startsWith("http")) {
+      href = `mailto:${cleanStr}`
+    } else if (!cleanStr.startsWith("http://") && !cleanStr.startsWith("https://")) {
+      href = `https://${cleanStr}`
     }
 
     parts.push(
-      <a
-        key={matchIndex}
-        href={href}
-        target={href.startsWith("mailto:") ? undefined : "_blank"}
-        rel={href.startsWith("mailto:") ? undefined : "noopener noreferrer"}
-        className="text-[#0a5c54] dark:text-emerald-400 font-semibold underline underline-offset-4 hover:text-emerald-600 transition-colors cursor-pointer"
-      >
-        {matchedStr}
-      </a>,
+      <React.Fragment key={matchIndex}>
+        <a
+          href={href}
+          target={href.startsWith("mailto:") ? undefined : "_blank"}
+          rel={href.startsWith("mailto:") ? undefined : "noopener noreferrer"}
+          className="text-[#0a5c54] dark:text-emerald-400 font-semibold underline underline-offset-4 hover:text-emerald-600 transition-colors cursor-pointer"
+        >
+          {cleanStr}
+        </a>
+        {trailingPunct}
+      </React.Fragment>,
     )
 
     lastIndex = urlRegex.lastIndex
