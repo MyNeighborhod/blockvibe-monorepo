@@ -513,6 +513,18 @@ export interface User {
    */
   memberType?: ('residential' | 'business' | 'other') | null;
   /**
+   * Yearly expiration date for member annual dues.
+   */
+  membershipExpiresAt?: string | null;
+  /**
+   * Active status of user annual membership dues.
+   */
+  membershipStatus?: ('active' | 'expired' | 'none') | null;
+  /**
+   * Active tier (e.g., individual, household, local-sponsor).
+   */
+  membershipTier?: string | null;
+  /**
    * Dynamic custom attributes defined for this resident.
    */
   customAttributes?:
@@ -2016,6 +2028,9 @@ export interface UsersSelect<T extends boolean = true> {
   household?: T;
   unsubscribed?: T;
   memberType?: T;
+  membershipExpiresAt?: T;
+  membershipStatus?: T;
+  membershipTier?: T;
   customAttributes?: T;
   tenants?:
     | T
@@ -2549,6 +2564,14 @@ export interface PaymentSetting {
     | null;
   enablePayPal?: boolean | null;
   enableCheckPayment?: boolean | null;
+  /**
+   * Allow residents to sign up for Individual and Household memberships.
+   */
+  enableResidentialMemberships?: boolean | null;
+  /**
+   * Allow local businesses to sign up for named business sponsorship tiers.
+   */
+  enableBusinessMemberships?: boolean | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -2577,6 +2600,8 @@ export interface PaymentSettingsSelect<T extends boolean = true> {
       };
   enablePayPal?: T;
   enableCheckPayment?: T;
+  enableResidentialMemberships?: T;
+  enableBusinessMemberships?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

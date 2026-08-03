@@ -911,63 +911,7 @@ async function run() {
     },
   })
 
-  // Membership Page
-  const membershipDoc = await payload.create({
-    collection: "pages",
-    depth: 0,
-    context: { disableRevalidate: true },
-    data: {
-      _status: "published",
-      title: "Membership - North Of Grand",
-      slug: "membership",
-      tenant: tenant.id,
-      hero: {
-        type: "none",
-      },
-      layout: [
-        {
-          blockName: "Membership Copy Block",
-          blockType: "content",
-          columns: [
-            {
-              type: "text",
-              size: "full",
-              richText: lexicalRichText([
-                richHeading("Membership"),
-                richParagraph("Individual: $10"),
-                richParagraph("Household: $20"),
-                richParagraph("Payable though Venmo, Paypal or cash"),
-                richHeading("Donations", "h3"),
-                richParagraph(
-                  "Donations & merchandise purchases help us put on community events such as our Annual Garage Sale and National Night Out. We are really hoping to grow our community engagement opportunities in the future and your participation directly impacts our community.",
-                ),
-                richHeading("How to Order:", "h3"),
-                richParagraph(
-                  "Please send an email to northofgrandpresident@gmail.com and request which size and item you'd like to purchase. You can either pay in cash upon pickup or we can send you a Paypal invoice through your email address.",
-                ),
-                richParagraph("Tshirts $25"),
-                richParagraph("Mug $15"),
-                richParagraph("Donation $____"),
-              ]),
-            },
-          ],
-        },
-        {
-          blockName: "Merchandise Images Block",
-          blockType: "content",
-          columns: [
-            { type: "media", size: "oneThird", media: merch1Doc.id },
-            { type: "media", size: "oneThird", media: merch2Doc.id },
-            { type: "media", size: "oneThird", media: merch3Doc.id },
-          ],
-        },
-      ],
-      meta: {
-        title: "Membership - North Of Grand",
-        description: "Support North of Grand by becoming a member or buying merchandise.",
-      },
-    },
-  })
+
 
   // Archives and Documents Page
   const archivesDoc = await payload.create({
@@ -1326,9 +1270,9 @@ async function run() {
           },
           {
             link: {
-              type: "reference",
+              type: "custom",
               label: "MEMBERSHIP",
-              reference: { relationTo: "pages", value: membershipDoc.id },
+              url: "/membership",
             },
           },
           {
