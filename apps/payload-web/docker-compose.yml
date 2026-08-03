@@ -1,9 +1,25 @@
 services:
-  payload:
+  payload_blue:
     image: blockvibe-app:latest
+    container_name: payload_blue
     restart: always
     ports:
-      - "127.0.0.1:3000:3000" # Bind only to localhost (Caddy proxies public traffic on 80/443)
+      - "127.0.0.1:3000:3000" # Bind to port 3000 for Blue instance
+    volumes:
+      - /var/www/blockvibe/media:/app/apps/payload-web/public/media
+    depends_on:
+      - db
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgres://${DB_USER:-postgres}:${DB_PASSWORD:-localhost}@db:5432/${DB_NAME:-blockvibe-multitenant}
+
+  payload_green:
+    image: blockvibe-app:latest
+    container_name: payload_green
+    restart: always
+    ports:
+      - "127.0.0.1:3001:3000" # Bind to port 3001 for Green instance
     volumes:
       - /var/www/blockvibe/media:/app/apps/payload-web/public/media
     depends_on:
@@ -15,6 +31,7 @@ services:
 
   db:
     image: postgres:16-alpine
+    container_name: blockvibe_db
     env_file:
       - .env
     environment:
