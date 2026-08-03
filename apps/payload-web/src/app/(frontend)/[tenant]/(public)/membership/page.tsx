@@ -6,14 +6,14 @@ import Image from "next/image"
 
 export default function MembershipLandingPage() {
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-background text-foreground py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto space-y-12">
         {/* Hero Section */}
         <div className="text-center space-y-4">
           <span className="inline-block px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300">
             North of Grand Neighborhood Association
           </span>
-          <h1 className="text-4xl sm:text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          <h1 className="text-4xl sm:text-5xl font-serif font-extrabold text-slate-900 dark:text-white tracking-tight">
             Membership & Community Support
           </h1>
           <p className="max-w-3xl mx-auto text-lg text-slate-600 dark:text-slate-400">
@@ -29,7 +29,7 @@ export default function MembershipLandingPage() {
               <div className="w-12 h-12 rounded-xl bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xl mb-4">
                 🏡
               </div>
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
+              <h2 className="text-2xl font-serif font-bold text-slate-900 dark:text-white mb-2">
                 Become a Member
               </h2>
               <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">
@@ -50,7 +50,7 @@ export default function MembershipLandingPage() {
               <div className="w-12 h-12 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xl mb-4">
                 🔄
               </div>
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
+              <h2 className="text-2xl font-serif font-bold text-slate-900 dark:text-white mb-2">
                 Renew Membership
               </h2>
               <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">
@@ -71,7 +71,7 @@ export default function MembershipLandingPage() {
               <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xl mb-4">
                 👕
               </div>
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
+              <h2 className="text-2xl font-serif font-bold text-slate-900 dark:text-white mb-2">
                 Merchandise & Donate
               </h2>
               <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">

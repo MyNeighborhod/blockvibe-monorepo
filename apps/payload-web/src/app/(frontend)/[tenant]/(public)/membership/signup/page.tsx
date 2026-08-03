@@ -166,14 +166,14 @@ function MembershipForm() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-background text-foreground py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto space-y-8">
         {/* Header */}
         <div className="text-center space-y-2">
           <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300">
             North of Grand Neighborhood Association
           </span>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white">
+          <h1 className="text-3xl sm:text-4xl font-serif font-extrabold text-slate-900 dark:text-white">
             {intent === "new"
               ? "New Community Membership"
               : intent === "renewal"
