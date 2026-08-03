@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
+import { ObfuscatedEmail } from "@/components/ObfuscatedEmail"
 
 function MembershipForm() {
   const router = useRouter()
@@ -606,14 +607,8 @@ function MembershipForm() {
                   <div>
                     <span className="font-bold text-slate-900 dark:text-white">Need help or running into payment issues?</span>
                     <div>
-                      Feel free to email the North of Grand President at{" "}
-                      <a
-                        href={`mailto:${paymentSupportEmail}`}
-                        className="font-bold text-indigo-600 dark:text-indigo-400 underline hover:text-indigo-700"
-                      >
-                        {paymentSupportEmail}
-                      </a>
-                      .
+                      Feel free to contact the North of Grand President:{" "}
+                      <ObfuscatedEmail email={paymentSupportEmail} />
                     </div>
                   </div>
                 </div>

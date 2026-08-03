@@ -2,6 +2,7 @@
 
 import React, { use } from "react"
 import Link from "next/link"
+import { ObfuscatedEmail } from "@/components/ObfuscatedEmail"
 
 export default function MembershipThankYouPage({
   searchParams,
@@ -92,15 +93,9 @@ export default function MembershipThankYouPage({
         )}
 
         {/* Support Email Notice */}
-        <div className="mb-8 p-4 rounded-xl bg-slate-50 dark:bg-slate-700/40 border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-400 text-center">
-          Questions or issues with your payment or receipt? Email the North of Grand President at{" "}
-          <a
-            href="mailto:northofgrandpresident@gmail.com"
-            className="font-bold text-indigo-600 dark:text-indigo-400 underline hover:text-indigo-700"
-          >
-            northofgrandpresident@gmail.com
-          </a>
-          .
+        <div className="mb-8 p-4 rounded-xl bg-slate-50 dark:bg-slate-700/40 border border-slate-200 dark:border-slate-700 text-xs text-slate-600 dark:text-slate-400 text-center flex flex-col sm:flex-row items-center justify-center gap-2">
+          <span>Questions or issues with your payment or receipt? Contact the North of Grand President:</span>
+          <ObfuscatedEmail email="northofgrandpresident@gmail.com" />
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
