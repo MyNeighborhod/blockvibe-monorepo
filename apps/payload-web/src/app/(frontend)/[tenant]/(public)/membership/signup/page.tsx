@@ -50,6 +50,7 @@ function MembershipForm() {
     paymentMethod: "paypal", // 'paypal' | 'check'
     agreeEmails: true,
     password: "",
+    createAccount: true,
   })
 
   const [loading, setLoading] = useState(false)
@@ -380,6 +381,28 @@ function MembershipForm() {
                     </div>
                   </label>
                 </div>
+
+                {intent === "donation" && (
+                  <div className="pt-2 border-t border-slate-100 dark:border-slate-700">
+                    <label className="flex items-start space-x-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name="createAccount"
+                        checked={formData.createAccount}
+                        onChange={(e) => setFormData({ ...formData, createAccount: e.target.checked })}
+                        className="w-5 h-5 mt-0.5 text-blue-600 rounded focus:ring-blue-500"
+                      />
+                      <div className="text-xs text-slate-600 dark:text-slate-400">
+                        <span className="font-semibold text-slate-800 dark:text-slate-200">
+                          Also create a neighborhood account for me based on my email address.
+                        </span>
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                          (Allows you to log into the neighborhood portal anytime with {formData.email || "your email"}.)
+                        </div>
+                      </div>
+                    </label>
+                  </div>
+                )}
               </div>
 
               {/* Tier Selection for Residential vs Business */}
@@ -723,7 +746,15 @@ function MembershipForm() {
                   disabled={loading}
                   className="w-full sm:w-auto px-8 py-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold transition-all shadow-lg text-base disabled:opacity-50"
                 >
-                  {loading ? "Processing..." : "Complete Registration"}
+                  {loading
+                    ? "Processing..."
+                    : intent === "donation"
+                    ? formData.createAccount
+                      ? "Register Account & Complete Donation"
+                      : `Complete Donation ($${calculatedTotal.toFixed(2)})`
+                    : intent === "renewal"
+                    ? "Renew Membership Dues"
+                    : "Complete Registration"}
                 </button>
               </div>
             </form>
