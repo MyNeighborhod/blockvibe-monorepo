@@ -72,15 +72,46 @@ function richHeading(
   }
 }
 
-// Fetch file with transparent PNG fallback to make seeding bulletproof
+import fs from "fs"
+import path from "path"
+
+// Fetch file with local media fallback and transparent PNG fallback
 async function fetchFile(url: string) {
+  const filename = url.split("/").pop()?.split("?")[0] || `file-${Date.now()}`
+
+  // Check if real media file already exists locally in public/media/nog or public/media
+  const localCandidates = [
+    path.resolve(process.cwd(), "public/media/nog", filename),
+    path.resolve(process.cwd(), "public/media", filename),
+    path.resolve(process.cwd(), "apps/payload-web/public/media/nog", filename),
+    path.resolve(process.cwd(), "apps/payload-web/public/media", filename),
+  ]
+
+  for (const localPath of localCandidates) {
+    if (fs.existsSync(localPath) && fs.statSync(localPath).size > 100) {
+      const data = fs.readFileSync(localPath)
+      const ext = filename.split(".").pop()?.toLowerCase() || ""
+      let mimetype = "image/jpeg"
+      if (ext === "png") mimetype = "image/png"
+      else if (ext === "webp") mimetype = "image/webp"
+      else if (ext === "pdf") mimetype = "application/pdf"
+      else if (ext === "docx") mimetype = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+
+      return {
+        name: filename,
+        data,
+        mimetype,
+        size: data.byteLength,
+      }
+    }
+  }
+
   try {
     const res = await fetch(url)
     if (!res.ok) {
       throw new Error(`Status ${res.status}`)
     }
     const data = await res.arrayBuffer()
-    const filename = url.split("/").pop()?.split("?")[0] || `file-${Date.now()}`
     const ext = filename.split(".").pop()?.toLowerCase() || ""
 
     let mimetype = "image/png"

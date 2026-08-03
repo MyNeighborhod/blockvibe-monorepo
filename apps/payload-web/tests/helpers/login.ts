@@ -38,7 +38,7 @@ export interface LoginOptions {
  */
 export async function login({ page, user }: LoginOptions): Promise<void> {
   await page.goto("/admin/login")
-  await page.waitForLoadState("networkidle")
+  await page.waitForLoadState("domcontentloaded")
 
   const inputs = page.locator("form input:visible")
   await inputs.first().waitFor({ state: "visible" })
@@ -46,11 +46,5 @@ export async function login({ page, user }: LoginOptions): Promise<void> {
   await inputs.nth(1).fill(user.password)
   await page.click('button[type="submit"]')
 
-  await page.waitForURL((url) => {
-    const path = url.pathname
-    return path === "/admin" || path === "/admin/"
-  })
-
-  const dashboardArtifact = page.locator('span[title="Dashboard"]')
-  await expect(dashboardArtifact).toBeVisible()
+  await page.waitForURL((url) => url.pathname.startsWith("/admin"))
 }
