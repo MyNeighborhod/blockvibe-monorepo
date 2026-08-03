@@ -11,6 +11,8 @@ import { shouldUseNogChrome } from "@/utilities/resolveTenantSlug"
 import { cn } from "@/utilities/ui"
 import { HeaderNav } from "./Nav"
 
+import { TopUtilityBar } from "@/components/TopUtilityBar"
+
 interface HeaderClientProps {
   data: Header
   tenant: any
@@ -43,10 +45,15 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data, tenant }) => {
       <header
         className={cn(
           "container z-20 w-full",
-          overDarkHero ? "absolute inset-x-0 top-0 mx-auto pt-6" : "relative pt-8",
+          overDarkHero ? "absolute inset-x-0 top-0 mx-auto pt-4" : "relative pt-4",
         )}
         {...(overDarkHero ? { "data-theme": "dark" } : theme ? { "data-theme": theme } : {})}
       >
+        {/* Top-Right Utility Menu (Login / Sign Up or My Dashboard | Logout) */}
+        <div className="w-full flex justify-end pb-3 pr-2">
+          <TopUtilityBar overDarkHero={overDarkHero} />
+        </div>
+
         <div className="flex flex-col items-center w-full">
           {logoUrl ? (
             <Link href="/" className="nog-desktop-logo">

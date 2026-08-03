@@ -10,6 +10,8 @@ import type { Header as HeaderType } from "@/payload-types"
 import { CMSLink } from "@/components/Link"
 import { cn } from "@/utilities/ui"
 
+import { TopUtilityBar } from "@/components/TopUtilityBar"
+
 type HeaderNavProps = {
   data: HeaderType
   variant?: "default" | "nog"
@@ -113,13 +115,6 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
         Businesses
       </Link>
     ),
-    isNog ? (
-      <li key="auth" className="ml-2">
-        {authButton}
-      </li>
-    ) : (
-      <React.Fragment key="auth">{authButton}</React.Fragment>
-    ),
   ]
 
   const search = (
@@ -197,6 +192,9 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
                 </button>
               </div>
               <ul>{links}</ul>
+              <div className="p-4 border-t border-slate-100 dark:border-slate-800">
+                <TopUtilityBar />
+              </div>
               <div className="nog-mobile-drawer-search">{search}</div>
             </nav>
           </div>
