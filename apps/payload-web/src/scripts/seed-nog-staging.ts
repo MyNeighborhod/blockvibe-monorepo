@@ -1372,6 +1372,7 @@ async function run() {
   ])
 
   try {
+    const currentSettings = await payload.findGlobal({ slug: "payment-settings" as any }).catch(() => ({} as any))
     await payload.updateGlobal({
       slug: "payment-settings" as any,
       data: {
@@ -1380,6 +1381,8 @@ async function run() {
         householdDuesAmount: 20,
         enablePayPal: true,
         enableCheckPayment: true,
+        paypalClientId: (currentSettings as any)?.paypalClientId || process.env.PAYPAL_CLIENT_ID || undefined,
+        paypalClientSecret: (currentSettings as any)?.paypalClientSecret || process.env.PAYPAL_CLIENT_SECRET || undefined,
       },
     })
   } catch (err) {
