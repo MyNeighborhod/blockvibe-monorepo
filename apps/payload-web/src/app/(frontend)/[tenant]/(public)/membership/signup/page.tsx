@@ -1,13 +1,23 @@
 "use client"
 
-import React, { useState } from "react"
-import { useRouter } from "next/navigation"
+import React, { useState, Suspense } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 
-export default function MembershipSignupPage() {
+function MembershipForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  const urlIntent = searchParams.get("intent")
+  const urlEmail = searchParams.get("email")
+
+  const [intent, setIntent] = useState<"new" | "renewal" | "donation">(
+    urlIntent === "renewal" || urlIntent === "donation" ? urlIntent : "new"
+  )
+  const [customAmount, setCustomAmount] = useState<number | string>(50)
+
   const [formData, setFormData] = useState({
     name: "",
-    email: "",
+    email: urlEmail || "",
     phone: "",
     address: "",
     tier: "individual", // 'individual' | 'household'
@@ -39,31 +49,32 @@ export default function MembershipSignupPage() {
       const res = await fetch("/api/membership/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          intent,
+          customAmount: intent === "donation" ? customAmount : undefined,
+        }),
       })
 
       const data = await res.json()
 
       if (!res.ok) {
-        throw new Error(data.error || "Failed to process signup.")
+        throw new Error(data.error || "Failed to process request.")
       }
 
       if (formData.paymentMethod === "paypal") {
         if (data.approvalUrl) {
-          // If approval URL provided by PayPal, redirect user to PayPal
           window.location.href = data.approvalUrl
           return
         }
-        // Save order session for inline confirmation / SDK
         setPaypalData(data)
       } else {
-        // Pay by check -> Go directly to Thank You page
         router.push(
-          `/membership/thank-you?accountId=${data.accountId}&method=check&tier=${formData.tier}`
+          `/membership/thank-you?accountId=${data.accountId}&method=check&tier=${formData.tier}&intent=${intent}`
         )
       }
-    } catch (err: any) {
-      setError(err.message || "An unexpected error occurred.")
+    } catch (err: unknown) {
+      setError((err as Error).message || "An unexpected error occurred.")
     } finally {
       setLoading(false)
     }
@@ -83,7 +94,7 @@ export default function MembershipSignupPage() {
           accountId: paypalData.accountId,
           userId: paypalData.userId,
           tier: formData.tier,
-          notes: "Approved via PayPal UI modal",
+          notes: `${intent.toUpperCase()} via PayPal UI modal`,
         }),
       })
 
@@ -93,10 +104,10 @@ export default function MembershipSignupPage() {
       }
 
       router.push(
-        `/membership/thank-you?accountId=${result.accountId}&method=paypal&status=${result.status}&paymentId=${result.paymentId}`
+        `/membership/thank-you?accountId=${result.accountId}&method=paypal&status=${result.status}&paymentId=${result.paymentId}&intent=${intent}`
       )
-    } catch (err: any) {
-      setError(err.message || "PayPal confirmation failed.")
+    } catch (err: unknown) {
+      setError((err as Error).message || "PayPal confirmation failed.")
     } finally {
       setLoading(false)
     }
@@ -105,12 +116,53 @@ export default function MembershipSignupPage() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto bg-white dark:bg-slate-800 shadow-xl rounded-2xl p-8 border border-slate-200 dark:border-slate-700">
+        {/* Intent Selector Tabs */}
+        <div className="flex rounded-xl bg-slate-100 dark:bg-slate-700 p-1.5 mb-8">
+          <button
+            type="button"
+            onClick={() => setIntent("new")}
+            className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all ${
+              intent === "new"
+                ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+            }`}
+          >
+            Become a Member
+          </button>
+          <button
+            type="button"
+            onClick={() => setIntent("renewal")}
+            className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all ${
+              intent === "renewal"
+                ? "bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-sm"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+            }`}
+          >
+            Renew Membership
+          </button>
+          <button
+            type="button"
+            onClick={() => setIntent("donation")}
+            className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all ${
+              intent === "donation"
+                ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+            }`}
+          >
+            One-Time Donation
+          </button>
+        </div>
+
         <div className="text-center mb-8">
           <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-            Join Community Membership
+            {intent === "new" && "New Community Membership"}
+            {intent === "renewal" && "Renew Annual Membership Dues"}
+            {intent === "donation" && "Support with a One-Time Donation"}
           </h1>
           <p className="mt-2 text-slate-600 dark:text-slate-400">
-            Pay annual dues to support your neighborhood and unlock active member privileges.
+            {intent === "donation"
+              ? "Your contributions directly fund neighborhood events and community projects."
+              : "Keep your membership active to enjoy voting rights and community access."}
           </p>
         </div>
 
@@ -184,60 +236,87 @@ export default function MembershipSignupPage() {
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">
-                Select Membership Tier
-              </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <label
-                  className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                    formData.tier === "individual"
-                      ? "border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/30"
-                      : "border-slate-200 dark:border-slate-700 hover:border-slate-300"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="tier"
-                    value="individual"
-                    checked={formData.tier === "individual"}
-                    onChange={handleChange}
-                    className="sr-only"
-                  />
-                  <div className="font-bold text-slate-900 dark:text-white">Individual Member</div>
-                  <div className="text-2xl font-extrabold text-indigo-600 dark:text-indigo-400 mt-1">
-                    $100 <span className="text-sm font-normal text-slate-500">/ year</span>
-                  </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                    Annual membership dues for single resident neighbor.
-                  </p>
+            {intent !== "donation" ? (
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">
+                  Select Membership Tier
                 </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <label
+                    className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                      formData.tier === "individual"
+                        ? "border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/30"
+                        : "border-slate-200 dark:border-slate-700 hover:border-slate-300"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="tier"
+                      value="individual"
+                      checked={formData.tier === "individual"}
+                      onChange={handleChange}
+                      className="sr-only"
+                    />
+                    <div className="font-bold text-slate-900 dark:text-white">Individual Member</div>
+                    <div className="text-2xl font-extrabold text-indigo-600 dark:text-indigo-400 mt-1">
+                      $100 <span className="text-sm font-normal text-slate-500">/ year</span>
+                    </div>
+                  </label>
 
-                <label
-                  className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                    formData.tier === "household"
-                      ? "border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/30"
-                      : "border-slate-200 dark:border-slate-700 hover:border-slate-300"
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="tier"
-                    value="household"
-                    checked={formData.tier === "household"}
-                    onChange={handleChange}
-                    className="sr-only"
-                  />
-                  <div className="font-bold text-slate-900 dark:text-white">Household Member</div>
-                  <div className="text-2xl font-extrabold text-indigo-600 dark:text-indigo-400 mt-1">
-                    $150 <span className="text-sm font-normal text-slate-500">/ year</span>
-                  </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                    Annual dues covering all family members in household.
-                  </p>
-                </label>
+                  <label
+                    className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                      formData.tier === "household"
+                        ? "border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/30"
+                        : "border-slate-200 dark:border-slate-700 hover:border-slate-300"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="tier"
+                      value="household"
+                      checked={formData.tier === "household"}
+                      onChange={handleChange}
+                      className="sr-only"
+                    />
+                    <div className="font-bold text-slate-900 dark:text-white">Household Member</div>
+                    <div className="text-2xl font-extrabold text-indigo-600 dark:text-indigo-400 mt-1">
+                      $150 <span className="text-sm font-normal text-slate-500">/ year</span>
+                    </div>
+                  </label>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">
+                  Select Donation Amount ($)
+                </label>
+                <div className="grid grid-cols-4 gap-3 mb-4">
+                  {[25, 50, 100, 250].map((amt) => (
+                    <button
+                      key={amt}
+                      type="button"
+                      onClick={() => setCustomAmount(amt)}
+                      className={`py-3 rounded-xl border-2 font-bold transition-all ${
+                        Number(customAmount) === amt
+                          ? "border-blue-600 bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400"
+                          : "border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300"
+                      }`}
+                    >
+                      ${amt}
+                    </button>
+                  ))}
+                </div>
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={customAmount}
+                  onChange={(e) => setCustomAmount(e.target.value)}
+                  placeholder="Custom Amount ($)"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                />
+              </div>
+            )}
 
             <div>
               <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">
@@ -259,9 +338,9 @@ export default function MembershipSignupPage() {
                     onChange={handleChange}
                   />
                   <div>
-                    <div className="font-bold text-slate-900 dark:text-white">PayPal</div>
+                    <div className="font-bold text-slate-900 dark:text-white">PayPal / Card</div>
                     <div className="text-xs text-slate-500 dark:text-slate-400">
-                      Credit card or PayPal Account
+                      Online instant payment
                     </div>
                   </div>
                 </label>
@@ -295,7 +374,11 @@ export default function MembershipSignupPage() {
               disabled={loading}
               className="w-full py-4 px-6 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-lg shadow-lg hover:shadow-indigo-500/25 transition-all disabled:opacity-50"
             >
-              {loading ? "Processing..." : "Proceed to Payment"}
+              {loading
+                ? "Processing..."
+                : intent === "donation"
+                ? `Donate $${customAmount} via ${formData.paymentMethod === "paypal" ? "PayPal" : "Check"}`
+                : `Proceed to Payment (${intent === "renewal" ? "Renew" : "Join"})`}
             </button>
           </form>
         ) : (
@@ -307,9 +390,6 @@ export default function MembershipSignupPage() {
               <p className="text-sm text-blue-700 dark:text-blue-300">
                 Order ID: <code className="font-mono bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded">{paypalData.orderId}</code>
               </p>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-4">
-                Click below to authorize & finalize payment with PayPal.
-              </p>
             </div>
 
             <button
@@ -317,11 +397,19 @@ export default function MembershipSignupPage() {
               disabled={loading}
               className="w-full py-4 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg shadow-lg hover:shadow-blue-500/25 transition-all disabled:opacity-50"
             >
-              {loading ? "Finalizing Payment..." : "Complete PayPal Payment ($" + (formData.tier === 'household' ? 150 : 100) + ")"}
+              {loading ? "Finalizing Payment..." : "Complete PayPal Payment"}
             </button>
           </div>
         )}
       </div>
     </div>
+  )
+}
+
+export default function MembershipSignupPageWrapper() {
+  return (
+    <Suspense fallback={<div className="p-12 text-center text-slate-500">Loading membership options...</div>}>
+      <MembershipForm />
+    </Suspense>
   )
 }
