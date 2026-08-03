@@ -42,16 +42,77 @@ export const PaymentSettings: GlobalConfig = {
       },
     },
     {
+      name: "personalDuesFrequency",
+      type: "select",
+      defaultValue: "annual",
+      options: [
+        { label: "Annual Dues", value: "annual" },
+        { label: "Monthly Dues", value: "monthly" },
+      ],
+      label: "Personal Member Charge Frequency",
+    },
+    {
       name: "individualDuesAmount",
       type: "number",
       defaultValue: 10,
-      label: "Individual Annual Dues ($)",
+      label: "Individual Member Dues Amount ($)",
     },
     {
       name: "householdDuesAmount",
       type: "number",
       defaultValue: 20,
-      label: "Household Annual Dues ($)",
+      label: "Household Member Dues Amount ($)",
+    },
+    {
+      name: "businessTiers",
+      type: "array",
+      label: "Named Business Membership Tiers",
+      labels: {
+        singular: "Business Tier",
+        plural: "Business Tiers",
+      },
+      fields: [
+        {
+          name: "name",
+          type: "text",
+          required: true,
+          label: "Tier Name",
+        },
+        {
+          name: "slug",
+          type: "text",
+          required: true,
+          label: "Tier Slug Identifier",
+        },
+        {
+          name: "description",
+          type: "textarea",
+          label: "Tier Description & Sponsorship Benefits",
+        },
+        {
+          name: "amount",
+          type: "number",
+          required: true,
+          label: "Dues / Sponsorship Amount ($)",
+        },
+        {
+          name: "frequency",
+          type: "select",
+          defaultValue: "yearly",
+          options: [
+            { label: "Yearly", value: "yearly" },
+            { label: "Monthly", value: "monthly" },
+            { label: "One-Time", value: "one_time" },
+          ],
+          label: "Charge Frequency",
+        },
+        {
+          name: "active",
+          type: "checkbox",
+          defaultValue: true,
+          label: "Active (Available on Signup)",
+        },
+      ],
     },
     {
       name: "enablePayPal",

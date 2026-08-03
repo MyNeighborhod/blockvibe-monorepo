@@ -1,11 +1,26 @@
 export type PaymentProviderType = "paypal" | "check" | "cash" | "manual" | "other"
 
-export type MembershipTier = "individual" | "household"
+export type MembershipTier = "individual" | "household" | "business" | string
+export type MemberCategory = "residential" | "business"
+export type RecurringFrequency = "annual" | "monthly" | "yearly" | "one_time"
+
+export interface BusinessTierConfig {
+  id?: string
+  name: string
+  slug: string
+  description?: string
+  amount: number
+  frequency: RecurringFrequency
+  active?: boolean
+}
 
 export interface CreateOrderParams {
   accountId: string
   userId: number | string
   tier: MembershipTier
+  memberCategory?: MemberCategory
+  businessTierSlug?: string
+  recurringFrequency?: RecurringFrequency
   amount: number
   currency?: string
   notes?: string
@@ -24,6 +39,9 @@ export interface CaptureOrderParams {
   accountId: string
   userId: number | string
   tier: MembershipTier
+  memberCategory?: MemberCategory
+  businessTierSlug?: string
+  recurringFrequency?: RecurringFrequency
   notes?: string
 }
 
@@ -31,6 +49,9 @@ export interface RecordManualPaymentParams {
   accountId: string
   userId: number | string
   tier: MembershipTier
+  memberCategory?: MemberCategory
+  businessTierSlug?: string
+  recurringFrequency?: RecurringFrequency
   provider: "check" | "cash" | "manual" | "other"
   amount: number
   providerTransactionId?: string

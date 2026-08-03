@@ -66,13 +66,17 @@ describe("Membership Flows & Stubbed PayPal Verification", () => {
     expect(captureResult.amount).toBe(10)
   })
 
-  it("handles merchandise and donation calculation", () => {
-    const baseDues = 10 // Individual
+  it("handles merchandise, business tier, and donation calculations", () => {
+    const residentialDues = 10 // Individual
+    const businessSponsorDues = 100 // Local Business Sponsor
     const tshirtPrice = 25
     const mugPrice = 15
     const magnetPrice = 5
 
-    const totalWithMerch = baseDues + tshirtPrice + mugPrice + magnetPrice
-    expect(totalWithMerch).toBe(55)
+    const totalResidential = residentialDues + tshirtPrice + mugPrice + magnetPrice
+    expect(totalResidential).toBe(55)
+
+    const totalBusiness = businessSponsorDues + tshirtPrice
+    expect(totalBusiness).toBe(125)
   })
 })

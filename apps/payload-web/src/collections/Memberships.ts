@@ -5,8 +5,8 @@ export const Memberships: CollectionConfig = {
   slug: "memberships",
   admin: {
     useAsTitle: "accountId",
-    defaultColumns: ["accountId", "tier", "status", "isAnnualPayingMember", "validUntil"],
-    description: "Community member subscription and annual dues status tracking.",
+    defaultColumns: ["accountId", "memberCategory", "tier", "businessTierSlug", "status", "isAnnualPayingMember", "validUntil"],
+    description: "Community member subscription and dues status tracking.",
   },
   access: {
     read: ({ req: { user } }) => {
@@ -57,14 +57,43 @@ export const Memberships: CollectionConfig = {
       },
     },
     {
+      name: "memberCategory",
+      type: "select",
+      defaultValue: "residential",
+      options: [
+        { label: "Residential / Personal Member", value: "residential" },
+        { label: "Business Member / Sponsor", value: "business" },
+      ],
+      required: true,
+    },
+    {
       name: "tier",
       type: "select",
       defaultValue: "individual",
       options: [
-        { label: "Individual ($100/yr)", value: "individual" },
-        { label: "Household ($150/yr)", value: "household" },
+        { label: "Individual", value: "individual" },
+        { label: "Household", value: "household" },
+        { label: "Business Tier", value: "business" },
       ],
       required: true,
+    },
+    {
+      name: "businessTierSlug",
+      type: "text",
+      label: "Business Tier Slug",
+      admin: {
+        description: "Slug of selected business tier (e.g. bronze, sponsor, gold).",
+      },
+    },
+    {
+      name: "recurringFrequency",
+      type: "select",
+      defaultValue: "annual",
+      options: [
+        { label: "Annual / Yearly", value: "annual" },
+        { label: "Monthly", value: "monthly" },
+        { label: "One-Time", value: "one_time" },
+      ],
     },
     {
       name: "status",
@@ -82,7 +111,7 @@ export const Memberships: CollectionConfig = {
       type: "checkbox",
       defaultValue: false,
       admin: {
-        description: "Set to true when dues threshold ($X/yr) is met.",
+        description: "Set to true when required dues threshold is met.",
       },
     },
     {
@@ -97,7 +126,7 @@ export const Memberships: CollectionConfig = {
       name: "validUntil",
       type: "date",
       admin: {
-        description: "Expiration date for annual membership.",
+        description: "Expiration date for membership status.",
       },
     },
     {

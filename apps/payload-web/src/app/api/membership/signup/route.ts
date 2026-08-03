@@ -12,6 +12,9 @@ export async function POST(req: Request) {
       phone,
       address,
       tier = "individual",
+      memberCategory = "residential",
+      businessTierSlug,
+      recurringFrequency,
       paymentMethod = "paypal",
       intent = "new", // 'new' | 'renewal' | 'donation'
       customAmount,
@@ -44,7 +47,7 @@ export async function POST(req: Request) {
           role: "contributor",
           status: "pending",
           isNeighbor: true,
-          memberType: "residential",
+          memberType: memberCategory === "business" ? "business" : "residential",
         },
       })
     }
@@ -57,7 +60,7 @@ export async function POST(req: Request) {
     if (intent === "donation") {
       chargeAmount = parseFloat(customAmount) || 50
     } else {
-      chargeAmount = customAmount ? parseFloat(customAmount) : await paymentService.getDuesAmount(tier)
+      chargeAmount = customAmount ? parseFloat(customAmount) : await paymentService.getDuesAmount(tier, businessTierSlug)
     }
 
     // 2. Ensure membership record exists (if membership or renewal)
@@ -68,29 +71,32 @@ export async function POST(req: Request) {
         limit: 1,
       })
 
+      const membershipData = {
+        memberCategory,
+        tier,
+        businessTierSlug: businessTierSlug || undefined,
+        recurringFrequency: recurringFrequency || "annual",
+        phone: phone || "",
+        address: address || "",
+      }
+
       if (existingMembership.docs.length === 0) {
         await payload.create({
           collection: "memberships" as any,
           data: {
             accountId,
             user: userId,
-            tier,
+            ...membershipData,
             status: "pending",
             isAnnualPayingMember: false,
             totalPaidCurrentYear: 0,
-            phone: phone || "",
-            address: address || "",
           },
         })
       } else {
         await payload.update({
           collection: "memberships" as any,
           id: existingMembership.docs[0].id,
-          data: {
-            phone: phone || existingMembership.docs[0].phone,
-            address: address || existingMembership.docs[0].address,
-            tier,
-          },
+          data: membershipData,
         })
       }
     }
@@ -101,6 +107,9 @@ export async function POST(req: Request) {
         accountId,
         userId,
         tier: intent === "donation" ? "individual" : tier,
+        memberCategory,
+        businessTierSlug,
+        recurringFrequency,
         amount: chargeAmount,
         notes: intent === "donation" ? "One-Time Donation" : `${intent.toUpperCase()} Dues`,
       })

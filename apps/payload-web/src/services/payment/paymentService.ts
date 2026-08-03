@@ -10,6 +10,9 @@ import type {
   CaptureOrderParams,
   RecordManualPaymentParams,
   ProcessedPaymentResult,
+  MembershipTier,
+  MemberCategory,
+  RecurringFrequency,
 } from "./types"
 
 export class PaymentService {
@@ -35,16 +38,24 @@ export class PaymentService {
     }
   }
 
-  async getDuesAmount(tier: "individual" | "household"): Promise<number> {
+  async getDuesAmount(tier: MembershipTier, businessSlug?: string): Promise<number> {
     try {
       const payload = await getPayload({ config: configPromise })
       const settings = await payload.findGlobal({ slug: "payment-settings" as any })
+
+      if (tier === "business" && businessSlug) {
+        const businessTiers = (settings as any)?.businessTiers || []
+        const matched = businessTiers.find((b: any) => b.slug === businessSlug)
+        if (matched) return matched.amount
+      }
+
       if (tier === "household") {
         return (settings as any)?.householdDuesAmount || 20
       }
       return (settings as any)?.individualDuesAmount || 10
     } catch {
-      return tier === "household" ? 20 : 10
+      if (tier === "household") return 20
+      return 10
     }
   }
 
@@ -65,6 +76,9 @@ export class PaymentService {
       accountId: params.accountId,
       userId: params.userId,
       tier: params.tier,
+      memberCategory: params.memberCategory,
+      businessTierSlug: params.businessTierSlug,
+      recurringFrequency: params.recurringFrequency,
       provider: "paypal",
       providerTransactionId: capture.captureId,
       amount: capture.amount,
@@ -78,6 +92,9 @@ export class PaymentService {
       accountId: params.accountId,
       userId: params.userId,
       tier: params.tier,
+      memberCategory: params.memberCategory,
+      businessTierSlug: params.businessTierSlug,
+      recurringFrequency: params.recurringFrequency,
       provider: params.provider,
       providerTransactionId: manualResult.providerTransactionId,
       amount: params.amount,
@@ -89,7 +106,10 @@ export class PaymentService {
   private async applyPaymentLedgerAndUpdateMembership(opts: {
     accountId: string
     userId: number | string
-    tier: "individual" | "household"
+    tier: MembershipTier
+    memberCategory?: MemberCategory
+    businessTierSlug?: string
+    recurringFrequency?: RecurringFrequency
     provider: "paypal" | "check" | "cash" | "manual" | "other"
     providerTransactionId: string
     amount: number
@@ -131,7 +151,7 @@ export class PaymentService {
     })
 
     const totalPaidCurrentYear = recentPayments.docs.reduce((sum: number, doc: any) => sum + (doc.amount || 0), 0)
-    const requiredDues = await this.getDuesAmount(opts.tier)
+    const requiredDues = await this.getDuesAmount(opts.tier, opts.businessTierSlug)
     const isAnnualPayingMember = totalPaidCurrentYear >= requiredDues
 
     const validUntilDate = new Date(paidAtDate.getTime() + 365 * 24 * 60 * 60 * 1000)
@@ -145,18 +165,23 @@ export class PaymentService {
       limit: 1,
     })
 
+    const membershipData = {
+      memberCategory: opts.memberCategory || "residential",
+      tier: opts.tier,
+      businessTierSlug: opts.businessTierSlug || undefined,
+      recurringFrequency: opts.recurringFrequency || "annual",
+      status: "active",
+      isAnnualPayingMember,
+      totalPaidCurrentYear,
+      validUntil: validUntilDate.toISOString(),
+    }
+
     if (existingMembership.docs.length > 0) {
       const docId = existingMembership.docs[0].id
       await payload.update({
         collection: "memberships" as any,
         id: docId,
-        data: {
-          tier: opts.tier,
-          status: "active",
-          isAnnualPayingMember,
-          totalPaidCurrentYear,
-          validUntil: validUntilDate.toISOString(),
-        },
+        data: membershipData,
       })
     } else {
       await payload.create({
@@ -164,11 +189,7 @@ export class PaymentService {
         data: {
           accountId: opts.accountId,
           user: opts.userId,
-          tier: opts.tier,
-          status: "active",
-          isAnnualPayingMember,
-          totalPaidCurrentYear,
-          validUntil: validUntilDate.toISOString(),
+          ...membershipData,
         },
       })
     }

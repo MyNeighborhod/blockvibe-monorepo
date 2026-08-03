@@ -1377,8 +1377,27 @@ async function run() {
       slug: "payment-settings" as any,
       data: {
         paypalEnvironment: "live",
+        personalDuesFrequency: "annual",
         individualDuesAmount: 10,
         householdDuesAmount: 20,
+        businessTiers: [
+          {
+            name: "Local Business Sponsor",
+            slug: "local-sponsor",
+            description: "Includes official business directory listing and website sponsorship recognition.",
+            amount: 100,
+            frequency: "yearly",
+            active: true,
+          },
+          {
+            name: "Community Champion",
+            slug: "community-champion",
+            description: "Includes banner placement at Annual Garage Sale & National Night Out events.",
+            amount: 250,
+            frequency: "yearly",
+            active: true,
+          },
+        ],
         enablePayPal: true,
         enableCheckPayment: true,
         paypalClientId: (currentSettings as any)?.paypalClientId || process.env.PAYPAL_CLIENT_ID || undefined,
