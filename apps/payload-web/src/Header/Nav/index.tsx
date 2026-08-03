@@ -56,6 +56,44 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
     }
   }, [isMenuOpen])
 
+  const [user, setUser] = useState<any>(null)
+
+  useEffect(() => {
+    fetch("/api/users/me")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.user) setUser(data.user)
+      })
+      .catch(() => {})
+  }, [pathname])
+
+  const authButton = user ? (
+    <Link
+      href="/dashboard"
+      className={cn(
+        "nav-link inline-flex items-center gap-1.5 font-bold tracking-wider text-[11px] uppercase transition-all",
+        isNog ? "text-[#484848] hover:text-indigo-600" : "text-primary"
+      )}
+    >
+      <span className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold">
+        {user.name ? user.name[0].toUpperCase() : user.email[0].toUpperCase()}
+      </span>
+      <span>MY DASHBOARD</span>
+    </Link>
+  ) : (
+    <Link
+      href="/login"
+      className={cn(
+        "nav-link inline-flex items-center gap-1 font-bold tracking-wider text-[11px] uppercase px-3 py-1.5 rounded-lg border transition-all",
+        isNog
+          ? "border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+          : "border-primary text-primary"
+      )}
+    >
+      <span>LOGIN / SIGN UP</span>
+    </Link>
+  )
+
   const links = [
     ...navItems.map(({ link }, i) =>
       isNog ? (
@@ -74,6 +112,13 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
       <Link key="businesses" href="/businesses" className="text-sm font-medium text-muted-foreground hover:text-foreground">
         Businesses
       </Link>
+    ),
+    isNog ? (
+      <li key="auth" className="ml-2">
+        {authButton}
+      </li>
+    ) : (
+      <React.Fragment key="auth">{authButton}</React.Fragment>
     ),
   ]
 

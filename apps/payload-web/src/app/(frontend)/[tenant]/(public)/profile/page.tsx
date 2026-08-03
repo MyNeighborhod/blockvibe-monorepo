@@ -32,6 +32,43 @@ export default async function ProfilePage({ params }: Args) {
           <CardDescription className="text-muted-foreground/80">{user.email}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* Membership Dues & Yearly Expiration Banner */}
+          {(() => {
+            const expirationDate = (user as any)?.membershipExpiresAt
+              ? new Date((user as any).membershipExpiresAt)
+              : new Date(new Date(user.createdAt || Date.now()).getTime() + 365 * 24 * 60 * 60 * 1000)
+            
+            const isExpired = Date.now() > expirationDate.getTime()
+            const formattedDate = expirationDate.toLocaleDateString("en-US", {
+              month: "long",
+              day: "numeric",
+              year: "numeric",
+            })
+
+            return (
+              <div className="p-4 rounded-xl bg-slate-900 border border-emerald-500/30 text-white space-y-3 shadow-lg">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">
+                    Annual Dues
+                  </span>
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase ${
+                    isExpired ? "bg-amber-500/20 text-amber-300" : "bg-emerald-500/20 text-emerald-300"
+                  }`}>
+                    {isExpired ? "Expired" : "Active"}
+                  </span>
+                </div>
+                <div className="text-xs font-medium text-slate-300">
+                  Membership dues yearly expiration on: <strong className="text-emerald-400 block text-sm mt-0.5 font-bold">{formattedDate}</strong>
+                </div>
+                <Button asChild className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 text-xs rounded-lg shadow">
+                  <Link href={`/membership/signup?intent=renewal&email=${encodeURIComponent(user.email)}`}>
+                    🔄 Renew Membership Dues
+                  </Link>
+                </Button>
+              </div>
+            )
+          })()}
+
           <div className="rounded-lg bg-muted/40 p-4 border border-border/20 space-y-3 text-sm">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Account Role:</span>

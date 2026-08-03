@@ -135,5 +135,23 @@ export const PaymentSettings: GlobalConfig = {
       defaultValue: true,
       label: "Enable Check / Offline Payments",
     },
+    {
+      name: "enableResidentialMemberships",
+      type: "checkbox",
+      defaultValue: true,
+      label: "Enable Residential Memberships (Individual & Household)",
+      admin: {
+        description: "Allow residents to sign up for Individual and Household memberships.",
+      },
+    },
+    {
+      name: "enableBusinessMemberships",
+      type: "checkbox",
+      defaultValue: false,
+      label: "Enable Business Memberships & Tier Sponsorships",
+      admin: {
+        description: "Allow local businesses to sign up for named business sponsorship tiers.",
+      },
+    },
   ],
 }

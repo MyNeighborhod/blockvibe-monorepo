@@ -17,6 +17,7 @@ function MembershipForm() {
   const [memberCategory, setMemberCategory] = useState<"residential" | "business">("residential")
   const [customAmount, setCustomAmount] = useState<number | string>(50)
   const [paymentSupportEmail, setPaymentSupportEmail] = useState("northofgrandpresident@gmail.com")
+  const [enableBusinessMemberships, setEnableBusinessMemberships] = useState(false)
 
   useEffect(() => {
     fetch("/api/payment-settings")
@@ -24,6 +25,9 @@ function MembershipForm() {
       .then((data) => {
         if (data.paymentSupportEmail) {
           setPaymentSupportEmail(data.paymentSupportEmail)
+        }
+        if (typeof data.enableBusinessMemberships === "boolean") {
+          setEnableBusinessMemberships(data.enableBusinessMemberships)
         }
       })
       .catch(() => {})
@@ -234,7 +238,7 @@ function MembershipForm() {
           {!paypalData ? (
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Category Selector (Residential vs Business) */}
-              {intent !== "donation" && (
+              {intent !== "donation" && enableBusinessMemberships && (
                 <div className="space-y-3">
                   <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
                     Member Type Category

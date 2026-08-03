@@ -141,7 +141,11 @@ ssh -i "$SSH_KEY" ubuntu@$IP "
     ALT_PORT=3001
   fi
 
-  sudo docker compose -f $COMPOSE_SOURCE up -d \$DB_SERVICE
+  # Stop any legacy non-blue/green standalone container if running
+  sudo docker stop app-staging-payload-staging-1 payload_staging 2>/dev/null || true
+  sudo docker rm app-staging-payload-staging-1 payload_staging 2>/dev/null || true
+
+  sudo docker compose -f $COMPOSE_SOURCE up -d --remove-orphans \$DB_SERVICE
 
   ACTIVE_PORT=\$DEFAULT_PORT
   if sudo grep -q \"127.0.0.1:\$DEFAULT_PORT\" /etc/caddy/Caddyfile 2>/dev/null; then
@@ -157,7 +161,7 @@ ssh -i "$SSH_KEY" ubuntu@$IP "
   fi
 
   echo \"Current active port: \$ACTIVE_PORT. Starting \$NEW_SERVICE on port \$NEW_PORT...\"
-  sudo docker compose -f $COMPOSE_SOURCE up -d \$NEW_SERVICE
+  sudo docker compose -f $COMPOSE_SOURCE up -d --remove-orphans \$NEW_SERVICE
 
   echo \"Warming up Next.js on port \$NEW_PORT...\"
   for i in \$(seq 1 30); do

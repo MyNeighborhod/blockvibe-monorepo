@@ -15,6 +15,8 @@ export async function GET() {
       businessTiers: (settings as any)?.businessTiers || [],
       enablePayPal: (settings as any)?.enablePayPal ?? true,
       enableCheckPayment: (settings as any)?.enableCheckPayment ?? true,
+      enableResidentialMemberships: (settings as any)?.enableResidentialMemberships ?? true,
+      enableBusinessMemberships: (settings as any)?.enableBusinessMemberships ?? false,
     })
   } catch (error: any) {
     return NextResponse.json(
@@ -26,6 +28,8 @@ export async function GET() {
         businessTiers: [],
         enablePayPal: true,
         enableCheckPayment: true,
+        enableResidentialMemberships: true,
+        enableBusinessMemberships: false,
       },
       { status: 200 }
     )

@@ -37,6 +37,48 @@ export default async function DashboardPage({ params }: Args) {
         </p>
       </div>
 
+      {/* Membership Dues & Yearly Expiration Banner */}
+      {(() => {
+        const expirationDate = (user as any)?.membershipExpiresAt
+          ? new Date((user as any).membershipExpiresAt)
+          : new Date(new Date(user.createdAt || Date.now()).getTime() + 365 * 24 * 60 * 60 * 1000)
+        
+        const isExpired = Date.now() > expirationDate.getTime()
+        const formattedDate = expirationDate.toLocaleDateString("en-US", {
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        })
+
+        return (
+          <Card className="bg-slate-900 dark:bg-slate-800/90 border border-emerald-500/30 p-6 rounded-2xl shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider ${
+                  isExpired
+                    ? "bg-amber-500/20 text-amber-400 border border-amber-500/40"
+                    : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
+                }`}>
+                  {isExpired ? "Dues Pending Renewal" : "Active Annual Member"}
+                </span>
+              </div>
+              <div className="text-lg md:text-xl font-bold text-white font-serif">
+                Membership dues yearly expiration on:{" "}
+                <span className="text-emerald-400 font-sans font-extrabold">{formattedDate}</span>
+              </div>
+              <p className="text-xs text-slate-400">
+                Your annual membership dues support local garage sale events, neighborhood signs, and voting privileges.
+              </p>
+            </div>
+            <Button asChild className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-3 rounded-xl shadow-lg shrink-0">
+              <Link href={`/membership/signup?intent=renewal&email=${encodeURIComponent(user.email)}`}>
+                🔄 Renew Membership Dues
+              </Link>
+            </Button>
+          </Card>
+        )
+      })()}
+
       {/* Overview Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="backdrop-blur-md bg-card/60 border border-border/40">

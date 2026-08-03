@@ -111,6 +111,33 @@ export const Users: CollectionConfig = {
       },
     },
     {
+      name: "membershipExpiresAt",
+      type: "date",
+      admin: {
+        description: "Yearly expiration date for member annual dues.",
+      },
+    },
+    {
+      name: "membershipStatus",
+      type: "select",
+      defaultValue: "none",
+      options: [
+        { label: "Active", value: "active" },
+        { label: "Expired", value: "expired" },
+        { label: "None / Unpaid", value: "none" },
+      ],
+      admin: {
+        description: "Active status of user annual membership dues.",
+      },
+    },
+    {
+      name: "membershipTier",
+      type: "text",
+      admin: {
+        description: "Active tier (e.g., individual, household, local-sponsor).",
+      },
+    },
+    {
       name: "customAttributes",
       type: "json",
       admin: {

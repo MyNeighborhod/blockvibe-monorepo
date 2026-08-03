@@ -1432,6 +1432,8 @@ async function run() {
         ],
         enablePayPal: true,
         enableCheckPayment: true,
+        enableResidentialMemberships: true,
+        enableBusinessMemberships: true,
         paypalClientId: (currentSettings as any)?.paypalClientId || process.env.PAYPAL_CLIENT_ID || undefined,
         paypalClientSecret: (currentSettings as any)?.paypalClientSecret || process.env.PAYPAL_CLIENT_SECRET || undefined,
       },

@@ -58,10 +58,10 @@ export default function MembershipLandingPage() {
               </p>
             </div>
             <Link
-              href="/membership/signup?intent=renewal"
+              href="/dashboard"
               className="w-full text-center py-3.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition-all shadow-md"
             >
-              Renew Dues
+              Renew from Dashboard
             </Link>
           </div>
 
