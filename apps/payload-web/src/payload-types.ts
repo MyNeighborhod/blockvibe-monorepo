@@ -491,7 +491,7 @@ export interface User {
   /**
    * Access level control for user permissions.
    */
-  role?: ('superadmin' | 'admin' | 'editor' | 'contributor') | null;
+  role?: ('superadmin' | 'admin' | 'editor' | 'contributor' | 'neighbor') | null;
   /**
    * Approval status for registration staging area.
    */

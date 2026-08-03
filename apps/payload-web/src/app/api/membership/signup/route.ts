@@ -44,7 +44,7 @@ export async function POST(req: Request) {
           email: normalizedEmail,
           name,
           password: `P@ss-${Math.random().toString(36).slice(-8)}${Date.now()}`,
-          role: "contributor",
+          role: "neighbor",
           status: "pending",
           isNeighbor: true,
           memberType: memberCategory === "business" ? "business" : "residential",
