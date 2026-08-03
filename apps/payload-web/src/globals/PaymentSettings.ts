@@ -43,13 +43,13 @@ export const PaymentSettings: GlobalConfig = {
     {
       name: "individualDuesAmount",
       type: "number",
-      defaultValue: 100,
+      defaultValue: 10,
       label: "Individual Annual Dues ($)",
     },
     {
       name: "householdDuesAmount",
       type: "number",
-      defaultValue: 150,
+      defaultValue: 20,
       label: "Household Annual Dues ($)",
     },
     {

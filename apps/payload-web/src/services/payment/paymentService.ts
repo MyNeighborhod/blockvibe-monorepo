@@ -40,11 +40,11 @@ export class PaymentService {
       const payload = await getPayload({ config: configPromise })
       const settings = await payload.findGlobal({ slug: "payment-settings" as any })
       if (tier === "household") {
-        return (settings as any)?.householdDuesAmount || 150
+        return (settings as any)?.householdDuesAmount || 20
       }
-      return (settings as any)?.individualDuesAmount || 100
+      return (settings as any)?.individualDuesAmount || 10
     } catch {
-      return tier === "household" ? 150 : 100
+      return tier === "household" ? 20 : 10
     }
   }
 

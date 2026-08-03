@@ -15,6 +15,12 @@ function MembershipForm() {
   )
   const [customAmount, setCustomAmount] = useState<number | string>(50)
 
+  // Merchandise Add-ons
+  const [includeTshirt, setIncludeTshirt] = useState(false)
+  const [tshirtSize, setTshirtSize] = useState("M")
+  const [includeMug, setIncludeMug] = useState(false)
+  const [includeMagnet, setIncludeMagnet] = useState(false)
+
   const [formData, setFormData] = useState({
     name: "",
     email: urlEmail || "",
@@ -33,6 +39,17 @@ function MembershipForm() {
     userId: string | number
   } | null>(null)
 
+  const baseAmount =
+    intent === "donation"
+      ? Number(customAmount) || 0
+      : formData.tier === "household"
+      ? 20 // Default or dynamic
+      : 10 // Default or dynamic
+
+  const merchTotal =
+    (includeTshirt ? 25 : 0) + (includeMug ? 15 : 0) + (includeMagnet ? 5 : 0)
+  const calculatedTotal = baseAmount + merchTotal
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
@@ -45,6 +62,14 @@ function MembershipForm() {
     setLoading(true)
     setError(null)
 
+    const merchNotes = [
+      includeTshirt ? `T-Shirt (Size: ${tshirtSize})` : null,
+      includeMug ? "Mug ($15)" : null,
+      includeMagnet ? "Car Magnet ($5)" : null,
+    ]
+      .filter(Boolean)
+      .join(", ")
+
     try {
       const res = await fetch("/api/membership/signup", {
         method: "POST",
@@ -52,7 +77,8 @@ function MembershipForm() {
         body: JSON.stringify({
           ...formData,
           intent,
-          customAmount: intent === "donation" ? customAmount : undefined,
+          customAmount: calculatedTotal,
+          notes: merchNotes ? `Merchandise: ${merchNotes}` : undefined,
         }),
       })
 
@@ -149,7 +175,7 @@ function MembershipForm() {
                 : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
             }`}
           >
-            One-Time Donation
+            Merchandise / Donation
           </button>
         </div>
 
@@ -157,12 +183,12 @@ function MembershipForm() {
           <h1 className="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
             {intent === "new" && "New Community Membership"}
             {intent === "renewal" && "Renew Annual Membership Dues"}
-            {intent === "donation" && "Support with a One-Time Donation"}
+            {intent === "donation" && "Order Merchandise or Donate"}
           </h1>
           <p className="mt-2 text-slate-600 dark:text-slate-400">
             {intent === "donation"
-              ? "Your contributions directly fund neighborhood events and community projects."
-              : "Keep your membership active to enjoy voting rights and community access."}
+              ? "Your contributions directly fund neighborhood events like our Annual Garage Sale & National Night Out."
+              : "Keep your membership active to support North of Grand and unlock neighborhood privileges."}
           </p>
         </div>
 
@@ -259,7 +285,7 @@ function MembershipForm() {
                     />
                     <div className="font-bold text-slate-900 dark:text-white">Individual Member</div>
                     <div className="text-2xl font-extrabold text-indigo-600 dark:text-indigo-400 mt-1">
-                      $100 <span className="text-sm font-normal text-slate-500">/ year</span>
+                      $10 <span className="text-sm font-normal text-slate-500">/ year</span>
                     </div>
                   </label>
 
@@ -280,7 +306,7 @@ function MembershipForm() {
                     />
                     <div className="font-bold text-slate-900 dark:text-white">Household Member</div>
                     <div className="text-2xl font-extrabold text-indigo-600 dark:text-indigo-400 mt-1">
-                      $150 <span className="text-sm font-normal text-slate-500">/ year</span>
+                      $20 <span className="text-sm font-normal text-slate-500">/ year</span>
                     </div>
                   </label>
                 </div>
@@ -291,7 +317,7 @@ function MembershipForm() {
                   Select Donation Amount ($)
                 </label>
                 <div className="grid grid-cols-4 gap-3 mb-4">
-                  {[25, 50, 100, 250].map((amt) => (
+                  {[15, 25, 50, 100].map((amt) => (
                     <button
                       key={amt}
                       type="button"
@@ -308,7 +334,7 @@ function MembershipForm() {
                 </div>
                 <input
                   type="number"
-                  min="1"
+                  min="0"
                   step="1"
                   value={customAmount}
                   onChange={(e) => setCustomAmount(e.target.value)}
@@ -318,9 +344,78 @@ function MembershipForm() {
               </div>
             )}
 
+            {/* Optional Merchandise Add-ons */}
+            <div className="p-6 rounded-2xl bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 space-y-4">
+              <h3 className="font-bold text-slate-900 dark:text-white text-base">
+                Add Official North of Grand Merchandise (Optional)
+              </h3>
+              <div className="space-y-3">
+                {/* T-Shirt */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={includeTshirt}
+                      onChange={(e) => setIncludeTshirt(e.target.checked)}
+                      className="w-5 h-5 rounded text-indigo-600"
+                    />
+                    <span className="font-semibold text-slate-900 dark:text-white">NOG T-Shirt (+$25)</span>
+                  </label>
+                  {includeTshirt && (
+                    <select
+                      value={tshirtSize}
+                      onChange={(e) => setTshirtSize(e.target.value)}
+                      className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 text-sm font-semibold bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
+                    >
+                      <option value="S">Size Small (S)</option>
+                      <option value="M">Size Medium (M)</option>
+                      <option value="L">Size Large (L)</option>
+                      <option value="XL">Size Extra Large (XL)</option>
+                      <option value="2XL">Size 2XL</option>
+                    </select>
+                  )}
+                </div>
+
+                {/* Mug */}
+                <div className="flex items-center justify-between p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={includeMug}
+                      onChange={(e) => setIncludeMug(e.target.checked)}
+                      className="w-5 h-5 rounded text-indigo-600"
+                    />
+                    <span className="font-semibold text-slate-900 dark:text-white">NOG Coffee Mug (+$15)</span>
+                  </label>
+                </div>
+
+                {/* Magnet */}
+                <div className="flex items-center justify-between p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={includeMagnet}
+                      onChange={(e) => setIncludeMagnet(e.target.checked)}
+                      className="w-5 h-5 rounded text-indigo-600"
+                    />
+                    <span className="font-semibold text-slate-900 dark:text-white">NOG Car Magnet / Badge (+$5)</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* Total Calculation Display */}
+            <div className="flex justify-between items-center p-4 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800">
+              <span className="font-bold text-slate-900 dark:text-white">Total Order Amount:</span>
+              <span className="text-2xl font-extrabold text-indigo-600 dark:text-indigo-400">
+                ${calculatedTotal}
+              </span>
+            </div>
+
+            {/* Payment Method Selector */}
             <div>
               <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">
-                Choose How to Pay Dues / Donate
+                Choose How to Pay
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <label
@@ -343,7 +438,7 @@ function MembershipForm() {
                       Credit / Debit Card or PayPal
                     </div>
                     <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                      Pay online instantly via PayPal (accepts all major Credit Cards, Debit Cards, or PayPal balance).
+                      Pay online instantly via PayPal (accepts Credit Cards, Debit Cards, or PayPal balance).
                     </div>
                   </div>
                 </label>
@@ -382,13 +477,9 @@ function MembershipForm() {
             >
               {loading
                 ? "Processing..."
-                : intent === "donation"
-                ? formData.paymentMethod === "check"
-                  ? "Pledge Donation (Pay Offline Later)"
-                  : `Donate $${customAmount} via PayPal / Credit Card`
                 : formData.paymentMethod === "check"
-                ? "Register Member Profile Now (Pay Offline Later)"
-                : `Proceed to Online Checkout (${intent === "renewal" ? "Renew" : "Join"})`}
+                ? `Register Now ($${calculatedTotal} - Pay Cash/Check Later)`
+                : `Pay $${calculatedTotal} Online via PayPal / Card`}
             </button>
           </form>
         ) : (
