@@ -1,46 +1,10 @@
 "use client"
 
-import React, { useState } from "react"
+import React from "react"
 import Link from "next/link"
 import Image from "next/image"
 
 export default function MembershipLandingPage() {
-  const [lookupEmail, setLookupEmail] = useState("")
-  const [lookupLoading, setLookupLoading] = useState(false)
-  const [lookupError, setLookupError] = useState<string | null>(null)
-  const [memberResult, setMemberResult] = useState<any | null>(null)
-
-  const handleLookup = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!lookupEmail) return
-    setLookupLoading(true)
-    setLookupError(null)
-    setMemberResult(null)
-
-    try {
-      const res = await fetch("/api/membership/lookup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: lookupEmail }),
-      })
-      const data = await res.json()
-
-      if (!res.ok) {
-        throw new Error(data.error || "Lookup failed.")
-      }
-
-      if (!data.found) {
-        setLookupError("No existing membership account found for that email address.")
-      } else {
-        setMemberResult(data)
-      }
-    } catch (err: unknown) {
-      setLookupError((err as Error).message || "An unexpected error occurred.")
-    } finally {
-      setLookupLoading(false)
-    }
-  }
-
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto space-y-12">
@@ -191,85 +155,6 @@ export default function MembershipLandingPage() {
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
               Pay via PayPal/Credit Card or select cash/check upon pickup. Email questions to <a href="mailto:northofgrandpresident@gmail.com" className="underline text-indigo-600 dark:text-indigo-400">northofgrandpresident@gmail.com</a>.
             </p>
-          </div>
-        </div>
-
-        {/* Existing Member Quick Lookup Tool */}
-        <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 border border-slate-200 dark:border-slate-700 shadow-lg">
-          <div className="max-w-xl mx-auto text-center space-y-4">
-            <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-              Check Your Membership Status & Account ID
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Enter your email address below to look up your ULID Account ID and current expiration date.
-            </p>
-
-            <form onSubmit={handleLookup} className="flex gap-2">
-              <input
-                type="email"
-                required
-                value={lookupEmail}
-                onChange={(e) => setLookupEmail(e.target.value)}
-                placeholder="Enter your email..."
-                className="flex-1 px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-              <button
-                type="submit"
-                disabled={lookupLoading}
-                className="px-6 py-3 rounded-xl bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-bold hover:bg-slate-800 dark:hover:bg-white transition-all disabled:opacity-50"
-              >
-                {lookupLoading ? "Searching..." : "Lookup"}
-              </button>
-            </form>
-
-            {lookupError && (
-              <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 text-xs">
-                {lookupError}
-              </div>
-            )}
-
-            {memberResult && (
-              <div className="p-6 rounded-xl bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 text-left space-y-3">
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-slate-500 dark:text-slate-400">Account Name:</span>
-                  <span className="font-bold text-slate-900 dark:text-white">{memberResult.user.name}</span>
-                </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-slate-500 dark:text-slate-400">Account ID (ULID):</span>
-                  <span className="font-mono text-xs bg-slate-200 dark:bg-slate-600 px-2 py-1 rounded">
-                    {memberResult.user.accountId}
-                  </span>
-                </div>
-                {memberResult.membership && (
-                  <>
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-slate-500 dark:text-slate-400">Annual Status:</span>
-                      <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                        {memberResult.membership.isAnnualPayingMember
-                          ? "Active Annual Paying Member"
-                          : "Pending / Inactive"}
-                      </span>
-                    </div>
-                    {memberResult.membership.validUntil && (
-                      <div className="flex justify-between items-center text-sm">
-                        <span className="text-slate-500 dark:text-slate-400">Valid Until:</span>
-                        <span className="font-mono text-xs">
-                          {new Date(memberResult.membership.validUntil).toLocaleDateString()}
-                        </span>
-                      </div>
-                    )}
-                  </>
-                )}
-                <div className="pt-3 border-t border-slate-200 dark:border-slate-600 text-center">
-                  <Link
-                    href={`/membership/signup?intent=renewal&email=${encodeURIComponent(memberResult.user.email)}`}
-                    className="inline-block px-6 py-2.5 rounded-xl bg-emerald-600 text-white font-bold text-sm hover:bg-emerald-700 transition-all"
-                  >
-                    Renew Dues Now
-                  </Link>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>
