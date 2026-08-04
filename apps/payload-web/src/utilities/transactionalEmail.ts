@@ -8,32 +8,28 @@ export type TransactionalEmailFrom = {
 
 type TenantLike = Partial<Tenant> | null | undefined
 
-const PLATFORM_DEFAULTS: TransactionalEmailFrom = {
-  address: process.env.SMTP_FROM_ADDRESS || "info@blockvibe.org",
-  name: process.env.SMTP_FROM_NAME || "BlockVibe",
+/** Platform-wide fallback from environment (.env.staging / .env.production). */
+function getPlatformTransactionalDefaults(): TransactionalEmailFrom {
+  return {
+    address: process.env.SMTP_FROM_ADDRESS || "info@blockvibe.org",
+    name: process.env.SMTP_FROM_NAME || "BlockVibe",
+  }
 }
 
-const SLUG_DEFAULTS: Record<string, TransactionalEmailFrom> = {
-  nog: {
-    address: process.env.NOG_SMTP_FROM_ADDRESS || "northofgrandpresident@northofgranddsm.org",
-    name: process.env.NOG_SMTP_FROM_NAME || "North of Grand Neighborhood Association",
-  },
-  default: PLATFORM_DEFAULTS,
-}
-
+/**
+ * Resolve transactional From for a tenant.
+ * Order: tenant DB fields → platform env (SMTP_FROM_ADDRESS / SMTP_FROM_NAME).
+ */
 export function resolveTransactionalEmailFrom(tenant?: TenantLike): TransactionalEmailFrom {
-  const slug = tenant?.slug || "default"
-  const slugDefaults = SLUG_DEFAULTS[slug] || PLATFORM_DEFAULTS
+  const platform = getPlatformTransactionalDefaults()
 
-  const address =
-    tenant?.transactionalEmailFrom?.trim() || slugDefaults.address || PLATFORM_DEFAULTS.address
-
+  const address = tenant?.transactionalEmailFrom?.trim() || platform.address
   const name =
     tenant?.transactionalEmailFromName?.trim() ||
     tenant?.organizationLegalName?.trim() ||
-    slugDefaults.name ||
+    platform.name ||
     tenant?.name?.trim() ||
-    PLATFORM_DEFAULTS.name
+    "BlockVibe"
 
   return { address, name }
 }

@@ -9,6 +9,7 @@ dotenv.config()
 import { getPayload } from "payload"
 import { getNogShowcaseUrl } from "./seed-helpers"
 import { NOG_NEWSLETTER_FORM_TITLE, nogNewsletterFormFields } from "./nog-newsletter-form"
+import { getNogTenantEmailDefaultsProduction } from "../config/tenantEmailDefaults"
 
 // Helper to construct Lexical Rich Text JSON structure simply
 function lexicalRichText(children: any[]): any {
@@ -348,19 +349,13 @@ async function run() {
   ])
 
   // 3. Create Tenant
+  const nogEmailDefaults = getNogTenantEmailDefaultsProduction()
   let tenant: any
   if (existingTenants.docs.length > 0) {
     tenant = await payload.update({
       collection: "tenants",
       id: existingTenants.docs[0].id,
-      data: {
-        domain: "www.northofgranddsm.org",
-        organizationLegalName: "North of Grand Neighborhood Association",
-        is501c3: true,
-        transactionalEmailFrom: "northofgrandpresident@northofgranddsm.org",
-        transactionalEmailFromName: "North of Grand Neighborhood Association",
-        emailDeliveryDefault: "ses",
-      },
+      data: nogEmailDefaults,
     })
   } else {
     payload.logger.info("Creating NOG Tenant...")
@@ -369,13 +364,8 @@ async function run() {
       data: {
         name: "North Of Grand Des Moines",
         slug: "nog",
-        domain: "www.northofgranddsm.org",
         template: "light",
-        organizationLegalName: "North of Grand Neighborhood Association",
-        is501c3: true,
-        transactionalEmailFrom: "northofgrandpresident@northofgranddsm.org",
-        transactionalEmailFromName: "North of Grand Neighborhood Association",
-        emailDeliveryDefault: "ses",
+        ...nogEmailDefaults,
       },
     })
   }
