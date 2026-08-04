@@ -14,18 +14,20 @@ We use your information for the following purposes:
 
 - Providing and maintaining multi-tenant neighborhood portals.
 - Sending **transactional email** on behalf of Tenants and the Platform (e.g., password resets, payment receipts, account confirmations, portal invitations).
+- **Newsletter & Community Updates Scope:** Community newsletters remain within the scope of our Platform services. However, **bulk newsletter tools are not currently available at the moment**. In the future, occasional newsletters or community updates may be delivered to users who have **explicitly verified their email address** and provided affirmative **opt-in consent**. Users retain the right to withdraw consent and unsubscribe at any time.
 - **Anti-Abuse Verification:** Automated processing of email bounces and complaints via Amazon SNS webhooks to suppress delivery to inactive or complaining addresses.
 - Injecting platform-wide sponsored footers in certain free-tier tenant emails, as described in our Terms of Service.
 
-**Tenant email policy:** Tenant Administrators are permitted to use Platform email tools only for transactional messages (see our [Terms of Service](/terms)). Tidier LLC does not authorize Tenants to send newsletters, marketing broadcasts, or spam through the Platform without prior written approval.
+**Tenant email policy:** Tenant Administrators are permitted to use Platform email tools for transactional messages and verified opt-in communications. Tidier LLC does not authorize Tenants to send unverified marketing broadcasts or spam through the Platform.
 
 ## 3. Third-Party Email & Delivery
 
 To deliver transactional email, we use third-party SMTP and API services (such as AWS SES), configured with verified sending identities (e.g., `info@blockvibe.org`).
 
+- **Opt-Out / Unsubscribe Links:** Every email sent by or through the Platform includes a clear, accessible **opt-out / unsubscribe link** in the footer, allowing recipients to easily manage their preferences or unsubscribe at any time with a single click.
 - We do not sell, rent, or trade your contact information with advertisers or data brokers.
 - Manually entered contacts start in an invite-only state until the recipient accepts.
-- Where provided, unsubscribe mechanisms comply with applicable law and Platform policy.
+- Unsubscribe mechanisms comply with applicable law and Platform policy.
 
 ## 4. Data Sharing and Multitenancy Scoping
 

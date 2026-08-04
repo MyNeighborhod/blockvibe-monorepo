@@ -19,29 +19,31 @@ To utilize certain Platform capabilities, you must register for an account. You 
 - All activities that occur under your account.
 - Promptly notifying us of any unauthorized access or security breach.
 
-## 4. Email Communications — Transactional Use Only
+## 4. Email Communications & Newsletter Scope
 
-The Platform may provide tools that allow Tenant Admins to send email on behalf of a Tenant. **Tenant Admins may use these tools only for transactional, event-driven messages** sent in direct response to a specific account action, membership step, or documented request from an individual recipient.
+The Platform provides tools that allow Tenant Admins to send communications on behalf of a Tenant.
 
-**Permitted transactional email includes, for example:**
+**Scope of Email Communications & Current Newsletter Status:**
+- **Transactional Messaging:** Tenant Admins may send transactional, event-driven messages in direct response to account actions, payment confirmations, password resets, or membership updates.
+- **Newsletter Scope:** Community newsletters remain within the scope of our Platform services. However, **bulk newsletter tools are not currently available at the moment**.
+- **Future Newsletter Delivery:** In the future, occasional newsletters or community updates may be sent to users **only when recipients explicitly verify their email address and actively opt in**.
 
-- Password reset and account verification messages
+**Permitted email communications include:**
+- Password resets, account verification, and security notices
 - Payment receipts, donation confirmations, and membership payment confirmations
-- Account registration confirmations and security notices
-- A **single** invitation email to join a Tenant portal (before the recipient has accepted)
-- Messages reasonably necessary to complete a payment, membership, or account change the recipient initiated
+- Account registration confirmations and single portal invitations
+- Occasional community newsletters or updates, **provided the recipient has explicitly verified their email address and actively opted in**
 
-**Prohibited without prior written approval from Tidier LLC:**
-
-- Newsletters, promotional broadcasts, bulk announcements, or marketing campaigns
+**Strictly Prohibited:**
 - Unsolicited commercial email of any kind (**spam**)
-- Repeated or bulk outreach that is not tied to a specific transactional event
+- Unverified bulk broadcasts or email campaigns sent without recipient verification and explicit opt-in consent
+- Continued communications to recipients who have requested to opt out or unsubscribe
 
 Tenant Admins represent, warrant, and covenant that they will **not send spam** and will comply with the **U.S. CAN-SPAM Act**, the **Telephone Consumer Protection Act (TCPA)**, and all other applicable communication and privacy laws.
 
 **Invite-only contacts:** Contacts manually added by a Tenant Admin are created in a pending-invite state. The Platform restricts general communications to those addresses until the recipient actively accepts the invitation.
 
-**Opt-out:** Where the Platform provides unsubscribe or opt-out mechanisms, Tenant Admins must honor them immediately. Residents who signed up offline (e.g., paper forms) must be able to opt out of future email at any time.
+**Opt-out / Unsubscribe Links:** Every outgoing email sent by or through the Platform includes a clear, functional **opt-out / unsubscribe link** in the message footer. Recipients can unsubscribe from future communications at any time with a single click, and Tenant Admins must honor all opt-out requests immediately.
 
 **Enforcement:** Tidier LLC monitors delivery logs, bounce rates, and spam complaints. We may suspend or terminate email privileges or Tenant Portal access immediately if a Tenant sends prohibited messages, generates excessive complaints, or violates this section.
 
