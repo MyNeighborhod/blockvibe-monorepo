@@ -132,8 +132,8 @@ ssh -i "$SSH_KEY" ubuntu@$IP "
   cd $REMOTE_DIR &&
 
   DB_SERVICE=\"db-staging\"
-  DEFAULT_PORT=3001
-  ALT_PORT=3002
+  DEFAULT_PORT=3002
+  ALT_PORT=3003
 
   if [ \"$STAGING\" -eq 0 ]; then
     DB_SERVICE=\"db\"

@@ -63,6 +63,8 @@ cd "$REMOTE_DIR"
 sudo docker compose -f "$COMPOSE_FILE" exec -T "$DB_SERVICE" psql -U postgres -d "$DB_NAME" -v ON_ERROR_STOP=1 <<SQL
 ALTER TABLE tenants ADD COLUMN IF NOT EXISTS transactional_email_from character varying;
 ALTER TABLE tenants ADD COLUMN IF NOT EXISTS transactional_email_from_name character varying;
+ALTER TABLE tenants ADD COLUMN IF NOT EXISTS organization_legal_name text;
+ALTER TABLE tenants ADD COLUMN IF NOT EXISTS is501c3 boolean DEFAULT false;
 
 UPDATE tenants SET
   domain = '${DOMAIN}',

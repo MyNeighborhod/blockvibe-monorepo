@@ -87,7 +87,7 @@ ssh -i "$SSH_KEY" ubuntu@$IP "
 
   # Detect active port in current Caddyfile
   ACTIVE_PORT=3000
-  if sudo grep -q '127.0.0.1:3000' /etc/caddy/Caddyfile 2>/dev/null; then
+  if sudo grep -q 'reverse_proxy 127.0.0.1:3000' /etc/caddy/Caddyfile 2>/dev/null; then
     ACTIVE_PORT=3000
     NEW_SERVICE=\"payload_green\"
     NEW_PORT=3001
@@ -113,9 +113,9 @@ ssh -i "$SSH_KEY" ubuntu@$IP "
     sleep 1
   done
 
-  # Hot-swap Caddy upstream target
+  # Hot-swap Caddy upstream target (production block only — first reverse_proxy line)
   echo \"Hot-swapping Caddy upstream to port \$NEW_PORT...\"
-  sudo sed -i \"s/127.0.0.1:\$ACTIVE_PORT/127.0.0.1:\$NEW_PORT/g\" /etc/caddy/Caddyfile
+  sudo sed -i \"0,/reverse_proxy 127.0.0.1:\$ACTIVE_PORT/s/reverse_proxy 127.0.0.1:\$ACTIVE_PORT/reverse_proxy 127.0.0.1:\$NEW_PORT/\" /etc/caddy/Caddyfile
   sudo systemctl reload caddy
 
   echo \"✓ Traffic hot-swapped! Stopping previous instance \$OLD_SERVICE...\"

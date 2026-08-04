@@ -4,7 +4,7 @@ services:
     container_name: payload_blue_staging
     restart: always
     ports:
-      - "127.0.0.1:3001:3000" # Bind to port 3001 for Staging Blue instance
+      - "127.0.0.1:3002:3000" # Staging Blue — avoids prod green on 3001
     volumes:
       - /var/www/blockvibe/media-staging/media:/app/apps/payload-web/public/media
     depends_on:
@@ -20,7 +20,7 @@ services:
     container_name: payload_green_staging
     restart: always
     ports:
-      - "127.0.0.1:3002:3000" # Bind to port 3002 for Staging Green instance
+      - "127.0.0.1:3003:3000" # Staging Green
     volumes:
       - /var/www/blockvibe/media-staging/media:/app/apps/payload-web/public/media
     depends_on:
