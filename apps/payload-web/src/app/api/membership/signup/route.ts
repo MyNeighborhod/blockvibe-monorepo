@@ -26,28 +26,75 @@ export async function POST(req: Request) {
       password: customPassword,
     } = body
 
-    const referer = req.headers.get("referer")
-    const host = req.headers.get("x-forwarded-host") || req.headers.get("host") || ""
-    const proto = req.headers.get("x-forwarded-proto") || "https"
-
-    let siteOrigin = "https://www.northofgranddsm.org"
-    if (referer) {
-      try {
-        const refUrl = new URL(referer)
-        if (!refUrl.hostname.includes("0.0.0.0") && !refUrl.hostname.includes("127.0.0.1")) {
-          siteOrigin = refUrl.origin
-        }
-      } catch {}
-    } else if (host && !host.includes("0.0.0.0") && !host.includes("127.0.0.1")) {
-      siteOrigin = `${proto}://${host}`
-    }
-
     if (!email || !name) {
       return NextResponse.json({ error: "Name and Email are required." }, { status: 400 })
     }
 
     const payload = await getPayload({ config: configPromise })
     const paymentService = new PaymentService()
+
+    // Resolve tenant from DB to determine dynamic multi-tenant siteOrigin
+    const rawHost = (req.headers.get("x-forwarded-host") || req.headers.get("host") || "").replace(/^www\./, "").split(":")[0]
+    const refererHeader = req.headers.get("referer") || ""
+    let refHostname = ""
+    if (refererHeader) {
+      try {
+        refHostname = new URL(refererHeader).hostname.replace(/^www\./, "")
+      } catch {}
+    }
+
+    const platformDomain = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || "blockvibe.org"
+    const stagingDomain = process.env.NEXT_PUBLIC_STAGING_DOMAIN || "staging.blockvibe.org"
+
+    let slugFromSubdomain = ""
+    if (rawHost.includes(`.${platformDomain}`)) {
+      slugFromSubdomain = rawHost.replace(`.${platformDomain}`, "").split(":")[0]
+    } else if (rawHost.includes(`.${stagingDomain}`)) {
+      slugFromSubdomain = rawHost.replace(`.${stagingDomain}`, "").split(":")[0]
+    } else if (refHostname.includes(`.${platformDomain}`)) {
+      slugFromSubdomain = refHostname.replace(`.${platformDomain}`, "").split(":")[0]
+    } else if (refHostname.includes(`.${stagingDomain}`)) {
+      slugFromSubdomain = refHostname.replace(`.${stagingDomain}`, "").split(":")[0]
+    }
+
+    const tenantMatches = await payload.find({
+      collection: "tenants",
+      where: {
+        or: [
+          ...(rawHost ? [{ domain: { equals: rawHost } }] : []),
+          ...(refHostname ? [{ domain: { equals: refHostname } }] : []),
+          ...(slugFromSubdomain && slugFromSubdomain !== "default" && slugFromSubdomain !== "localhost" ? [{ slug: { equals: slugFromSubdomain } }] : []),
+          ...(body.tenantSlug ? [{ slug: { equals: body.tenantSlug } }] : []),
+        ],
+      },
+      limit: 1,
+    })
+
+    const matchedTenant = tenantMatches.docs[0]
+    let siteOrigin = ""
+    if (matchedTenant) {
+      if (matchedTenant.domain && matchedTenant.domain.trim()) {
+        const cleanDomain = matchedTenant.domain.replace(/^https?:\/\//, "").replace(/\/$/, "")
+        siteOrigin = `https://${cleanDomain}`
+      } else if (matchedTenant.slug) {
+        siteOrigin = `https://${matchedTenant.slug}.${platformDomain}`
+      }
+    }
+
+    if (!siteOrigin || siteOrigin.includes("0.0.0.0") || siteOrigin.includes("127.0.0.1")) {
+      if (refererHeader) {
+        try {
+          const refUrl = new URL(refererHeader)
+          if (!refUrl.hostname.includes("0.0.0.0") && !refUrl.hostname.includes("127.0.0.1")) {
+            siteOrigin = refUrl.origin
+          }
+        } catch {}
+      }
+    }
+
+    if (!siteOrigin || siteOrigin.includes("0.0.0.0") || siteOrigin.includes("127.0.0.1")) {
+      siteOrigin = process.env.NEXT_PUBLIC_SERVER_URL?.replace(/\/$/, "") || "https://www.northofgranddsm.org"
+    }
 
     // 1. Find or create user
     const normalizedEmail = email.trim().toLowerCase()
