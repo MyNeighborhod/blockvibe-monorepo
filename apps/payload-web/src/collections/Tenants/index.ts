@@ -50,15 +50,18 @@ export const Tenants: CollectionConfig = {
       },
     },
     {
-      name: "emailDeliveryDefault",
-      type: "select",
-      defaultValue: "ses",
-      options: [
-        { label: "Platform (SES)", value: "ses" },
-        { label: "Neighborhood Gmail", value: "gmail" },
-      ],
+      name: "organizationLegalName",
+      type: "text",
       admin: {
-        description: "Default delivery channel for Email Broadcaster.",
+        description: "Official legal entity name for receipts (e.g., North of Grand Neighborhood Association).",
+      },
+    },
+    {
+      name: "is501c3",
+      type: "checkbox",
+      defaultValue: false,
+      admin: {
+        description: "Check if this tenant is a registered 501(c)(3) tax-exempt organization.",
       },
     },
   ],

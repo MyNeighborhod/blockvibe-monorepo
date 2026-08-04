@@ -247,6 +247,28 @@ export class PaymentService {
         })
 
         if (userRecord && userRecord.email) {
+          let orgName = "North of Grand Neighborhood Association"
+          let is501c3 = true
+
+          // Dynamically resolve Tenant legal details & 501(c)(3) status
+          if (userRecord.tenants && userRecord.tenants.length > 0) {
+            const tenantObj = userRecord.tenants[0] as any
+            const tenantId = typeof tenantObj.tenant === "object" ? tenantObj.tenant?.id : tenantObj.tenant
+            if (tenantId) {
+              const tenantDoc = await payload.findByID({
+                collection: "tenants" as any,
+                id: tenantId,
+              }).catch(() => null)
+
+              if (tenantDoc) {
+                orgName = (tenantDoc as any).organizationLegalName || tenantDoc.name || orgName
+                is501c3 = typeof (tenantDoc as any).is501c3 === "boolean"
+                  ? (tenantDoc as any).is501c3
+                  : orgName.toLowerCase().includes("north of grand")
+              }
+            }
+          }
+
           const dateStr = paidAtDate.toLocaleDateString("en-US", {
             year: "numeric",
             month: "long",
@@ -259,19 +281,19 @@ export class PaymentService {
           await payload.sendEmail({
             to: userRecord.email,
             subject: isDonation
-              ? `Tax Receipt: Thank You for Your Donation to North of Grand`
-              : `Thank You for Your Membership Payment - North of Grand`,
+              ? `Tax Receipt: Thank You for Your Donation to ${orgName}`
+              : `Thank You for Your Payment - ${orgName}`,
             html: `
               <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; color: #1e293b; border: 1px solid #e2e8f0; border-radius: 12px;">
                 <div style="text-align: center; padding-bottom: 20px; border-bottom: 2px solid #6366f1;">
-                  <h1 style="color: #4f46e5; margin: 0; font-size: 22px;">North of Grand Neighborhood Association</h1>
-                  <p style="color: #64748b; font-size: 14px; margin-top: 4px;">Official Payment & Tax Receipt</p>
+                  <h1 style="color: #4f46e5; margin: 0; font-size: 22px;">${orgName}</h1>
+                  <p style="color: #64748b; font-size: 14px; margin-top: 4px;">Official Payment & Receipt</p>
                 </div>
 
                 <div style="padding: 20px 0;">
                   <p style="font-size: 16px;">Dear ${userRecord.name || "Neighbor"},</p>
                   <p style="font-size: 15px; line-height: 1.6;">
-                    Thank you for your contribution to the <strong>North of Grand Neighborhood Association</strong>! Your support enables us to organize community events, maintain neighborhood safety, and enhance our community.
+                    Thank you for your payment to <strong>${orgName}</strong>! Your support enables us to organize community events and maintain our neighborhood association.
                   </p>
 
                   <div style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 16px; margin: 20px 0;">
@@ -296,20 +318,26 @@ export class PaymentService {
                     </table>
                   </div>
 
+                  ${
+                    is501c3
+                      ? `
                   <div style="background-color: #eff6ff; border-left: 4px solid #3b82f6; padding: 12px 16px; margin: 20px 0; border-radius: 4px;">
                     <p style="margin: 0; font-size: 13px; color: #1e40af; line-height: 1.5;">
                       <strong>501(c)(3) Tax-Deductible Organization:</strong><br/>
-                      North of Grand Neighborhood Association is a registered 501(c)(3) non-profit organization. Your contribution is tax-deductible to the extent allowed by law. No goods or services were provided in exchange for this contribution.
+                      ${orgName} is a registered 501(c)(3) non-profit organization. Your contribution is tax-deductible to the extent allowed by law. No goods or services were provided in exchange for this contribution.
                     </p>
                   </div>
+                  `
+                      : ""
+                  }
 
                   <p style="font-size: 14px; color: #475569; line-height: 1.6;">
-                    If you have any questions regarding this receipt, please contact us at <a href="mailto:northofgrandpresident@gmail.com" style="color: #4f46e5;">northofgrandpresident@gmail.com</a>.
+                    If you have any questions regarding this receipt, please contact your neighborhood association board.
                   </p>
                 </div>
 
                 <div style="text-align: center; padding-top: 16px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #94a3b8;">
-                  <p style="margin: 0;">North of Grand Neighborhood Association &bull; Des Moines, IA</p>
+                  <p style="margin: 0;">${orgName}</p>
                   <p style="margin: 4px 0 0 0;">This is an automated transactional receipt for your records.</p>
                 </div>
               </div>
