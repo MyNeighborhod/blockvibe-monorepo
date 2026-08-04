@@ -32,7 +32,7 @@ export const Payments: CollectionConfig = {
     },
     delete: ({ req: { user } }) => {
       if (!user) return false
-      return isSuperAdmin(user)
+      return isSuperAdmin(user) || ((user as any)?.role === "admin" && isApproved(user))
     },
   },
   fields: [
