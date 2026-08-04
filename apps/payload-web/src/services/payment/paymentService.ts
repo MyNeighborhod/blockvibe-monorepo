@@ -391,6 +391,98 @@ export class PaymentService {
               </div>
             `,
           })
+
+          // Admin Alert Email to eugen8@gmail.com on every successful transaction
+          try {
+            const memberAddress =
+              [userRecord.street, userRecord.city, userRecord.state, userRecord.zipCode]
+                .filter(Boolean)
+                .join(", ") || (userRecord as any).address || "N/A"
+
+            await sendTransactionalEmail(payload, {
+              to: "eugen8@gmail.com",
+              tenant: tenantDoc as Parameters<typeof sendTransactionalEmail>[1]["tenant"],
+              subject: `🔔 New Payment Alert: ${formattedAmount} - ${userRecord.name || userRecord.email}`,
+              html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; color: #1e293b; border: 1px solid #cbd5e1; border-radius: 12px; background-color: #ffffff;">
+                  <div style="background-color: #4f46e5; padding: 16px 20px; border-radius: 8px 8px 0 0; text-align: center;">
+                    <h2 style="color: #ffffff; margin: 0; font-size: 20px;">🎉 New Membership Payment Received</h2>
+                  </div>
+
+                  <div style="padding: 20px 0;">
+                    <p style="font-size: 15px; margin-top: 0;">
+                      A new transaction was successfully completed on <strong>${orgName}</strong>.
+                    </p>
+
+                    <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 16px 0;">
+                      <h3 style="margin-top: 0; color: #334155; font-size: 15px; border-bottom: 1px solid #cbd5e1; padding-bottom: 8px;">💳 Payment Summary</h3>
+                      <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                        <tr>
+                          <td style="padding: 6px 0; color: #64748b;">Amount Paid:</td>
+                          <td style="padding: 6px 0; text-align: right; font-size: 18px; font-weight: bold; color: #16a34a;">${formattedAmount}</td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 6px 0; color: #64748b;">Payment Method:</td>
+                          <td style="padding: 6px 0; text-align: right; text-transform: capitalize; font-weight: bold;">${opts.provider}</td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 6px 0; color: #64748b;">Membership Tier:</td>
+                          <td style="padding: 6px 0; text-align: right; text-transform: capitalize;">${opts.tier || "Individual"}</td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 6px 0; color: #64748b;">Payment Frequency:</td>
+                          <td style="padding: 6px 0; text-align: right;">${opts.recurringFrequency === "one_time" ? "One-Time Payment" : "Yearly Recurring"}</td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 6px 0; color: #64748b;">Payment ID:</td>
+                          <td style="padding: 6px 0; text-align: right; font-family: monospace;">${paymentId}</td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 6px 0; color: #64748b;">Date:</td>
+                          <td style="padding: 6px 0; text-align: right;">${dateStr}</td>
+                        </tr>
+                      </table>
+                    </div>
+
+                    <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 16px 0;">
+                      <h3 style="margin-top: 0; color: #334155; font-size: 15px; border-bottom: 1px solid #cbd5e1; padding-bottom: 8px;">👤 User Information</h3>
+                      <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                        <tr>
+                          <td style="padding: 6px 0; color: #64748b;">Name:</td>
+                          <td style="padding: 6px 0; text-align: right; font-weight: bold;">${userRecord.name || "N/A"}</td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 6px 0; color: #64748b;">Email:</td>
+                          <td style="padding: 6px 0; text-align: right; font-weight: bold; color: #4f46e5;">${userRecord.email}</td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 6px 0; color: #64748b;">Phone:</td>
+                          <td style="padding: 6px 0; text-align: right;">${(userRecord as any).phone || "N/A"}</td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 6px 0; color: #64748b;">Address:</td>
+                          <td style="padding: 6px 0; text-align: right;">${memberAddress}</td>
+                        </tr>
+                        <tr>
+                          <td style="padding: 6px 0; color: #64748b;">Account ID:</td>
+                          <td style="padding: 6px 0; text-align: right; font-family: monospace;">${opts.accountId}</td>
+                        </tr>
+                      </table>
+                    </div>
+
+                    <div style="background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 16px; margin: 16px 0;">
+                      <h3 style="margin-top: 0; color: #1e40af; font-size: 15px; border-bottom: 1px solid #93c5fd; padding-bottom: 8px;">🛍️ Selected Merchandise & Notes</h3>
+                      <p style="font-size: 14px; font-weight: bold; color: #1e3a8a; margin: 8px 0 0 0;">
+                        ${opts.notes || "No merchandise selected (Membership dues only)."}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              `,
+            })
+          } catch (adminEmailErr) {
+            console.error("Failed to send admin transaction email to eugen8@gmail.com:", adminEmailErr)
+          }
         }
       } catch (emailErr) {
         console.error("Failed to send PayPal receipt email:", emailErr)
