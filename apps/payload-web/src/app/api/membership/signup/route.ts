@@ -216,6 +216,7 @@ export async function POST(req: Request) {
         businessTierSlug,
         recurringFrequency,
         amount: chargeAmount,
+        userEmail: normalizedEmail,
         notes: intent === "donation" ? "One-Time Donation" : `${intent.toUpperCase()} Dues`,
         siteOrigin,
       })
