@@ -175,7 +175,11 @@ ssh -i "$SSH_KEY" ubuntu@$IP "
 
   echo \"Hot-swapping Caddy upstream to port \$NEW_PORT...\"
   sudo cp /tmp/Caddyfile /etc/caddy/Caddyfile
-  sudo sed -i \"s/127.0.0.1:\$ACTIVE_PORT/127.0.0.1:\$NEW_PORT/g\" /etc/caddy/Caddyfile
+  if [ \"\$STAGING\" -eq 1 ]; then
+    sudo sed -i \"s/127.0.0.1:3002/127.0.0.1:\$NEW_PORT/g\" /etc/caddy/Caddyfile
+  else
+    sudo sed -i \"s/127.0.0.1:3000/127.0.0.1:\$NEW_PORT/g\" /etc/caddy/Caddyfile
+  fi
   sudo systemctl reload caddy
 
   echo \"✓ Hot-swap complete! Stopping previous service \$OLD_SERVICE...\"
