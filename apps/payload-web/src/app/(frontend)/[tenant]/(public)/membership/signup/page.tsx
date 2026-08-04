@@ -58,6 +58,7 @@ function MembershipForm() {
     address: "",
     tier: "individual", // 'individual' | 'household' | 'business'
     businessTierSlug: "local-sponsor", // 'local-sponsor' | 'community-champion'
+    recurringFrequency: "annual", // 'annual' | 'one_time'
     paymentMethod: "paypal", // 'paypal' | 'check'
     agreeEmails: true,
     password: "",
@@ -487,115 +488,177 @@ function MembershipForm() {
 
               {/* Tier Selection for Residential vs Business */}
               {intent !== "donation" ? (
-                memberCategory === "residential" ? (
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">
-                      Select Residential Tier
+                <>
+                  {memberCategory === "residential" ? (
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">
+                        Select Residential Tier
+                      </label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <label
+                          className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                            formData.tier === "individual"
+                              ? "border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/30"
+                              : "border-slate-200 dark:border-slate-700 hover:border-slate-300"
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="tier"
+                            value="individual"
+                            checked={formData.tier === "individual"}
+                            onChange={handleChange}
+                            className="sr-only"
+                          />
+                          <div className="font-bold text-slate-900 dark:text-white">Individual Member</div>
+                          <div className="text-2xl font-extrabold text-indigo-600 dark:text-indigo-400 mt-1">
+                            $10 <span className="text-sm font-normal text-slate-500">/ year</span>
+                          </div>
+                        </label>
+
+                        <label
+                          className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                            formData.tier === "household"
+                              ? "border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/30"
+                              : "border-slate-200 dark:border-slate-700 hover:border-slate-300"
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="tier"
+                            value="household"
+                            checked={formData.tier === "household"}
+                            onChange={handleChange}
+                            className="sr-only"
+                          />
+                          <div className="font-bold text-slate-900 dark:text-white">Household Member</div>
+                          <div className="text-2xl font-extrabold text-indigo-600 dark:text-indigo-400 mt-1">
+                            $20 <span className="text-sm font-normal text-slate-500">/ year</span>
+                          </div>
+                        </label>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">
+                        Select Business Sponsorship Tier
+                      </label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <label
+                          className={`p-5 rounded-xl border-2 cursor-pointer transition-all ${
+                            formData.businessTierSlug === "local-sponsor"
+                              ? "border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/30"
+                              : "border-slate-200 dark:border-slate-700 hover:border-slate-300"
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="businessTierSlug"
+                            value="local-sponsor"
+                            checked={formData.businessTierSlug === "local-sponsor"}
+                            onChange={handleChange}
+                            className="sr-only"
+                          />
+                          <div className="font-bold text-slate-900 dark:text-white text-base">
+                            Local Business Sponsor
+                          </div>
+                          <div className="text-2xl font-extrabold text-indigo-600 dark:text-indigo-400 mt-1">
+                            $100 <span className="text-sm font-normal text-slate-500">/ year</span>
+                          </div>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                            Includes directory listing & website sponsorship logo.
+                          </p>
+                        </label>
+
+                        <label
+                          className={`p-5 rounded-xl border-2 cursor-pointer transition-all ${
+                            formData.businessTierSlug === "community-champion"
+                              ? "border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/30"
+                              : "border-slate-200 dark:border-slate-700 hover:border-slate-300"
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="businessTierSlug"
+                            value="community-champion"
+                            checked={formData.businessTierSlug === "community-champion"}
+                            onChange={handleChange}
+                            className="sr-only"
+                          />
+                          <div className="font-bold text-slate-900 dark:text-white text-base">
+                            Community Champion
+                          </div>
+                          <div className="text-2xl font-extrabold text-indigo-600 dark:text-indigo-400 mt-1">
+                            $250 <span className="text-sm font-normal text-slate-500">/ year</span>
+                          </div>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                            Includes banner placement at Annual Garage Sale & National Night Out.
+                          </p>
+                        </label>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Payment Type & Frequency (Recurring vs One-Time) */}
+                  <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-700">
+                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
+                      Payment Type & Frequency *
                     </label>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <label
-                        className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                          formData.tier === "individual"
+                        className={`p-4 rounded-xl border-2 cursor-pointer transition-all flex items-start space-x-3 ${
+                          formData.recurringFrequency === "annual"
                             ? "border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/30"
                             : "border-slate-200 dark:border-slate-700 hover:border-slate-300"
                         }`}
                       >
                         <input
                           type="radio"
-                          name="tier"
-                          value="individual"
-                          checked={formData.tier === "individual"}
+                          name="recurringFrequency"
+                          value="annual"
+                          required
+                          checked={formData.recurringFrequency === "annual"}
                           onChange={handleChange}
-                          className="sr-only"
+                          className="mt-1 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-slate-300"
                         />
-                        <div className="font-bold text-slate-900 dark:text-white">Individual Member</div>
-                        <div className="text-2xl font-extrabold text-indigo-600 dark:text-indigo-400 mt-1">
-                          $10 <span className="text-sm font-normal text-slate-500">/ year</span>
+                        <div>
+                          <div className="font-bold text-slate-900 dark:text-white text-sm">
+                            🔄 Yearly Recurring Payment
+                          </div>
+                          <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                            Annual membership dues (renews each year).
+                          </div>
                         </div>
                       </label>
 
                       <label
-                        className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                          formData.tier === "household"
+                        className={`p-4 rounded-xl border-2 cursor-pointer transition-all flex items-start space-x-3 ${
+                          formData.recurringFrequency === "one_time"
                             ? "border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/30"
                             : "border-slate-200 dark:border-slate-700 hover:border-slate-300"
                         }`}
                       >
                         <input
                           type="radio"
-                          name="tier"
-                          value="household"
-                          checked={formData.tier === "household"}
+                          name="recurringFrequency"
+                          value="one_time"
+                          required
+                          checked={formData.recurringFrequency === "one_time"}
                           onChange={handleChange}
-                          className="sr-only"
+                          className="mt-1 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-slate-300"
                         />
-                        <div className="font-bold text-slate-900 dark:text-white">Household Member</div>
-                        <div className="text-2xl font-extrabold text-indigo-600 dark:text-indigo-400 mt-1">
-                          $20 <span className="text-sm font-normal text-slate-500">/ year</span>
+                        <div>
+                          <div className="font-bold text-slate-900 dark:text-white text-sm">
+                            💳 One-Time Payment
+                          </div>
+                          <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                            Single 1-year contribution without auto-renew.
+                          </div>
                         </div>
                       </label>
                     </div>
                   </div>
-                ) : (
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">
-                      Select Business Sponsorship Tier
-                    </label>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <label
-                        className={`p-5 rounded-xl border-2 cursor-pointer transition-all ${
-                          formData.businessTierSlug === "local-sponsor"
-                            ? "border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/30"
-                            : "border-slate-200 dark:border-slate-700 hover:border-slate-300"
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          name="businessTierSlug"
-                          value="local-sponsor"
-                          checked={formData.businessTierSlug === "local-sponsor"}
-                          onChange={handleChange}
-                          className="sr-only"
-                        />
-                        <div className="font-bold text-slate-900 dark:text-white text-base">
-                          Local Business Sponsor
-                        </div>
-                        <div className="text-2xl font-extrabold text-indigo-600 dark:text-indigo-400 mt-1">
-                          $100 <span className="text-sm font-normal text-slate-500">/ year</span>
-                        </div>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                          Includes directory listing & website sponsorship logo.
-                        </p>
-                      </label>
-
-                      <label
-                        className={`p-5 rounded-xl border-2 cursor-pointer transition-all ${
-                          formData.businessTierSlug === "community-champion"
-                            ? "border-indigo-600 bg-indigo-50/50 dark:bg-indigo-950/30"
-                            : "border-slate-200 dark:border-slate-700 hover:border-slate-300"
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          name="businessTierSlug"
-                          value="community-champion"
-                          checked={formData.businessTierSlug === "community-champion"}
-                          onChange={handleChange}
-                          className="sr-only"
-                        />
-                        <div className="font-bold text-slate-900 dark:text-white text-base">
-                          Community Champion
-                        </div>
-                        <div className="text-2xl font-extrabold text-indigo-600 dark:text-indigo-400 mt-1">
-                          $250 <span className="text-sm font-normal text-slate-500">/ year</span>
-                        </div>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                          Includes banner placement at Annual Garage Sale & National Night Out.
-                        </p>
-                      </label>
-                    </div>
-                  </div>
-                )
+                </>
               ) : (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
