@@ -47,17 +47,18 @@ export async function POST(req: Request) {
           name,
           password: customPassword && customPassword.trim() ? customPassword.trim() : `P@ss-${Math.random().toString(36).slice(-8)}${Date.now()}`,
           role: "neighbor",
-          status: "pending",
+          status: "approved",
           isNeighbor: true,
           memberType: memberCategory === "business" ? "business" : "residential",
           unsubscribed: agreeEmails === false,
         },
       })
     } else {
-      await payload.update({
+      userRecord = await payload.update({
         collection: "users",
         id: userRecord.id,
         data: {
+          status: "approved",
           unsubscribed: agreeEmails === false,
         },
       })

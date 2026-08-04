@@ -50,7 +50,7 @@ export const Users: CollectionConfig = {
     {
       name: "role",
       type: "select",
-      defaultValue: "contributor",
+      defaultValue: "neighbor",
       options: [
         { label: "Super Admin", value: "superadmin" },
         { label: "Admin", value: "admin" },
@@ -65,7 +65,7 @@ export const Users: CollectionConfig = {
     {
       name: "status",
       type: "select",
-      defaultValue: "pending",
+      defaultValue: "approved",
       options: [
         { label: "Pending Approval", value: "pending" },
         { label: "Approved", value: "approved" },

@@ -36,16 +36,16 @@ export const usersBeforeChangeHook: CollectionBeforeChangeHook = async ({
   }
 
   // 2. Anonymous / Self-registration (no logged-in user) — create only.
-  // Updates without a session (e.g. unsubscribe/resubscribe) must not reset status.
   if (!user) {
     if (operation === "create") {
-      data.role = "contributor"
-      data.status = "pending"
+      if (!data.role) data.role = "neighbor"
+      if (!data.status) data.status = "approved"
 
       // Detect tenant from request context (host or referer)
-      const host = req.headers?.get?.("host") || ""
+      const host = (req.headers?.get?.("host") || "").replace(/^www\./, "").split(":")[0]
       const referer = req.headers?.get?.("referer") || ""
       let slug = ""
+      let refHost = ""
 
       const platformDomain = process.env.NEXT_PUBLIC_PLATFORM_DOMAIN || "blockvibe.org"
       const stagingDomain = process.env.NEXT_PUBLIC_STAGING_DOMAIN || "staging.blockvibe.org"
@@ -56,10 +56,12 @@ export const usersBeforeChangeHook: CollectionBeforeChangeHook = async ({
         slug = host.replace(`.${platformDomain}`, "").split(":")[0]
       } else if (host.includes(`.${stagingDomain}`)) {
         slug = host.replace(`.${stagingDomain}`, "").split(":")[0]
-      } else if (referer) {
+      }
+
+      if (referer) {
         try {
           const refUrl = new URL(referer)
-          const refHost = refUrl.hostname
+          refHost = refUrl.hostname.replace(/^www\./, "")
           if (refHost.includes(".localhost")) {
             slug = refHost.split(".")[0]
           } else if (refHost.includes(`.${platformDomain}`)) {
@@ -72,18 +74,20 @@ export const usersBeforeChangeHook: CollectionBeforeChangeHook = async ({
         }
       }
 
-      if (slug && slug !== "default" && slug !== "localhost") {
-        const tenantsResult = await payload.find({
-          collection: "tenants",
-          where: {
-            slug: { equals: slug },
-          },
-          limit: 1,
-        })
+      const tenantsResult = await payload.find({
+        collection: "tenants",
+        where: {
+          or: [
+            ...(host ? [{ domain: { equals: host } }] : []),
+            ...(refHost ? [{ domain: { equals: refHost } }] : []),
+            ...(slug && slug !== "default" && slug !== "localhost" ? [{ slug: { equals: slug } }] : []),
+          ],
+        },
+        limit: 1,
+      })
 
-        if (tenantsResult.docs.length > 0) {
-          data.tenants = [{ tenant: tenantsResult.docs[0].id }]
-        }
+      if (tenantsResult.docs.length > 0) {
+        data.tenants = [{ tenant: tenantsResult.docs[0].id }]
       }
     }
     return data
