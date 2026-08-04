@@ -25,6 +25,37 @@ export async function POST(req: Request) {
     return NextResponse.json(result)
   } catch (error: any) {
     console.error("PayPal confirmation error:", error)
-    return NextResponse.json({ error: error.message || "Failed to confirm PayPal payment." }, { status: 500 })
+  }
+}
+
+export async function GET(req: Request) {
+  const url = new URL(req.url)
+  const token = url.searchParams.get("token") // PayPal Order ID
+  const accountId = url.searchParams.get("accountId")
+  const userId = url.searchParams.get("userId")
+  const tier = (url.searchParams.get("tier") as any) || "individual"
+
+  if (!token || !accountId || !userId) {
+    return NextResponse.redirect(`${url.origin}/membership/signup?error=Missing+PayPal+confirmation+details`)
+  }
+
+  try {
+    const paymentService = new PaymentService()
+    await paymentService.capturePayPalOrder({
+      orderId: token,
+      accountId,
+      userId,
+      tier,
+      notes: "Captured via PayPal Web Checkout redirect",
+    })
+
+    return NextResponse.redirect(
+      `${url.origin}/membership/thank-you?accountId=${accountId}&method=paypal&tier=${tier}`
+    )
+  } catch (error: any) {
+    console.error("PayPal return redirect capture error:", error)
+    return NextResponse.redirect(
+      `${url.origin}/membership/signup?error=${encodeURIComponent(error.message || "Failed to capture PayPal payment")}`
+    )
   }
 }

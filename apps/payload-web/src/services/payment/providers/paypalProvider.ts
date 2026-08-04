@@ -31,8 +31,12 @@ export class PayPalProvider {
       return "MOCK-PAYPAL-ACCESS-TOKEN-LOCAL"
     }
 
-    const clientId = credentials.clientId || process.env.PAYPAL_CLIENT_ID || "mock-client-id"
-    const clientSecret = credentials.clientSecret || process.env.PAYPAL_CLIENT_SECRET || "mock-client-secret"
+    const clientId = credentials.clientId || process.env.PAYPAL_CLIENT_ID || ""
+    const clientSecret = credentials.clientSecret || process.env.PAYPAL_CLIENT_SECRET || ""
+
+    if (!clientId || !clientSecret) {
+      throw new Error("PayPal Client ID or Client Secret is missing in Payment Settings.")
+    }
 
     const baseUrl = this.getBaseUrl(credentials.environment)
     const authHeader = Buffer.from(`${clientId}:${clientSecret}`).toString("base64")
@@ -49,14 +53,16 @@ export class PayPalProvider {
 
       if (!res.ok) {
         const errorText = await res.text()
-        throw new Error(`Failed to obtain PayPal Access Token from ${baseUrl}: ${errorText}`)
+        throw new Error(`PayPal OAuth authentication failed (${res.status}): ${errorText}`)
       }
 
       const data = await res.json()
       return data.access_token
-    } catch {
-      // Fallback for offline local stub testing
-      return "MOCK-PAYPAL-ACCESS-TOKEN-LOCAL"
+    } catch (err: any) {
+      if (this.isStubMode(credentials)) {
+        return "MOCK-PAYPAL-ACCESS-TOKEN-LOCAL"
+      }
+      throw new Error(err.message || `Failed to authenticate with PayPal at ${baseUrl}`)
     }
   }
 
@@ -78,13 +84,14 @@ export class PayPalProvider {
     try {
       const accessToken = await this.getAccessToken(credentials)
       const baseUrl = this.getBaseUrl(credentials.environment)
+      const baseUrlSite = process.env.NEXT_PUBLIC_SERVER_URL || "https://www.northofgranddsm.org"
 
       const payload = {
         intent: "CAPTURE",
         purchase_units: [
           {
             reference_id: params.accountId,
-            description: `${params.tier.toUpperCase()} Annual Membership Dues`,
+            description: params.notes || `${params.tier.toUpperCase()} Membership Contribution`,
             amount: {
               currency_code: params.currency || "USD",
               value: params.amount.toFixed(2),
@@ -92,9 +99,11 @@ export class PayPalProvider {
           },
         ],
         application_context: {
-          brand_name: "Community Membership",
+          brand_name: "North of Grand Neighborhood Association",
           landing_page: "NO_PREFERENCE",
           user_action: "PAY_NOW",
+          return_url: `${baseUrlSite}/api/membership/confirm-paypal?accountId=${params.accountId}&userId=${params.userId}&tier=${params.tier}`,
+          cancel_url: `${baseUrlSite}/membership/signup`,
         },
       }
 
@@ -109,11 +118,15 @@ export class PayPalProvider {
 
       if (!res.ok) {
         const errorText = await res.text()
-        throw new Error(`PayPal Create Order Error from ${baseUrl}: ${errorText}`)
+        throw new Error(`PayPal Order Creation Failed (${res.status}): ${errorText}`)
       }
 
       const orderData = await res.json()
       const approvalLink = orderData.links?.find((link: any) => link.rel === "approve")?.href
+
+      if (!approvalLink) {
+        throw new Error("PayPal response did not contain an approval link.")
+      }
 
       return {
         orderId: orderData.id,
@@ -122,16 +135,18 @@ export class PayPalProvider {
         amount: params.amount,
         currency: params.currency || "USD",
       }
-    } catch {
-      // Fallback for offline local stub testing
-      const mockOrderId = `MOCK-ORD-${ulid().slice(-10)}`
-      return {
-        orderId: mockOrderId,
-        approvalUrl: undefined,
-        provider: "paypal",
-        amount: params.amount,
-        currency: params.currency || "USD",
+    } catch (err: any) {
+      if (this.isStubMode(credentials)) {
+        const mockOrderId = `MOCK-ORD-${ulid().slice(-10)}`
+        return {
+          orderId: mockOrderId,
+          approvalUrl: undefined,
+          provider: "paypal",
+          amount: params.amount,
+          currency: params.currency || "USD",
+        }
       }
+      throw err
     }
   }
 
