@@ -122,10 +122,13 @@ export class PayPalProvider {
       }
 
       const orderData = await res.json()
-      const approvalLink = orderData.links?.find((link: any) => link.rel === "approve")?.href
+      const approvalLink = orderData.links?.find(
+        (link: any) => link.rel === "approve" || link.rel === "payer-action"
+      )?.href
 
       if (!approvalLink) {
-        throw new Error("PayPal response did not contain an approval link.")
+        const availableRels = orderData.links?.map((l: any) => l.rel).join(", ") || "none"
+        throw new Error(`PayPal order created (${orderData.id}) but no redirect link found. Links: ${availableRels}`)
       }
 
       return {
