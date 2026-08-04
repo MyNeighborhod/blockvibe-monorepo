@@ -36,9 +36,16 @@ function MembershipForm() {
 
   // Merchandise Add-ons
   const [includeTshirt, setIncludeTshirt] = useState(false)
+  const [tshirtStyle, setTshirtStyle] = useState("Tee Shirt") // 'Tee Shirt' | 'Tank Top'
   const [tshirtSize, setTshirtSize] = useState("M")
+
   const [includeMug, setIncludeMug] = useState(false)
+  const [includeMedallion, setIncludeMedallion] = useState(false)
+  const [includeTote, setIncludeTote] = useState(false)
   const [includeMagnet, setIncludeMagnet] = useState(false)
+
+  const [includeOldTshirt, setIncludeOldTshirt] = useState(false)
+  const [oldTshirtSize, setOldTshirtSize] = useState("M")
 
   const [formData, setFormData] = useState({
     name: "",
@@ -81,7 +88,13 @@ function MembershipForm() {
       : 10
 
   const merchTotal =
-    (includeTshirt ? 25 : 0) + (includeMug ? 15 : 0) + (includeMagnet ? 5 : 0)
+    (includeTshirt ? 25 : 0) +
+    (includeMug ? 15 : 0) +
+    (includeMedallion ? 35 : 0) +
+    (includeTote ? 10 : 0) +
+    (includeMagnet ? 2 : 0) +
+    (includeOldTshirt ? 10 : 0)
+
   const calculatedTotal = baseAmount + merchTotal
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -97,9 +110,12 @@ function MembershipForm() {
     setError(null)
 
     const merchNotes = [
-      includeTshirt ? `T-Shirt (Size: ${tshirtSize})` : null,
+      includeTshirt ? `T-Shirt/Tank Top (${tshirtStyle}, Size: ${tshirtSize}) - $25` : null,
       includeMug ? "Mug ($15)" : null,
-      includeMagnet ? "Car Magnet ($5)" : null,
+      includeMedallion ? "Medallion ($35)" : null,
+      includeTote ? "Tote ($10)" : null,
+      includeMagnet ? "Magnet ($2)" : null,
+      includeOldTshirt ? `Old Tee Shirt Design (Limited Sizes: ${oldTshirtSize}) - $10` : null,
     ]
       .filter(Boolean)
       .join(", ")
@@ -237,6 +253,19 @@ function MembershipForm() {
 
         {/* Main Card */}
         <div className="bg-white dark:bg-slate-800 rounded-3xl p-8 border border-slate-200 dark:border-slate-700 shadow-2xl space-y-6">
+          {/* 501(c)(3) Non-Profit Badge */}
+          <div className="flex items-center space-x-3 p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-emerald-900 dark:text-emerald-200 text-xs sm:text-sm">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white font-black text-xs shadow-sm">
+              501c3
+            </span>
+            <div>
+              <div className="font-bold">Registered 501(c)(3) Non-Profit Organization</div>
+              <div className="text-xs text-emerald-700 dark:text-emerald-300/80">
+                All donations and membership dues support North of Grand community projects. Contributions are tax-deductible to the extent allowed by law.
+              </div>
+            </div>
+          </div>
+
           {error && (
             <div className="p-4 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-sm">
               {error}
@@ -650,8 +679,8 @@ function MembershipForm() {
                 </h3>
 
                 <div className="space-y-3">
-                  {/* T-Shirt */}
-                  <div className="flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-700/30">
+                  {/* Tee Shirt / Tank Top */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-700/30 gap-3">
                     <label className="flex items-center space-x-3 cursor-pointer">
                       <input
                         type="checkbox"
@@ -660,23 +689,33 @@ function MembershipForm() {
                         className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500"
                       />
                       <div>
-                        <div className="font-bold text-slate-900 dark:text-white">NOG T-Shirt (+$25)</div>
+                        <div className="font-bold text-slate-900 dark:text-white">Tee Shirt / Tank Top (+$25)</div>
                         <div className="text-xs text-slate-500 dark:text-slate-400">Available in sizes S to 2XL</div>
                       </div>
                     </label>
 
                     {includeTshirt && (
-                      <select
-                        value={tshirtSize}
-                        onChange={(e) => setTshirtSize(e.target.value)}
-                        className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-xs font-bold"
-                      >
-                        <option value="S">Size S</option>
-                        <option value="M">Size M</option>
-                        <option value="L">Size L</option>
-                        <option value="XL">Size XL</option>
-                        <option value="2XL">Size 2XL</option>
-                      </select>
+                      <div className="flex items-center space-x-2 pl-8 sm:pl-0">
+                        <select
+                          value={tshirtStyle}
+                          onChange={(e) => setTshirtStyle(e.target.value)}
+                          className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-xs font-bold"
+                        >
+                          <option value="Tee Shirt">Tee Shirt</option>
+                          <option value="Tank Top">Tank Top</option>
+                        </select>
+                        <select
+                          value={tshirtSize}
+                          onChange={(e) => setTshirtSize(e.target.value)}
+                          className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-xs font-bold"
+                        >
+                          <option value="S">Size S</option>
+                          <option value="M">Size M</option>
+                          <option value="L">Size L</option>
+                          <option value="XL">Size XL</option>
+                          <option value="2XL">Size 2XL</option>
+                        </select>
+                      </div>
                     )}
                   </div>
 
@@ -690,8 +729,40 @@ function MembershipForm() {
                         className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500"
                       />
                       <div>
-                        <div className="font-bold text-slate-900 dark:text-white">NOG Coffee Mug (+$15)</div>
+                        <div className="font-bold text-slate-900 dark:text-white">Coffee Mug (+$15)</div>
                         <div className="text-xs text-slate-500 dark:text-slate-400">Classic ceramic neighborhood mug</div>
+                      </div>
+                    </label>
+                  </div>
+
+                  {/* Medallion */}
+                  <div className="flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-700/30">
+                    <label className="flex items-center space-x-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={includeMedallion}
+                        onChange={(e) => setIncludeMedallion(e.target.checked)}
+                        className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500"
+                      />
+                      <div>
+                        <div className="font-bold text-slate-900 dark:text-white">Medallion (+$35)</div>
+                        <div className="text-xs text-slate-500 dark:text-slate-400">Custom commemorative medallion</div>
+                      </div>
+                    </label>
+                  </div>
+
+                  {/* Tote */}
+                  <div className="flex items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-700/30">
+                    <label className="flex items-center space-x-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={includeTote}
+                        onChange={(e) => setIncludeTote(e.target.checked)}
+                        className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500"
+                      />
+                      <div>
+                        <div className="font-bold text-slate-900 dark:text-white">Tote Bag (+$10)</div>
+                        <div className="text-xs text-slate-500 dark:text-slate-400">Reusable canvas tote bag</div>
                       </div>
                     </label>
                   </div>
@@ -706,10 +777,40 @@ function MembershipForm() {
                         className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500"
                       />
                       <div>
-                        <div className="font-bold text-slate-900 dark:text-white">Car Magnet / Badge (+$5)</div>
-                        <div className="text-xs text-slate-500 dark:text-slate-400">Weatherproof full color vinyl</div>
+                        <div className="font-bold text-slate-900 dark:text-white">Magnet (+$2)</div>
+                        <div className="text-xs text-slate-500 dark:text-slate-400">Full color neighborhood magnet</div>
                       </div>
                     </label>
+                  </div>
+
+                  {/* Old Tee Shirt Design */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-700/30 gap-3">
+                    <label className="flex items-center space-x-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={includeOldTshirt}
+                        onChange={(e) => setIncludeOldTshirt(e.target.checked)}
+                        className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500"
+                      />
+                      <div>
+                        <div className="font-bold text-slate-900 dark:text-white">Old Tee Shirt Design (+$10)</div>
+                        <div className="text-xs text-slate-500 dark:text-slate-400">Limited sizes available</div>
+                      </div>
+                    </label>
+
+                    {includeOldTshirt && (
+                      <select
+                        value={oldTshirtSize}
+                        onChange={(e) => setOldTshirtSize(e.target.value)}
+                        className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-xs font-bold shrink-0 self-start sm:self-auto"
+                      >
+                        <option value="S">Size S</option>
+                        <option value="M">Size M</option>
+                        <option value="L">Size L</option>
+                        <option value="XL">Size XL</option>
+                        <option value="2XL">Size 2XL</option>
+                      </select>
+                    )}
                   </div>
                 </div>
               </div>
