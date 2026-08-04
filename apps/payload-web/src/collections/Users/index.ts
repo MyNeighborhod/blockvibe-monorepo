@@ -21,7 +21,7 @@ export const Users: CollectionConfig = {
   },
   admin: {
     defaultColumns: ["name", "email", "role", "status"],
-    useAsTitle: "name",
+    useAsTitle: "email",
   },
   auth: {
     cookies: {

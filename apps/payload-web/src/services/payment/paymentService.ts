@@ -308,6 +308,19 @@ export class PaymentService {
           const formattedAmount = `$${opts.amount.toFixed(2)}`
           const isDonation = opts.tier === "donation" || opts.notes?.toLowerCase().includes("donation")
 
+          let tenantWebsiteUrl = "https://www.northofgranddsm.org"
+          if (tenantDoc) {
+            if ((tenantDoc as any).slug === "nog") {
+              tenantWebsiteUrl = "https://www.northofgranddsm.org"
+            } else if ((tenantDoc as any).domain && (tenantDoc as any).domain.trim()) {
+              const cleanDomain = (tenantDoc as any).domain.replace(/^https?:\/\//, "").replace(/\/$/, "")
+              tenantWebsiteUrl = `https://${cleanDomain}`
+            } else if ((tenantDoc as any).slug) {
+              tenantWebsiteUrl = `https://${(tenantDoc as any).slug}.blockvibe.org`
+            }
+          }
+          const displayWebsiteDomain = tenantWebsiteUrl.replace(/^https?:\/\//, "")
+
           await sendTransactionalEmail(payload, {
             to: userRecord.email,
             tenant: tenantDoc as Parameters<typeof sendTransactionalEmail>[1]["tenant"],
@@ -317,14 +330,18 @@ export class PaymentService {
             html: `
               <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; color: #1e293b; border: 1px solid #e2e8f0; border-radius: 12px;">
                 <div style="text-align: center; padding-bottom: 20px; border-bottom: 2px solid #6366f1;">
-                  <h1 style="color: #4f46e5; margin: 0; font-size: 22px;">${orgName}</h1>
-                  <p style="color: #64748b; font-size: 14px; margin-top: 4px;">Official Payment & Receipt</p>
+                  <h1 style="color: #4f46e5; margin: 0; font-size: 22px;">
+                    <a href="${tenantWebsiteUrl}" style="color: #4f46e5; text-decoration: none;">${orgName}</a>
+                  </h1>
+                  <p style="color: #64748b; font-size: 14px; margin-top: 4px;">
+                    Official Payment & Receipt &bull; <a href="${tenantWebsiteUrl}" style="color: #6366f1; text-decoration: underline;">${displayWebsiteDomain}</a>
+                  </p>
                 </div>
 
                 <div style="padding: 20px 0;">
                   <p style="font-size: 16px;">Dear ${userRecord.name || "Neighbor"},</p>
                   <p style="font-size: 15px; line-height: 1.6;">
-                    Thank you for your payment to <strong>${orgName}</strong>! Your support enables us to organize community events and maintain our neighborhood association.
+                    Thank you for your payment to <strong><a href="${tenantWebsiteUrl}" style="color: #4f46e5; text-decoration: none;">${orgName}</a></strong>! Your support enables us to organize community events and maintain our neighborhood association.
                   </p>
 
                   <div style="background-color: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 16px; margin: 20px 0;">
@@ -363,12 +380,12 @@ export class PaymentService {
                   }
 
                   <p style="font-size: 14px; color: #475569; line-height: 1.6;">
-                    If you have any questions regarding this receipt, please contact your neighborhood association board.
+                    If you have any questions regarding this receipt, please contact your neighborhood association board at <a href="${tenantWebsiteUrl}" style="color: #6366f1; text-decoration: underline;">${displayWebsiteDomain}</a>.
                   </p>
                 </div>
 
                 <div style="text-align: center; padding-top: 16px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #94a3b8;">
-                  <p style="margin: 0;">${orgName}</p>
+                  <p style="margin: 0; font-weight: bold;"><a href="${tenantWebsiteUrl}" style="color: #6366f1; text-decoration: none;">${orgName} (${displayWebsiteDomain})</a></p>
                   <p style="margin: 4px 0 0 0;">This is an automated transactional receipt for your records.</p>
                 </div>
               </div>

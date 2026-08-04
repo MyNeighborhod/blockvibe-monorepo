@@ -104,6 +104,8 @@ export async function POST(req: Request) {
       limit: 1,
     })
 
+    const userTenantData = matchedTenant ? [{ tenant: matchedTenant.id }] : undefined
+
     let userRecord = existingUsers.docs[0]
 
     if (!userRecord) {
@@ -118,15 +120,29 @@ export async function POST(req: Request) {
           isNeighbor: true,
           memberType: memberCategory === "business" ? "business" : "residential",
           unsubscribed: agreeEmails === false,
+          ...(userTenantData ? { tenants: userTenantData } : {}),
         },
       })
     } else {
+      const existingTenants = (userRecord as any).tenants || []
+      let updatedTenants = existingTenants
+      if (matchedTenant) {
+        const hasTenant = existingTenants.some((t: any) => {
+          const id = typeof t.tenant === "object" && t.tenant !== null ? t.tenant.id : t.tenant
+          return id === matchedTenant.id
+        })
+        if (!hasTenant) {
+          updatedTenants = [...existingTenants, { tenant: matchedTenant.id }]
+        }
+      }
+
       userRecord = await payload.update({
         collection: "users",
         id: userRecord.id,
         data: {
           status: "approved",
           unsubscribed: agreeEmails === false,
+          tenants: updatedTenants,
         },
       })
     }
