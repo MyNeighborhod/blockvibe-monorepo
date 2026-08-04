@@ -24,23 +24,33 @@ export class PaymentService {
       const payload = await getPayload({ config: configPromise })
       const settings = await payload.findGlobal({ slug: "payment-settings" as any })
 
-      let clientId = (settings as any)?.paypalClientId || process.env.PAYPAL_CLIENT_ID || ""
-      let clientSecret = (settings as any)?.paypalClientSecret || process.env.PAYPAL_CLIENT_SECRET || ""
-      let environment = ((settings as any)?.paypalEnvironment || process.env.PAYPAL_ENVIRONMENT || "live") as "sandbox" | "live"
+      let clientId = (settings as any)?.paypalClientId
+      let clientSecret = (settings as any)?.paypalClientSecret
+      let environment = ((settings as any)?.paypalEnvironment || "live") as "sandbox" | "live"
 
-      // Fail-safe fallback to live production credentials if DB settings are empty or set to mock
+      // Support sandbox env vars (e.g. on staging environment)
+      if ((!clientId || clientId === "mock" || clientId === "stub") && process.env.PAYPAL_SANDBOX_CLIENT) {
+        clientId = process.env.PAYPAL_SANDBOX_CLIENT
+        clientSecret = process.env.PAYPAL_SANDBOX_SECRET
+        environment = "sandbox"
+      }
+
+      // Fail-safe fallback to live production credentials if DB settings are empty and no sandbox env set
       if (!clientId || clientId === "mock" || clientId === "stub") {
         clientId = "Ad8WBOLNrxmM9DooNvS9dFqFYPRnjlF944D_n-l2Em-CKCeVhJE5BAfr2ZkEW1XyQYIJluMIOfesL0qo"
         clientSecret = "EBNQTY6CVH30Wa_VtpCeMYKXehos062hJeemWl1pCIcFlAauY2j-tLzBI1nRCp3BP2CgPMAwLVJ8_sSC"
         environment = "live"
       }
 
-      if (clientId && clientId.length > 20 && (environment === ("mock" as any))) {
-        environment = "live"
-      }
-
       return { clientId, clientSecret, environment }
     } catch {
+      if (process.env.PAYPAL_SANDBOX_CLIENT) {
+        return {
+          clientId: process.env.PAYPAL_SANDBOX_CLIENT,
+          clientSecret: process.env.PAYPAL_SANDBOX_SECRET || "",
+          environment: "sandbox",
+        }
+      }
       return {
         clientId: "Ad8WBOLNrxmM9DooNvS9dFqFYPRnjlF944D_n-l2Em-CKCeVhJE5BAfr2ZkEW1XyQYIJluMIOfesL0qo",
         clientSecret: "EBNQTY6CVH30Wa_VtpCeMYKXehos062hJeemWl1pCIcFlAauY2j-tLzBI1nRCp3BP2CgPMAwLVJ8_sSC",
