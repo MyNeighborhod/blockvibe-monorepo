@@ -380,7 +380,7 @@ export class PaymentService {
                   }
 
                   <p style="font-size: 14px; color: #475569; line-height: 1.6;">
-                    If you have any questions regarding this receipt, please contact your neighborhood association board at <a href="${tenantWebsiteUrl}" style="color: #6366f1; text-decoration: underline;">${displayWebsiteDomain}</a>.
+                    <em>Please note:</em> This email is sent from an automated system and cannot accept direct replies. For any additional questions or assistance, please reach out to <a href="mailto:northofgrandpresident@gmail.com" style="color: #6366f1; font-weight: bold; text-decoration: underline;">northofgrandpresident@gmail.com</a>.
                   </p>
                 </div>
 
