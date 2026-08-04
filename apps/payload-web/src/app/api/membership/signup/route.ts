@@ -22,6 +22,8 @@ export async function POST(req: Request) {
       password: customPassword,
     } = body
 
+    const siteOrigin = new URL(req.url).origin
+
     if (!email || !name) {
       return NextResponse.json({ error: "Name and Email are required." }, { status: 400 })
     }
@@ -126,6 +128,7 @@ export async function POST(req: Request) {
         recurringFrequency,
         amount: chargeAmount,
         notes: intent === "donation" ? "One-Time Donation" : `${intent.toUpperCase()} Dues`,
+        siteOrigin,
       })
 
       return NextResponse.json({

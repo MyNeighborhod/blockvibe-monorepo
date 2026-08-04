@@ -24,6 +24,8 @@ export interface CreateOrderParams {
   amount: number
   currency?: string
   notes?: string
+  /** Public site origin for PayPal return/cancel URLs (e.g. https://www.northofgranddsm.org). */
+  siteOrigin?: string
 }
 
 export interface CreateOrderResult {

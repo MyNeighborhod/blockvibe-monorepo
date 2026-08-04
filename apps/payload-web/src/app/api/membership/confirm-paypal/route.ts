@@ -25,6 +25,10 @@ export async function POST(req: Request) {
     return NextResponse.json(result)
   } catch (error: any) {
     console.error("PayPal confirmation error:", error)
+    return NextResponse.json(
+      { error: error.message || "Failed to capture PayPal payment." },
+      { status: 500 }
+    )
   }
 }
 
