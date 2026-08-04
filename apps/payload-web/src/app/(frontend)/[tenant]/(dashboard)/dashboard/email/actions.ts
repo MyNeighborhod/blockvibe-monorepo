@@ -22,6 +22,7 @@ import type { EmailDeliveryMethod } from "@/utilities/gmailOAuth"
 import { mintBroadcastCompletionToken } from "@blockvibe/email-contracts"
 import { finalizeBroadcastDeliveryLog } from "@/utilities/broadcastDelivery"
 import { getEmailAccountForTenant, isEmailAccountConnected } from "@/utilities/emailSrvAccount"
+import { resolveTransactionalEmailFrom } from "@/utilities/transactionalEmail"
 
 const MAX_BROADCAST_IMAGE_BYTES = 5 * 1024 * 1024
 
@@ -150,6 +151,7 @@ export async function sendBroadcastAction(
     })
     const tenantSlug = tenantResult.slug
     const numericTenantId = typeof tenantId === "string" ? parseInt(tenantId, 10) : tenantId
+    const transactionalFrom = resolveTransactionalEmailFrom(tenantResult)
 
     const { user: senderUser } = await getMeUser()
     if (!senderUser) {
@@ -268,6 +270,8 @@ export async function sendBroadcastAction(
         campaign: {
           ...campaignBase,
           delivery: "ses",
+          fromAddress: transactionalFrom.address,
+          fromName: transactionalFrom.name,
         },
       })
     } else {
@@ -278,6 +282,7 @@ export async function sendBroadcastAction(
         resolvedMessage,
         host,
         tenantSlug,
+        tenant: tenantResult,
       })
       await finalizeBroadcastDeliveryLog(payload, broadcast.id, result)
     }

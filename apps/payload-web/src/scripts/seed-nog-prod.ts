@@ -350,7 +350,18 @@ async function run() {
   // 3. Create Tenant
   let tenant: any
   if (existingTenants.docs.length > 0) {
-    tenant = existingTenants.docs[0]
+    tenant = await payload.update({
+      collection: "tenants",
+      id: existingTenants.docs[0].id,
+      data: {
+        domain: "www.northofgranddsm.org",
+        organizationLegalName: "North of Grand Neighborhood Association",
+        is501c3: true,
+        transactionalEmailFrom: "northofgrandpresident@northofgranddsm.org",
+        transactionalEmailFromName: "North of Grand Neighborhood Association",
+        emailDeliveryDefault: "ses",
+      },
+    })
   } else {
     payload.logger.info("Creating NOG Tenant...")
     tenant = await payload.create({
@@ -360,6 +371,11 @@ async function run() {
         slug: "nog",
         domain: "www.northofgranddsm.org",
         template: "light",
+        organizationLegalName: "North of Grand Neighborhood Association",
+        is501c3: true,
+        transactionalEmailFrom: "northofgrandpresident@northofgranddsm.org",
+        transactionalEmailFromName: "North of Grand Neighborhood Association",
+        emailDeliveryDefault: "ses",
       },
     })
   }

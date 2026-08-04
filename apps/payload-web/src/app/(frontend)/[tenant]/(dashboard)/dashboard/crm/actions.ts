@@ -7,6 +7,7 @@ import crypto from "crypto"
 import { getMeUser } from "@/utilities/getMeUser"
 import { getUserTenantIds } from "@/access/roles"
 import { evaluateMailingList, compileRulesToQuery } from "@/utilities/crmEvaluator"
+import { sendTransactionalEmail } from "@/utilities/transactionalEmail"
 
 
 export async function sendInviteAction(name: string, email: string, tenantId: string | number) {
@@ -104,11 +105,18 @@ export async function sendInviteAction(name: string, email: string, tenantId: st
     const protocol = host.includes("localhost") ? "http" : "https"
     const inviteUrl = `${protocol}://${host}/invite?token=${token}`
 
+    const numericTenantId = typeof tenantId === "string" ? parseInt(tenantId, 10) : tenantId
+    const tenantDoc = await payload.findByID({
+      collection: "tenants",
+      id: numericTenantId,
+    })
+
     // Send Email via Payload's transport configuration (invite record already created)
     try {
-      await payload.sendEmail({
+      await sendTransactionalEmail(payload, {
         to: email,
-        subject: `Invitation to join ${host}`,
+        tenant: tenantDoc,
+        subject: `Invitation to join ${tenantDoc.name || host}`,
         html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; rounded-lg;">
           <h2 style="color: #0f172a; margin-bottom: 16px;">Welcome to the Neighborhood Portal!</h2>

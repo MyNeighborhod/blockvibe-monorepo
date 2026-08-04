@@ -53,9 +53,10 @@ async function deliverToRecipient(params: {
 
 async function sendSesCampaign(message: CampaignJobMessage): Promise<BroadcastDeliveryResult> {
   const transporter = createSesTransporter()
-  const fromAddress = process.env.SMTP_FROM_ADDRESS || "info@blockvibe.org"
-  const fromName = process.env.SMTP_FROM_NAME || "BlockVibe"
   const { campaign } = message
+  const fromAddress =
+    campaign.fromAddress || process.env.SMTP_FROM_ADDRESS || "info@blockvibe.org"
+  const fromName = campaign.fromName || process.env.SMTP_FROM_NAME || "BlockVibe"
   const unsubscribeSecret = getUnsubscribeSecret()
   const result = emptyResult()
 

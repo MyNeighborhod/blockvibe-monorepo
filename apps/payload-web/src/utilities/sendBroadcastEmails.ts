@@ -1,7 +1,9 @@
 import type { BroadcastDeliveryResult } from "@blockvibe/email-contracts"
 import { buildBroadcastEmailHtml } from "@blockvibe/email-contracts"
 import type { Payload } from "payload"
+import type { Tenant } from "@/payload-types"
 import { refreshGoogleAccessToken, sendGmailHtmlEmail } from "./gmailOAuth"
+import { resolveTransactionalEmailFrom, formatEmailFrom } from "./transactionalEmail"
 
 function emptyResult(): BroadcastDeliveryResult {
   return { sentCount: 0, failedCount: 0, failedEmails: [] }
@@ -37,10 +39,12 @@ export async function sendBroadcastEmailsInline(params: {
   resolvedMessage: string
   host: string
   tenantSlug: string
+  tenant?: Partial<Tenant> | null
 }): Promise<BroadcastDeliveryResult> {
-  const { payload, activeEmails, subject, resolvedMessage, host, tenantSlug } = params
+  const { payload, activeEmails, subject, resolvedMessage, host, tenantSlug, tenant } = params
   const unsubscribeSecret = process.env.PAYLOAD_SECRET || "fallback-secret"
   const result = emptyResult()
+  const from = formatEmailFrom(resolveTransactionalEmailFrom(tenant))
 
   for (const email of activeEmails) {
     const html = buildBroadcastEmailHtml({
@@ -60,6 +64,7 @@ export async function sendBroadcastEmailsInline(params: {
           to: email,
           subject,
           html,
+          from,
         })
       },
     })

@@ -14,6 +14,7 @@ import type {
   MemberCategory,
   RecurringFrequency,
 } from "./types"
+import { sendTransactionalEmail } from "@/utilities/transactionalEmail"
 
 export class PaymentService {
   private paypalProvider = new PayPalProvider()
@@ -275,16 +276,19 @@ export class PaymentService {
         if (userRecord && userRecord.email) {
           let orgName = "North of Grand Neighborhood Association"
           let is501c3 = true
+          let tenantDoc: { organizationLegalName?: string | null; is501c3?: boolean | null; name?: string | null; slug?: string | null; transactionalEmailFrom?: string | null; transactionalEmailFromName?: string | null } | null = null
 
           // Dynamically resolve Tenant legal details & 501(c)(3) status
           if (userRecord.tenants && userRecord.tenants.length > 0) {
             const tenantObj = userRecord.tenants[0] as any
             const tenantId = typeof tenantObj.tenant === "object" ? tenantObj.tenant?.id : tenantObj.tenant
             if (tenantId) {
-              const tenantDoc = await payload.findByID({
-                collection: "tenants" as any,
-                id: tenantId,
-              }).catch(() => null)
+              tenantDoc = await payload
+                .findByID({
+                  collection: "tenants" as any,
+                  id: tenantId,
+                })
+                .catch(() => null)
 
               if (tenantDoc) {
                 orgName = (tenantDoc as any).organizationLegalName || tenantDoc.name || orgName
@@ -304,8 +308,9 @@ export class PaymentService {
           const formattedAmount = `$${opts.amount.toFixed(2)}`
           const isDonation = opts.tier === "donation" || opts.notes?.toLowerCase().includes("donation")
 
-          await payload.sendEmail({
+          await sendTransactionalEmail(payload, {
             to: userRecord.email,
+            tenant: tenantDoc as Parameters<typeof sendTransactionalEmail>[1]["tenant"],
             subject: isDonation
               ? `Tax Receipt: Thank You for Your Donation to ${orgName}`
               : `Thank You for Your Payment - ${orgName}`,

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { PaymentService } from "@/services/payment/paymentService"
+import { resolvePublicOriginFromRequest } from "@/utilities/resolvePublicOrigin"
 
 export async function POST(req: Request) {
   try {
@@ -32,26 +33,8 @@ export async function POST(req: Request) {
   }
 }
 
-function resolvePublicOrigin(req: Request): string {
-  const url = new URL(req.url)
-  const hostHeader = req.headers.get("x-forwarded-host") || req.headers.get("host") || ""
-  const cleanHost = hostHeader.split(":")[0]
-  const proto = req.headers.get("x-forwarded-proto") || "https"
-
-  if (cleanHost && !cleanHost.includes("0.0.0.0") && !cleanHost.includes("127.0.0.1") && !cleanHost.includes("localhost")) {
-    return `${proto}://${cleanHost}`
-  }
-
-  const fromEnv = process.env.NEXT_PUBLIC_SERVER_URL?.replace(/\/$/, "")
-  if (fromEnv && !fromEnv.includes("0.0.0.0") && !fromEnv.includes("127.0.0.1") && !fromEnv.includes("localhost")) {
-    return fromEnv
-  }
-
-  return "https://www.northofgranddsm.org"
-}
-
 export async function GET(req: Request) {
-  const origin = resolvePublicOrigin(req)
+  const origin = resolvePublicOriginFromRequest(req)
   const url = new URL(req.url)
   const token = url.searchParams.get("token") // PayPal Order ID
   const accountId = url.searchParams.get("accountId")

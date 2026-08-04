@@ -49,6 +49,10 @@ export interface EnqueueCampaignRequest {
   gmail?: GmailCampaignCredentials
   /** Payload broadcasts row id for delivery status updates */
   broadcastId?: number
+  /** SES From address override (tenant transactional email) */
+  fromAddress?: string
+  /** SES From display name override */
+  fromName?: string
 }
 
 export interface EnqueueCampaignResponse {

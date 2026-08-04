@@ -64,5 +64,32 @@ export const Tenants: CollectionConfig = {
         description: "Check if this tenant is a registered 501(c)(3) tax-exempt organization.",
       },
     },
+    {
+      name: "emailDeliveryDefault",
+      type: "select",
+      defaultValue: "ses",
+      options: [
+        { label: "Platform SES", value: "ses" },
+        { label: "Neighborhood Gmail", value: "gmail" },
+      ],
+      admin: {
+        description: "Default delivery channel for Email Broadcaster.",
+      },
+    },
+    {
+      name: "transactionalEmailFrom",
+      type: "email",
+      admin: {
+        description:
+          "From address for transactional email (password reset, receipts, invites). Must be verified in SES.",
+      },
+    },
+    {
+      name: "transactionalEmailFromName",
+      type: "text",
+      admin: {
+        description: "Display name for transactional email From header.",
+      },
+    },
   ],
 }

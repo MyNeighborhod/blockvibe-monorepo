@@ -272,9 +272,25 @@ export interface Tenant {
    */
   template?: ('light' | 'dark' | 'auto') | null;
   /**
+   * Official legal entity name for receipts (e.g., North of Grand Neighborhood Association).
+   */
+  organizationLegalName?: string | null;
+  /**
+   * Check if this tenant is a registered 501(c)(3) tax-exempt organization.
+   */
+  is501c3?: boolean | null;
+  /**
    * Default delivery channel for Email Broadcaster.
    */
   emailDeliveryDefault?: ('ses' | 'gmail') | null;
+  /**
+   * From address for transactional email (password reset, receipts, invites). Must be verified in SES.
+   */
+  transactionalEmailFrom?: string | null;
+  /**
+   * Display name for transactional email From header.
+   */
+  transactionalEmailFromName?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -491,7 +507,7 @@ export interface User {
   /**
    * Access level control for user permissions.
    */
-  role?: ('superadmin' | 'admin' | 'editor' | 'contributor' | 'neighbor') | null;
+  role?: ('superadmin' | 'admin' | 'editor' | 'contributor') | null;
   /**
    * Approval status for registration staging area.
    */
@@ -1293,6 +1309,10 @@ export interface Membership {
   validUntil?: string | null;
   phone?: string | null;
   address?: string | null;
+  street?: string | null;
+  city?: string | null;
+  state?: string | null;
+  zipCode?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -2064,7 +2084,11 @@ export interface TenantsSelect<T extends boolean = true> {
   slug?: T;
   domain?: T;
   template?: T;
+  organizationLegalName?: T;
+  is501c3?: T;
   emailDeliveryDefault?: T;
+  transactionalEmailFrom?: T;
+  transactionalEmailFromName?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2227,6 +2251,10 @@ export interface MembershipsSelect<T extends boolean = true> {
   validUntil?: T;
   phone?: T;
   address?: T;
+  street?: T;
+  city?: T;
+  state?: T;
+  zipCode?: T;
   updatedAt?: T;
   createdAt?: T;
 }
