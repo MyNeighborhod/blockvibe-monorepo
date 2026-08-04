@@ -38,7 +38,7 @@ export const usersBeforeChangeHook: CollectionBeforeChangeHook = async ({
   // 2. Anonymous / Self-registration (no logged-in user) — create only.
   if (!user) {
     if (operation === "create") {
-      if (!data.role) data.role = "neighbor"
+      if (!data.role) data.role = "contributor"
       if (!data.status) data.status = "approved"
 
       // Detect tenant from request context (host or referer)

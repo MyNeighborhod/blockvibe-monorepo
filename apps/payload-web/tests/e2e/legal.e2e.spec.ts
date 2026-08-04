@@ -14,10 +14,11 @@ test.describe("Legal Pages (Terms of Service & Privacy Policy)", () => {
     const firstSectionHeading = page.locator("h2").first()
     await expect(firstSectionHeading).toHaveText("1. Legal Entity & Binding Agreement")
 
-    // Check custom anti-spam policies we added are present in the DOM
+    // Check transactional email policy and platform rules
     const termsBody = page.locator("body")
-    await expect(termsBody).toContainText("Invite-Only Restriction for Manual Additions")
-    await expect(termsBody).toContainText("Sponsored Message Injection")
+    await expect(termsBody).toContainText("Email Communications — Transactional Use Only")
+    await expect(termsBody).toContainText("Invite-only contacts")
+    await expect(termsBody).toContainText("Platform Sponsored Messages")
   })
 
   test("can load Privacy Policy on the default platform domain", async ({ page }) => {
@@ -30,9 +31,10 @@ test.describe("Legal Pages (Terms of Service & Privacy Policy)", () => {
     const firstSectionHeading = page.locator("h2").first()
     await expect(firstSectionHeading).toHaveText("1. Information We Collect")
 
-    // Check that it mentions our anti-abuse SNS webhooks
+    // Check transactional email policy reference
     const privacyBody = page.locator("body")
     await expect(privacyBody).toContainText("Amazon SNS webhooks")
+    await expect(privacyBody).toContainText("transactional email")
   })
 
   test("returns 404 for Terms of Service on a neighborhood subdomain (e.g., NOG)", async ({

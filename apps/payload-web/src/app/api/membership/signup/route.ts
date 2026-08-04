@@ -66,7 +66,7 @@ export async function POST(req: Request) {
           email: normalizedEmail,
           name,
           password: customPassword && customPassword.trim() ? customPassword.trim() : `P@ss-${Math.random().toString(36).slice(-8)}${Date.now()}`,
-          role: "neighbor",
+          role: "contributor",
           status: "approved",
           isNeighbor: true,
           memberType: memberCategory === "business" ? "business" : "residential",

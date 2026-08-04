@@ -53,20 +53,38 @@ export async function Footer() {
 
   if (tenant?.slug === "default") {
     return (
-      <footer className="mt-auto border-t border-gray-100 bg-white py-8">
-        <div className="container max-w-4xl mx-auto px-4 flex flex-col md:flex-row md:justify-between items-center text-xs text-gray-400 gap-4">
-          <p>© {new Date().getFullYear()} BlockVibe. All rights reserved.</p>
-          <nav className="flex gap-4">
-            {navItems.map(({ link }, i) => {
-              return (
+      <footer className="mt-auto border-t border-gray-200 bg-gray-50 py-10">
+        <div className="container max-w-4xl mx-auto px-4 flex flex-col gap-5">
+          <nav
+            aria-label="Legal and platform links"
+            className="flex flex-wrap justify-center md:justify-start items-center gap-x-5 gap-y-2 text-sm font-medium"
+          >
+            <Link
+              href="/terms"
+              className="text-gray-800 hover:text-emerald-700 underline-offset-4 hover:underline"
+            >
+              Terms of Service
+            </Link>
+            <span className="text-gray-300 select-none" aria-hidden="true">|</span>
+            <Link
+              href="/privacy"
+              className="text-gray-800 hover:text-emerald-700 underline-offset-4 hover:underline"
+            >
+              Privacy Policy
+            </Link>
+            {navItems.map(({ link }, i) => (
+              <React.Fragment key={i}>
+                <span className="text-gray-300 select-none" aria-hidden="true">|</span>
                 <CMSLink
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
-                  key={i}
+                  className="text-gray-600 hover:text-gray-900 underline-offset-4 hover:underline transition-colors"
                   {...link}
                 />
-              )
-            })}
+              </React.Fragment>
+            ))}
           </nav>
+          <p className="text-center md:text-left text-xs text-gray-500">
+            © {new Date().getFullYear()} BlockVibe · Tidier LLC
+          </p>
         </div>
       </footer>
     )

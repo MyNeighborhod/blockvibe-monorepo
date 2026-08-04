@@ -50,13 +50,12 @@ export const Users: CollectionConfig = {
     {
       name: "role",
       type: "select",
-      defaultValue: "neighbor",
+      defaultValue: "contributor",
       options: [
         { label: "Super Admin", value: "superadmin" },
         { label: "Admin", value: "admin" },
         { label: "Editor", value: "editor" },
         { label: "Contributor", value: "contributor" },
-        { label: "Neighbor Member", value: "neighbor" },
       ],
       admin: {
         description: "Access level control for user permissions.",

@@ -6,10 +6,11 @@ import path from "path"
 import { marked } from "marked"
 
 import { headers } from "next/headers"
+import { PlatformLegalFooterLinks } from "@/components/PlatformLegalFooterLinks"
 
 export const metadata: Metadata = {
   title: "Privacy Policy | BlockVibe",
-  description: "Privacy Policy for BlockVibe, operated by TIDIER, LLC.",
+  description: "Privacy Policy for BlockVibe, operated by Tidier LLC.",
 }
 
 interface PageProps {
@@ -63,7 +64,7 @@ export default async function PrivacyPolicyPage({ params }: PageProps) {
               Privacy Policy
             </h1>
             <p className="mt-4 text-sm text-gray-500 dark:text-zinc-400">
-              Last Updated: June 10, 2026 &bull; Effective Immediately
+              Last Updated: August 4, 2026 &bull; Effective Immediately
             </p>
           </header>
 
@@ -71,6 +72,10 @@ export default async function PrivacyPolicyPage({ params }: PageProps) {
             className="prose dark:prose-invert max-w-none text-gray-700 dark:text-zinc-300 leading-relaxed font-sans space-y-6"
             dangerouslySetInnerHTML={{ __html: html }}
           />
+
+          <footer className="mt-12 pt-8 border-t border-gray-150 dark:border-zinc-800">
+            <PlatformLegalFooterLinks />
+          </footer>
         </div>
       </div>
     </article>
