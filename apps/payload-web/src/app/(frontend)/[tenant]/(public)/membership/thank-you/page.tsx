@@ -87,7 +87,7 @@ export default function MembershipThankYouPage({
               Please mail your paper check (payable to <strong>North of Grand Neighborhood Association</strong>) to our treasurer.
             </p>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-              Include your Account ID (<code>{accountId}</code>) in the memo line. An admin will mark your membership active upon receipt.
+              Please include your <strong>email address</strong> on the check memo line so we can match your payment. An admin will mark your membership active upon receipt.
             </p>
           </div>
         )}
