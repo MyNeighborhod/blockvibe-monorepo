@@ -17,6 +17,9 @@ export async function GET() {
       enableCheckPayment: (settings as any)?.enableCheckPayment ?? true,
       enableResidentialMemberships: (settings as any)?.enableResidentialMemberships ?? true,
       enableBusinessMemberships: (settings as any)?.enableBusinessMemberships ?? false,
+      debugHasPaypalClientId: Boolean((settings as any)?.paypalClientId),
+      debugPaypalClientIdLength: ((settings as any)?.paypalClientId || "").length,
+      debugPaypalEnvironment: (settings as any)?.paypalEnvironment || "none",
     })
   } catch (error: any) {
     return NextResponse.json(
