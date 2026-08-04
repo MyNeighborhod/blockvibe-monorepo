@@ -163,13 +163,29 @@ export class PaymentService {
     const paymentId = ulid()
     const paidAtDate = new Date()
 
+    let parsedUserId: number | string = opts.userId
+    if (typeof opts.userId === "string" && !isNaN(Number(opts.userId))) {
+      parsedUserId = parseInt(opts.userId, 10)
+    }
+
+    if (!parsedUserId || (typeof parsedUserId === "number" && isNaN(parsedUserId))) {
+      const userDoc = await payload.find({
+        collection: "users",
+        where: { accountId: { equals: opts.accountId } },
+        limit: 1,
+      })
+      if (userDoc.docs[0]) {
+        parsedUserId = userDoc.docs[0].id
+      }
+    }
+
     // 1. Save entry to Payments collection
     await payload.create({
       collection: "payments" as any,
       data: {
         paymentId,
         accountId: opts.accountId,
-        user: opts.userId,
+        user: parsedUserId,
         provider: opts.provider,
         providerTransactionId: opts.providerTransactionId,
         amount: opts.amount,
@@ -177,7 +193,7 @@ export class PaymentService {
         status: "completed",
         paidAt: paidAtDate.toISOString(),
         notes: opts.notes || "",
-        recordedBy: opts.recordedByUserId || undefined,
+        recordedBy: opts.recordedByUserId ? (typeof opts.recordedByUserId === "string" && !isNaN(Number(opts.recordedByUserId)) ? parseInt(opts.recordedByUserId, 10) : opts.recordedByUserId) : undefined,
       },
     })
 
@@ -243,7 +259,7 @@ export class PaymentService {
       try {
         const userRecord = await payload.findByID({
           collection: "users",
-          id: opts.userId as any,
+          id: parsedUserId as any,
         })
 
         if (userRecord && userRecord.email) {
