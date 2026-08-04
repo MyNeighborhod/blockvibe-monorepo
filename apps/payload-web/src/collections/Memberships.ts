@@ -137,6 +137,22 @@ export const Memberships: CollectionConfig = {
       name: "address",
       type: "text",
     },
+    {
+      name: "street",
+      type: "text",
+    },
+    {
+      name: "city",
+      type: "text",
+    },
+    {
+      name: "state",
+      type: "text",
+    },
+    {
+      name: "zipCode",
+      type: "text",
+    },
   ],
   timestamps: true,
 }

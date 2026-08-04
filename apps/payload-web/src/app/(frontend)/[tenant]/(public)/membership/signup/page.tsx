@@ -44,6 +44,10 @@ function MembershipForm() {
     name: "",
     email: urlEmail || "",
     phone: "",
+    street: "",
+    city: "Des Moines",
+    state: "IA",
+    zipCode: "50312",
     address: "",
     tier: "individual", // 'individual' | 'household' | 'business'
     businessTierSlug: "local-sponsor", // 'local-sponsor' | 'community-champion'
@@ -335,20 +339,6 @@ function MembershipForm() {
 
                   <div>
                     <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                      Street Address
-                    </label>
-                    <input
-                      type="text"
-                      name="address"
-                      value={formData.address}
-                      onChange={handleChange}
-                      placeholder="123 Oak Street"
-                      className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                       Account Password (Optional)
                     </label>
                     <input
@@ -359,6 +349,67 @@ function MembershipForm() {
                       placeholder="Choose password (or reset anytime via email)"
                       className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                     />
+                  </div>
+                </div>
+
+                {/* Address: Street, City, State, ZIP */}
+                <div className="space-y-4 pt-2">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                      Street Address
+                    </label>
+                    <input
+                      type="text"
+                      name="street"
+                      value={formData.street}
+                      onChange={handleChange}
+                      placeholder="1234 42nd Street"
+                      className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-6 gap-3">
+                    <div className="col-span-6 sm:col-span-3">
+                      <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                        City
+                      </label>
+                      <input
+                        type="text"
+                        name="city"
+                        value={formData.city}
+                        onChange={handleChange}
+                        placeholder="Des Moines"
+                        className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                      />
+                    </div>
+
+                    <div className="col-span-3 sm:col-span-1">
+                      <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                        State
+                      </label>
+                      <input
+                        type="text"
+                        name="state"
+                        value={formData.state}
+                        onChange={handleChange}
+                        placeholder="IA"
+                        className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                      />
+                    </div>
+
+                    <div className="col-span-3 sm:col-span-2">
+                      <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                        ZIP Code
+                      </label>
+                      <input
+                        type="text"
+                        name="zipCode"
+                        value={formData.zipCode}
+                        onChange={handleChange}
+                        placeholder="50312"
+                        className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                      />
+                    </div>
                   </div>
                 </div>
 

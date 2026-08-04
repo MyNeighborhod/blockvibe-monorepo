@@ -11,6 +11,10 @@ export async function POST(req: Request) {
       name,
       phone,
       address,
+      street,
+      city,
+      state: addressState,
+      zipCode,
       tier = "individual",
       memberCategory = "residential",
       businessTierSlug,
@@ -101,13 +105,21 @@ export async function POST(req: Request) {
         limit: 1,
       })
 
+      const fullAddress =
+        address ||
+        [street, city, addressState, zipCode].filter((s) => s && String(s).trim() !== "").join(", ")
+
       const membershipData = {
         memberCategory,
         tier,
         businessTierSlug: businessTierSlug || undefined,
         recurringFrequency: recurringFrequency || "annual",
         phone: phone || "",
-        address: address || "",
+        address: fullAddress || "",
+        street: street || "",
+        city: city || "",
+        state: addressState || "",
+        zipCode: zipCode || "",
       }
 
       if (existingMembership.docs.length === 0) {
