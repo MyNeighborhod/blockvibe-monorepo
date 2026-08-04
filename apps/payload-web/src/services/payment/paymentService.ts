@@ -72,18 +72,50 @@ export class PaymentService {
       throw new Error("PayPal payment capture was not completed.")
     }
 
-    return this.applyPaymentLedgerAndUpdateMembership({
-      accountId: params.accountId,
-      userId: params.userId,
-      tier: params.tier,
-      memberCategory: params.memberCategory,
-      businessTierSlug: params.businessTierSlug,
-      recurringFrequency: params.recurringFrequency,
-      provider: "paypal",
-      providerTransactionId: capture.captureId,
-      amount: capture.amount,
-      notes: params.notes || "PayPal Online Payment",
-    })
+    try {
+      return await this.applyPaymentLedgerAndUpdateMembership({
+        accountId: params.accountId,
+        userId: params.userId,
+        tier: params.tier,
+        memberCategory: params.memberCategory,
+        businessTierSlug: params.businessTierSlug,
+        recurringFrequency: params.recurringFrequency,
+        provider: "paypal",
+        providerTransactionId: capture.captureId,
+        amount: capture.amount,
+        notes: params.notes || "PayPal Online Payment",
+      })
+    } catch (err: any) {
+      console.error("[CRITICAL FAILURE] Payment captured via PayPal but post-processing failed:", err)
+
+      try {
+        const payload = await getPayload({ config: configPromise })
+        await payload.sendEmail({
+          to: "eugen8@gmail.com",
+          subject: "🚨 ALERT: PayPal Payment Captured But Post-Processing Failed",
+          html: `
+            <div style="font-family: sans-serif; padding: 20px; line-height: 1.6; color: #1e293b;">
+              <h2 style="color: #dc2626;">🚨 Emergency Alert: Payment Post-Processing Failed</h2>
+              <p>A payment was <strong>successfully captured via PayPal</strong>, but updating the database (payment ledger entry or activating membership status) encountered a failure.</p>
+              
+              <table style="width: 100%; border-collapse: collapse; margin: 15px 0;">
+                <tr><td style="font-weight: bold; padding: 6px; width: 180px;">PayPal Transaction ID:</td><td>${capture.captureId}</td></tr>
+                <tr><td style="font-weight: bold; padding: 6px;">Amount Captured:</td><td>$${capture.amount.toFixed(2)}</td></tr>
+                <tr><td style="font-weight: bold; padding: 6px;">Account ID (ULID):</td><td>${params.accountId}</td></tr>
+                <tr><td style="font-weight: bold; padding: 6px;">User ID:</td><td>${params.userId}</td></tr>
+                <tr><td style="font-weight: bold; padding: 6px;">Tier:</td><td>${params.tier}</td></tr>
+                <tr><td style="font-weight: bold; padding: 6px;">Error Trace:</td><td style="color: #dc2626; font-family: monospace;">${err.message || String(err)}</td></tr>
+              </table>
+              <p style="margin-top: 20px; font-size: 13px; color: #64748b;">Please review the Payload CMS admin dashboard or database logs to verify this account.</p>
+            </div>
+          `,
+        })
+      } catch (emailErr) {
+        console.error("Failed to send emergency alert email to eugen8@gmail.com:", emailErr)
+      }
+
+      throw new Error(`Payment captured (${capture.captureId}) but post-processing error occurred: ${err.message}`)
+    }
   }
 
   async recordManualPayment(params: RecordManualPaymentParams): Promise<ProcessedPaymentResult> {
