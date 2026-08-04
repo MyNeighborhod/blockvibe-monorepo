@@ -723,9 +723,15 @@ function MembershipForm() {
 
               {/* Optional Merchandise Add-ons */}
               <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-700">
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-                  Add Official Merchandise (Optional)
-                </h3>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                    Add Official Merchandise (Optional)
+                  </h3>
+                  <p className="mt-1 text-sm font-bold text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 p-3 rounded-xl border border-amber-200 dark:border-amber-800/60 flex items-center gap-2">
+                    <span>⚠️</span>
+                    <span><strong>Please check merch availability first</strong> before completing your payment by reaching out to <strong>northofgrandpresident@gmail.com</strong>.</span>
+                  </p>
+                </div>
 
                 <div className="space-y-3">
                   {/* Tee Shirt / Tank Top */}
