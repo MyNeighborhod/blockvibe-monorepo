@@ -46,10 +46,14 @@ export class PayPalProvider {
 
   private resolveSiteOrigin(params: CreateOrderParams): string {
     const fromParams = params.siteOrigin?.replace(/\/$/, "")
-    if (fromParams) return fromParams
+    if (fromParams && !fromParams.includes("0.0.0.0") && !fromParams.includes("127.0.0.1") && !fromParams.includes("localhost")) {
+      return fromParams
+    }
 
     const fromEnv = process.env.NEXT_PUBLIC_SERVER_URL?.replace(/\/$/, "")
-    if (fromEnv) return fromEnv
+    if (fromEnv && !fromEnv.includes("0.0.0.0") && !fromEnv.includes("127.0.0.1") && !fromEnv.includes("localhost")) {
+      return fromEnv
+    }
 
     return "https://www.northofgranddsm.org"
   }

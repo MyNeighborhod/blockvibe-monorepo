@@ -7,7 +7,7 @@ describe("resolvePayPalApiBaseUrl", () => {
   beforeEach(() => {
     delete process.env.PAYPAL_API_BASE_URL
     delete process.env.PAYPAL_API_URL
-    process.env.NODE_ENV = "production"
+    ;(process.env as any).NODE_ENV = "production"
   })
 
   afterEach(() => {
@@ -25,7 +25,7 @@ describe("resolvePayPalApiBaseUrl", () => {
   })
 
   it("allows local stub URL during development", () => {
-    process.env.NODE_ENV = "development"
+    ;(process.env as any).NODE_ENV = "development"
     process.env.PAYPAL_API_BASE_URL = "http://localhost:3000/api/testutils/paypal"
     expect(resolvePayPalApiBaseUrl("sandbox")).toBe("http://localhost:3000/api/testutils/paypal")
   })

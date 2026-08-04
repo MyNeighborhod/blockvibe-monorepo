@@ -22,7 +22,21 @@ export async function POST(req: Request) {
       password: customPassword,
     } = body
 
-    const siteOrigin = new URL(req.url).origin
+    const referer = req.headers.get("referer")
+    const host = req.headers.get("x-forwarded-host") || req.headers.get("host") || ""
+    const proto = req.headers.get("x-forwarded-proto") || "https"
+
+    let siteOrigin = "https://www.northofgranddsm.org"
+    if (referer) {
+      try {
+        const refUrl = new URL(referer)
+        if (!refUrl.hostname.includes("0.0.0.0") && !refUrl.hostname.includes("127.0.0.1")) {
+          siteOrigin = refUrl.origin
+        }
+      } catch {}
+    } else if (host && !host.includes("0.0.0.0") && !host.includes("127.0.0.1")) {
+      siteOrigin = `${proto}://${host}`
+    }
 
     if (!email || !name) {
       return NextResponse.json({ error: "Name and Email are required." }, { status: 400 })
