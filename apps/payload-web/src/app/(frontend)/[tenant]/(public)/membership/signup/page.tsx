@@ -20,20 +20,6 @@ function MembershipForm() {
   const [paymentSupportEmail, setPaymentSupportEmail] = useState("northofgrandpresident@gmail.com")
   const [enableBusinessMemberships, setEnableBusinessMemberships] = useState(false)
 
-  useEffect(() => {
-    fetch("/api/payment-settings")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.paymentSupportEmail) {
-          setPaymentSupportEmail(data.paymentSupportEmail)
-        }
-        if (typeof data.enableBusinessMemberships === "boolean") {
-          setEnableBusinessMemberships(data.enableBusinessMemberships)
-        }
-      })
-      .catch(() => {})
-  }, [])
-
   // Merchandise Add-ons
   const [includeTshirt, setIncludeTshirt] = useState(false)
   const [tshirtStyle, setTshirtStyle] = useState("Tee Shirt") // 'Tee Shirt' | 'Tank Top'

@@ -59,23 +59,17 @@ export default function MembershipFlyerPage() {
           <h3 className="text-lg font-bold text-slate-900 dark:text-white print:text-black mb-4 text-center sm:text-left">
             Annual Membership Tiers
           </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-center">
             <div className="p-4 rounded-xl bg-white dark:bg-slate-800 print:bg-white border border-slate-200 dark:border-slate-600 shadow-sm">
-              <div className="text-xs uppercase font-bold tracking-wider text-slate-500 print:text-slate-600">Individual</div>
+              <div className="text-xs uppercase font-bold tracking-wider text-slate-500 print:text-slate-600">Individual Resident</div>
               <div className="text-3xl font-black text-indigo-600 print:text-indigo-700 my-1">$10</div>
               <div className="text-xs text-slate-600 dark:text-slate-400 print:text-slate-700">Per resident / year</div>
             </div>
 
             <div className="p-4 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 print:bg-indigo-50 border-2 border-indigo-600 print:border-indigo-600 shadow-sm">
-              <div className="text-xs uppercase font-bold tracking-wider text-indigo-700 print:text-indigo-800">Household</div>
+              <div className="text-xs uppercase font-bold tracking-wider text-indigo-700 print:text-indigo-800">Household Membership</div>
               <div className="text-3xl font-black text-indigo-700 print:text-indigo-800 my-1">$20</div>
               <div className="text-xs text-indigo-900 dark:text-indigo-300 print:text-indigo-900 font-medium">Entire household / year</div>
-            </div>
-
-            <div className="p-4 rounded-xl bg-white dark:bg-slate-800 print:bg-white border border-slate-200 dark:border-slate-600 shadow-sm">
-              <div className="text-xs uppercase font-bold tracking-wider text-slate-500 print:text-slate-600">Business / Sponsor</div>
-              <div className="text-3xl font-black text-indigo-600 print:text-indigo-700 my-1">$100+</div>
-              <div className="text-xs text-slate-600 dark:text-slate-400 print:text-slate-700">Includes logo & directory listing</div>
             </div>
           </div>
         </div>
