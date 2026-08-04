@@ -395,7 +395,7 @@ export class PaymentService {
           // Admin Alert Email to eugen8@gmail.com on every successful transaction
           try {
             const memberAddress =
-              [userRecord.street, userRecord.city, userRecord.state, userRecord.zipCode]
+              [(userRecord as any).street, (userRecord as any).city, (userRecord as any).state, (userRecord as any).zipCode]
                 .filter(Boolean)
                 .join(", ") || (userRecord as any).address || "N/A"
 
