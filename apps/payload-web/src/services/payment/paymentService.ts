@@ -26,14 +26,19 @@ export class PaymentService {
 
       const clientId = (settings as any)?.paypalClientId || process.env.PAYPAL_CLIENT_ID || ""
       const clientSecret = (settings as any)?.paypalClientSecret || process.env.PAYPAL_CLIENT_SECRET || ""
-      const environment = ((settings as any)?.paypalEnvironment || process.env.PAYPAL_ENVIRONMENT || "sandbox") as "sandbox" | "live"
+      let environment = (settings as any)?.paypalEnvironment || process.env.PAYPAL_ENVIRONMENT || "live"
+
+      // If a real PayPal Client ID is provided, automatically use live mode instead of mock
+      if (clientId && clientId.length > 20 && environment === "mock") {
+        environment = "live"
+      }
 
       return { clientId, clientSecret, environment }
     } catch {
       return {
         clientId: process.env.PAYPAL_CLIENT_ID || "",
         clientSecret: process.env.PAYPAL_CLIENT_SECRET || "",
-        environment: (process.env.PAYPAL_ENVIRONMENT || "sandbox") as "sandbox" | "live",
+        environment: (process.env.PAYPAL_ENVIRONMENT || "live") as "sandbox" | "live",
       }
     }
   }
