@@ -61,6 +61,14 @@ export const plugins: Plugin[] = [
     fields: {
       payment: false,
     },
+    formSubmissionOverrides: {
+      access: {
+        read: ({ req: { user } }) => {
+          if (!user) return false
+          return true
+        },
+      },
+    },
     formOverrides: {
       fields: ({ defaultFields }) => {
         const fieldsWithConfirmationEditor = defaultFields.map((field) => {
