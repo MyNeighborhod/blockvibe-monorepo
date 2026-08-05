@@ -5,7 +5,7 @@ export const Memberships: CollectionConfig = {
   slug: "memberships",
   admin: {
     useAsTitle: "accountId",
-    defaultColumns: ["accountId", "memberCategory", "tier", "businessTierSlug", "status", "isAnnualPayingMember", "validUntil"],
+    defaultColumns: ["user", "accountId", "memberCategory", "tier", "businessTierSlug", "status", "isAnnualPayingMember", "validUntil"],
     description: "Community member subscription and dues status tracking.",
   },
   access: {

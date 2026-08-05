@@ -5,7 +5,7 @@ export const Payments: CollectionConfig = {
   slug: "payments",
   admin: {
     useAsTitle: "paymentId",
-    defaultColumns: ["paymentId", "accountId", "provider", "amount", "status", "paidAt"],
+    defaultColumns: ["user", "paymentId", "accountId", "provider", "amount", "status", "paidAt"],
     description: "Payment transaction ledger for auto and manual payments.",
   },
   access: {
