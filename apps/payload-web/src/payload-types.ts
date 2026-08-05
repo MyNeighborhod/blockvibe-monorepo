@@ -83,6 +83,7 @@ export interface Config {
     businesses: Business;
     memberships: Membership;
     payments: Payment;
+    sent_emails: SentEmail;
     redirects: Redirect;
     forms: Form;
     'form-submissions': FormSubmission;
@@ -116,6 +117,7 @@ export interface Config {
     businesses: BusinessesSelect<false> | BusinessesSelect<true>;
     memberships: MembershipsSelect<false> | MembershipsSelect<true>;
     payments: PaymentsSelect<false> | PaymentsSelect<true>;
+    sent_emails: SentEmailsSelect<false> | SentEmailsSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     forms: FormsSelect<false> | FormsSelect<true>;
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
@@ -1357,6 +1359,45 @@ export interface Payment {
   createdAt: string;
 }
 /**
+ * Audit log of all sent emails with S3 bucket archives.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sent_emails".
+ */
+export interface SentEmail {
+  id: number;
+  /**
+   * ULID identifier for the sent email.
+   */
+  emailId: string;
+  /**
+   * Timestamp when email was sent.
+   */
+  date: string;
+  /**
+   * Recipient email address.
+   */
+  to: string;
+  /**
+   * Email subject line.
+   */
+  subject: string;
+  /**
+   * True for transactional emails (receipts/alerts), false for broadcasts/newsletters.
+   */
+  isTransactional?: boolean | null;
+  /**
+   * Associated tenant.
+   */
+  tenant?: (number | null) | Tenant;
+  /**
+   * S3 URI path to the stored email.json archive (e.g. s3://outgoing_emails_prod/nog/2026-08-05/2026-08-05T07-29-05_01KZ.../email.json).
+   */
+  s3Uri: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "redirects".
  */
@@ -1610,6 +1651,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'payments';
         value: number | Payment;
+      } | null)
+    | ({
+        relationTo: 'sent_emails';
+        value: number | SentEmail;
       } | null)
     | ({
         relationTo: 'redirects';
@@ -2274,6 +2319,21 @@ export interface PaymentsSelect<T extends boolean = true> {
   paidAt?: T;
   notes?: T;
   recordedBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sent_emails_select".
+ */
+export interface SentEmailsSelect<T extends boolean = true> {
+  emailId?: T;
+  date?: T;
+  to?: T;
+  subject?: T;
+  isTransactional?: T;
+  tenant?: T;
+  s3Uri?: T;
   updatedAt?: T;
   createdAt?: T;
 }

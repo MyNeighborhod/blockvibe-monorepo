@@ -1,5 +1,6 @@
 import type { Payload } from "payload"
 import type { Tenant } from "@/payload-types"
+import { archiveSentEmail } from "@/services/email/emailStorageService"
 
 export type TransactionalEmailFrom = {
   address: string
@@ -46,14 +47,30 @@ export async function sendTransactionalEmail(
     subject: string
     html: string
     tenant?: TenantLike
+    isTransactional?: boolean
   },
 ): Promise<void> {
   const from = resolveTransactionalEmailFrom(params.tenant)
+  const formattedFrom = formatEmailFrom(from)
 
   await payload.sendEmail({
     to: params.to,
     subject: params.subject,
     html: params.html,
-    from: formatEmailFrom(from),
+    from: formattedFrom,
   })
+
+  // Archive sent email to AWS S3 & record in sent_emails collection
+  try {
+    await archiveSentEmail(payload, {
+      to: params.to,
+      from: formattedFrom,
+      subject: params.subject,
+      html: params.html,
+      isTransactional: params.isTransactional ?? true,
+      tenant: params.tenant,
+    })
+  } catch (archiveErr) {
+    console.error("[sendTransactionalEmail] Failed to archive sent email:", archiveErr)
+  }
 }
