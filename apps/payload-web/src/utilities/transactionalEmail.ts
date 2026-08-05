@@ -60,9 +60,9 @@ export async function sendTransactionalEmail(
     from: formattedFrom,
   })
 
-  // Archive sent email to AWS S3 & record in sent_emails collection
+  // Archive sent email to AWS S3 & record in email_srv.sent_emails
   try {
-    await archiveSentEmail(payload, {
+    await archiveSentEmail({
       to: params.to,
       from: formattedFrom,
       subject: params.subject,

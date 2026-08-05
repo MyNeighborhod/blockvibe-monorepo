@@ -23,7 +23,6 @@ import { MailingLists } from "./collections/MailingLists"
 import { Businesses } from "./collections/Businesses"
 import { Memberships } from "./collections/Memberships"
 import { Payments } from "./collections/Payments"
-import { SentEmails } from "./collections/SentEmails"
 import { PaymentSettings } from "./globals/PaymentSettings"
 import { nodemailerAdapter } from "@payloadcms/email-nodemailer"
 
@@ -108,7 +107,6 @@ export default buildConfig({
     Businesses,
     Memberships,
     Payments,
-    SentEmails,
   ],
   cors: [getServerSideURL()].filter(Boolean),
   globals: [PaymentSettings],
