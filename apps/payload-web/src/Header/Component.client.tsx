@@ -38,7 +38,7 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data, tenant }) => {
   const isNog = shouldUseNogChrome(tenant)
   const logoImage = (data as any)?.logoImage
   const logoUrl = logoImage && typeof logoImage === "object" ? logoImage.url : null
-  const overDarkHero = theme === "dark"
+  const overDarkHero = isNog ? false : theme === "dark"
 
   if (isNog) {
     return (
