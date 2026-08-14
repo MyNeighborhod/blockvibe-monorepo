@@ -52,34 +52,77 @@ async function run() {
     limit: 1,
   })
 
+  // Extract rich text content & slideshow from Page 216 if present
+  let slideshowImages: any[] = [287, 288, 289, 290, 291, 292, 293, 294, 295, 296, 297, 298, 299, 300, 301, 302].map(id => ({ image: id }))
+  if (page216?.layout) {
+    const slideshowBlock = page216.layout.find((b: any) => b.blockType === "slideshowBlock")
+    if (slideshowBlock?.images?.length > 0) {
+      slideshowImages = slideshowBlock.images
+        .map((item: any) => ({
+          image: typeof item.image === "object" ? item.image?.id : item.image,
+        }))
+        .filter((item: any) => Boolean(item.image))
+    }
+  }
+
+  const baseRichText = page216?.layout?.[0]?.columns?.[0]?.richText || {
+    root: {
+      type: "root",
+      format: "",
+      indent: 0,
+      version: 1,
+      children: [
+        {
+          type: "paragraph",
+          version: 1,
+          children: [
+            {
+              type: "text",
+              version: 1,
+              text: "We didn't let a little bit of rain keep us from having a blast at the 2026 National Neighborhood Night Out on Tuesday, August 4th.",
+            },
+          ],
+        },
+      ],
+    },
+  }
+
+  // Ensure root children has the slideshowBlock
+  const rootChildren = [...(baseRichText.root?.children || [])]
+  const hasSlideshow = rootChildren.some((child: any) => child.type === "block" && child.fields?.blockType === "slideshowBlock")
+  if (!hasSlideshow) {
+    rootChildren.push({
+      type: "block",
+      version: 2,
+      format: "",
+      fields: {
+        id: "slideshow-night-out",
+        blockType: "slideshowBlock",
+        images: slideshowImages,
+      },
+    })
+  }
+
+  const contentWithSlideshow = {
+    ...baseRichText,
+    root: {
+      ...baseRichText.root,
+      children: rootChildren,
+    },
+  }
+
   let postDoc: any = null
   if (existingPosts.docs.length > 0) {
     postDoc = existingPosts.docs[0]
-    console.log("Post already exists:", postDoc.id)
-  } else {
-    // Extract rich text content from Page 216 if present
-    const contentRichText = page216?.layout?.[0]?.columns?.[0]?.richText || {
-      root: {
-        type: "root",
-        format: "",
-        indent: 0,
-        version: 1,
-        children: [
-          {
-            type: "paragraph",
-            version: 1,
-            children: [
-              {
-                type: "text",
-                version: 1,
-                text: "We didn't let a little bit of rain keep us from having a blast at the 2026 National Neighborhood Night Out on Tuesday, August 4th. Thank you to all of our donors and neighbors!",
-              },
-            ],
-          },
-        ],
+    await payload.update({
+      collection: "posts",
+      id: postDoc.id,
+      data: {
+        content: contentWithSlideshow,
       },
-    }
-
+    })
+    console.log("Updated Post with Slideshow:", postDoc.id)
+  } else {
     postDoc = await payload.create({
       collection: "posts",
       data: {
@@ -87,11 +130,11 @@ async function run() {
         slug: "national-neighborhood-night-out-2026",
         tenant: nogTenant.id as number,
         _status: "published",
-        content: contentRichText,
+        content: contentWithSlideshow,
         publishedAt: new Date().toISOString(),
       },
     })
-    console.log("Created Post:", postDoc.id, postDoc.title)
+    console.log("Created Post with Slideshow:", postDoc.id, postDoc.title)
   }
 
   // 4. Update Header for NOG to include BLOG link -> /posts
