@@ -158,7 +158,7 @@ export default async function Post({ params: paramsPromise }: Args) {
                   {hasAuthors && (
                     <span className="inline-flex items-center gap-1.5">
                       <User className="w-3.5 h-3.5 text-slate-400" />
-                      {formatAuthors(post.populatedAuthors)}
+                      {formatAuthors(post.populatedAuthors || [])}
                     </span>
                   )}
                   {post.publishedAt && (
