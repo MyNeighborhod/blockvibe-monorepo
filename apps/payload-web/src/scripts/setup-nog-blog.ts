@@ -94,18 +94,21 @@ async function run() {
 
   // Ensure root children has the slideshowBlock
   const rootChildren = [...(baseRichText.root?.children || [])]
-  const hasSlideshow = rootChildren.some((child: any) => child.type === "block" && child.fields?.blockType === "slideshowBlock")
-  if (!hasSlideshow) {
-    rootChildren.push({
-      type: "block",
-      version: 2,
-      format: "",
-      fields: {
-        id: "slideshow-night-out",
-        blockType: "slideshowBlock",
-        images: slideshowImages,
-      },
-    })
+  const slideshowIdx = rootChildren.findIndex((child: any) => child.type === "block" && child.fields?.blockType === "slideshowBlock")
+  const slideshowNode = {
+    type: "block",
+    version: 2,
+    format: "",
+    fields: {
+      id: "slideshow-night-out",
+      blockType: "slideshowBlock",
+      images: slideshowImages,
+    },
+  }
+  if (slideshowIdx >= 0) {
+    rootChildren[slideshowIdx] = slideshowNode
+  } else {
+    rootChildren.push(slideshowNode)
   }
 
   const contentWithSlideshow = {
