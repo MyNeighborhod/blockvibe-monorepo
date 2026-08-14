@@ -6,22 +6,31 @@ import type { Media } from "@/payload-types"
 
 export type SlideshowBlockType = {
   blockType?: "slideshowBlock"
-  images: {
+  media?: (Media | number | string)[]
+  images?: {
     image: Media | number | string
   }[]
 }
 
-export const SlideshowBlock: React.FC<SlideshowBlockType> = ({ images }) => {
+export const SlideshowBlock: React.FC<SlideshowBlockType> = ({ media, images }) => {
   const [slideIndex, setSlideIndex] = useState(0)
   const [isPaused, setIsPaused] = useState(false)
   const touchStartX = useRef<number | null>(null)
   const touchEndX = useRef<number | null>(null)
 
-  const validImages = (images || []).filter(
-    (item) => item && item.image && typeof item.image === "object",
-  )
+  const mediaList: Media[] = []
+  if (Array.isArray(media)) {
+    media.forEach((item) => {
+      if (item && typeof item === "object") mediaList.push(item as Media)
+    })
+  }
+  if (mediaList.length === 0 && Array.isArray(images)) {
+    images.forEach((item) => {
+      if (item && item.image && typeof item.image === "object") mediaList.push(item.image as Media)
+    })
+  }
 
-  const count = validImages.length
+  const count = mediaList.length
 
   useEffect(() => {
     if (count <= 1 || isPaused) return
@@ -30,6 +39,29 @@ export const SlideshowBlock: React.FC<SlideshowBlockType> = ({ images }) => {
     }, 4500)
     return () => clearInterval(timer)
   }, [count, isPaused])
+
+  // Keyboard navigation (ArrowLeft & ArrowRight)
+  useEffect(() => {
+    if (count <= 1) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't intercept if user is typing in an input or textarea
+      const target = e.target as HTMLElement
+      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) {
+        return
+      }
+
+      if (e.key === "ArrowLeft") {
+        e.preventDefault()
+        handlePrev()
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault()
+        handleNext()
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [count])
 
   if (count === 0) return null
 
@@ -78,8 +110,7 @@ export const SlideshowBlock: React.FC<SlideshowBlockType> = ({ images }) => {
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
       >
-        {validImages.map((item, index) => {
-          const media = item.image as Media
+        {mediaList.map((media, index) => {
           const url = media.url
           const alt = media.alt || `Slide ${index + 1}`
           return (
@@ -118,8 +149,7 @@ export const SlideshowBlock: React.FC<SlideshowBlockType> = ({ images }) => {
         {/* Slide Indicators / Dots */}
         {count > 1 && (
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-20 bg-black/30 backdrop-blur-md px-3 py-1.5 rounded-full">
-            {validImages.map((item, index) => {
-              const media = item.image as Media
+            {mediaList.map((media, index) => {
               return (
                 <button
                   key={`dot-${media.id || "media"}-${index}`}
