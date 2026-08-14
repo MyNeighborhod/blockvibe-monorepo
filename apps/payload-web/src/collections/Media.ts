@@ -181,6 +181,12 @@ export const Media: CollectionConfig = {
     staticDir: path.resolve(dirname, "../../public/media"),
     adminThumbnail: "thumbnail",
     focalPoint: true,
+    resizeOptions: {
+      width: 2560,
+      height: 2560,
+      fit: "inside",
+      withoutEnlargement: true,
+    },
     imageSizes: [
       {
         name: "thumbnail",

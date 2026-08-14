@@ -4,6 +4,8 @@ import React, { useState, useEffect, useRef } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import type { Media } from "@/payload-types"
 
+import { getBestMediaUrl } from "@/utilities/getBestMediaUrl"
+
 export type SlideshowBlockType = {
   blockType?: "slideshowBlock"
   media?: (Media | number | string)[]
@@ -111,7 +113,7 @@ export const SlideshowBlock: React.FC<SlideshowBlockType> = ({ media, images }) 
         onMouseLeave={() => setIsPaused(false)}
       >
         {mediaList.map((media, index) => {
-          const url = media.url
+          const url = getBestMediaUrl(media, "large")
           const alt = media.alt || `Slide ${index + 1}`
           return (
             <div
