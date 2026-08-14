@@ -94,8 +94,11 @@ function renderAutoLinkedText(text: string) {
 const jsxConverters: JSXConvertersFunction<NodeTypes> = ({ defaultConverters }) => ({
   ...defaultConverters,
   ...LinkJSXConverter({ internalDocToHref }),
-  text: ({ node }) => {
+  text: ({ node, parent }) => {
     if (!node.text) return null
+    if (parent && ("type" in parent) && (parent.type === "link" || parent.type === "autolink")) {
+      return node.text
+    }
     return renderAutoLinkedText(node.text)
   },
   blocks: {
