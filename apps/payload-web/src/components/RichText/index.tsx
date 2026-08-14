@@ -118,7 +118,7 @@ const jsxConverters: JSXConvertersFunction<NodeTypes> = ({ defaultConverters }) 
     ),
     code: ({ node }) => <CodeBlock className="col-start-2" {...node.fields} />,
     cta: ({ node }) => <CallToActionBlock {...node.fields} />,
-    slideshowBlock: ({ node }) => <SlideshowBlock {...(node.fields as any)} />,
+    slideshowBlock: ({ node }: { node: any }) => <SlideshowBlock {...(node.fields as any)} />,
   },
 })
 
