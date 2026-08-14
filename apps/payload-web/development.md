@@ -106,14 +106,14 @@ If you need to seed or reset the database with tenant-specific layout configurat
 To pull live site structures, pages, posts, categories, header, footer, and media files from production into your local environment **without** pulling user accounts, passwords, sessions, or payment secrets:
 
 ```bash
-# Pull North of Grand site data & media
+# Pull North of Grand site data & media from PROD (default)
 pnpm db:pull:site-data nog
 
-# Pull Beaverdale site data & media
-pnpm db:pull:site-data beaverdale
+# Pull North of Grand site data & media from STAGING
+pnpm db:pull:site-data --staging nog
 
-# Pull all sites & media
-pnpm db:pull:site-data
+# Pull all sites & media from STAGING
+pnpm db:pull:site-data --staging
 ```
 
 > [!SECURITY NOTE]

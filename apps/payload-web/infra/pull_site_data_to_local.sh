@@ -1,17 +1,29 @@
 #!/bin/bash
 set -e
 
-# pull_site_data_to_local.sh [site-slug-or-domain]
+# pull_site_data_to_local.sh [--staging] [site-slug-or-domain]
 #
 # Pull site structure, pages, posts, categories, headers, footers, media metadata,
-# and media assets from production into local development environment.
+# and media assets from production or staging into local development environment.
 #
 # Usage:
-#   pnpm db:pull:site-data          (pulls all sites)
-#   pnpm db:pull:site-data nog      (pulls North of Grand site data & media)
-#   ./infra/pull_site_data_to_local.sh beaverdale
+#   pnpm db:pull:site-data              (pulls all sites from PROD)
+#   pnpm db:pull:site-data nog          (pulls North of Grand site data & media from PROD)
+#   pnpm db:pull:site-data --staging    (pulls all sites from STAGING)
+#   pnpm db:pull:site-data --staging nog(pulls North of Grand site data & media from STAGING)
+#   ./infra/pull_site_data_to_local.sh --staging beaverdale
 
-SITE_ARG="${1:-all}"
+STAGING=0
+SITE_ARG="all"
+
+for arg in "$@"; do
+  case "$arg" in
+    --staging) STAGING=1 ;;
+    --prod) STAGING=0 ;;
+    --*) ;;
+    *) SITE_ARG="$arg" ;;
+  esac
+done
 
 INFRA_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 PROJECT_DIR="$( dirname "$INFRA_DIR" )"
@@ -40,14 +52,26 @@ for cmd in pg_dump scp ssh rsync; do
   fi
 done
 
-SNAPSHOT_DIR="$PROJECT_DIR/dbsnapshots/prod"
+REMOTE_DIR="/home/ubuntu/app"
+REMOTE_MEDIA_DIR="/var/www/blockvibe/media"
+REMOTE_DB_SERVICE="db"
+ENV_LABEL="production"
+
+if [ "$STAGING" -eq 1 ]; then
+  REMOTE_DIR="/home/ubuntu/app-staging"
+  REMOTE_MEDIA_DIR="/var/www/blockvibe/media-staging/media"
+  REMOTE_DB_SERVICE="db-staging"
+  ENV_LABEL="staging"
+fi
+
+SNAPSHOT_DIR="$PROJECT_DIR/dbsnapshots/$ENV_LABEL"
 mkdir -p "$SNAPSHOT_DIR"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 LOCAL_PATH="$SNAPSHOT_DIR/site_data_${SITE_ARG}_${TIMESTAMP}.sql"
-REMOTE_PATH="/home/ubuntu/site_data_${SITE_ARG}_${TIMESTAMP}.sql"
+REMOTE_PATH="/home/ubuntu/site_data_${ENV_LABEL}_${SITE_ARG}_${TIMESTAMP}.sql"
 
 echo "========================================================"
-echo "Pulling Site Data from Production (ubuntu@$IP)"
+echo "Pulling Site Data from $ENV_LABEL (ubuntu@$IP)"
 echo "Target Site Filter: $SITE_ARG"
 echo "EXCLUDES: users, passwords, sessions, memberships, CRM, emails, payment secrets"
 echo "========================================================"
@@ -78,11 +102,11 @@ EXCLUDE_FLAGS=(
 
 EXCLUDE_ARGS="${EXCLUDE_FLAGS[*]}"
 
-echo "Step 1/3: Taking sanitized database snapshot on production EC2..."
+echo "Step 1/3: Taking sanitized database snapshot on $ENV_LABEL EC2..."
 ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "ubuntu@$IP" \
-  REMOTE_PATH="$REMOTE_PATH" EXCLUDE_ARGS="$EXCLUDE_ARGS" bash -s <<'REMOTE'
+  REMOTE_DIR="$REMOTE_DIR" REMOTE_DB_SERVICE="$REMOTE_DB_SERVICE" REMOTE_PATH="$REMOTE_PATH" EXCLUDE_ARGS="$EXCLUDE_ARGS" bash -s <<'REMOTE'
 set -e
-cd /home/ubuntu/app
+cd "$REMOTE_DIR"
 
 DB_NAME="blockvibe-multitenant"
 if [ -f .env ]; then
@@ -92,8 +116,8 @@ if [ -f .env ]; then
   fi
 fi
 
-echo "Running pg_dump excluding sensitive tables..."
-sudo docker compose exec -T db pg_dump -U postgres -d "$DB_NAME" $EXCLUDE_ARGS > "$REMOTE_PATH"
+echo "Running pg_dump inside $REMOTE_DB_SERVICE excluding sensitive tables..."
+sudo docker compose exec -T "$REMOTE_DB_SERVICE" pg_dump -U postgres -d "$DB_NAME" $EXCLUDE_ARGS > "$REMOTE_PATH"
 
 if [ ! -s "$REMOTE_PATH" ]; then
   echo "Error: Snapshot failed or is empty."
@@ -115,19 +139,19 @@ echo "Step 3/3: Syncing media assets to local public/media..."
 mkdir -p "$PROJECT_DIR/public/media"
 
 if [ "$SITE_ARG" != "all" ]; then
-  echo "Syncing media specifically for site: $SITE_ARG"
+  echo "Syncing media specifically for site '$SITE_ARG' from $ENV_LABEL..."
   rsync -avz --progress \
     -e "ssh -i $SSH_KEY -o StrictHostKeyChecking=no" \
-    "ubuntu@$IP:/var/www/blockvibe/media/${SITE_ARG}/" \
+    "ubuntu@$IP:${REMOTE_MEDIA_DIR}/${SITE_ARG}/" \
     "$PROJECT_DIR/public/media/${SITE_ARG}/" 2>/dev/null || \
   rsync -avz --progress \
     -e "ssh -i $SSH_KEY -o StrictHostKeyChecking=no" \
-    "ubuntu@$IP:/var/www/blockvibe/media/" \
+    "ubuntu@$IP:${REMOTE_MEDIA_DIR}/" \
     "$PROJECT_DIR/public/media/" || echo "Warning: Media sync completed with notices."
 else
   rsync -avz --progress \
     -e "ssh -i $SSH_KEY -o StrictHostKeyChecking=no" \
-    "ubuntu@$IP:/var/www/blockvibe/media/" \
+    "ubuntu@$IP:${REMOTE_MEDIA_DIR}/" \
     "$PROJECT_DIR/public/media/" || echo "Warning: Media sync completed with notices."
 fi
 
@@ -160,7 +184,7 @@ if [ -n "$POSTGRES_CONTAINER" ]; then
     " >/dev/null 2>&1 || true
   fi
 
-  echo "✓ Successfully restored site data for target '$SITE_ARG' into local database '$LOCAL_DB'!"
+  echo "✓ Successfully restored $ENV_LABEL site data for '$SITE_ARG' into local database '$LOCAL_DB'!"
 else
   echo "Notice: Local Postgres container not running. You can restore manually using:"
   echo "  pnpm tsx src/scripts/restore_local_db.ts $LOCAL_PATH"
@@ -168,5 +192,5 @@ fi
 
 echo ""
 echo "========================================================"
-echo "✓ All Done! Site structures, pages, posts, and media synced for [$SITE_ARG]."
+echo "✓ All Done! $ENV_LABEL site structures, pages, posts, and media synced for [$SITE_ARG]."
 echo "========================================================"

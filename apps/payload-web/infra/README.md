@@ -49,7 +49,7 @@ This builds the Docker image **on your machine** (not on EC2), syncs media, uplo
 | `pnpm email-service:deploy --staging`        | Deploy **email Lambda** (CDK) — separate from `deploy.sh`                |
 | `pnpm seed:prod-content`                     | Seed prod **content only** (platform home + NOG users) via SSH tunnel    |
 | `./infra/sync-prod-schema.sh`                | Pull prod DB → schema push locally → push back (no full content replace) |
-| `./infra/pull_site_data_to_local.sh [site]`  | **Pull sanitized site data & media** from prod to local (no passwords/users) |
+| `./infra/pull_site_data_to_local.sh [--staging] [site]` | **Pull sanitized site data & media** from prod/staging to local (no passwords/users) |
 
 ### What `deploy.sh` does
 
