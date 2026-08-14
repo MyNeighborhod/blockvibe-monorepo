@@ -118,12 +118,25 @@ export const SlideshowBlock: React.FC<SlideshowBlockType> = ({ media, images }) 
           return (
             <div
               key={`${media.id || "media"}-${index}`}
-              className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
+              className={`absolute inset-0 transition-opacity duration-700 ease-in-out flex items-center justify-center ${
                 index === slideIndex ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
               }`}
             >
+              {/* Blurred background layer for aesthetic container filling */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={url || ""} alt={alt} className="w-full h-full object-cover" />
+              <img
+                src={url || ""}
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover blur-xl opacity-35 scale-110 pointer-events-none"
+                aria-hidden="true"
+              />
+              {/* Main uncropped full image */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={url || ""}
+                alt={alt}
+                className="relative max-w-full max-h-full object-contain z-10 rounded-lg drop-shadow-md"
+              />
             </div>
           )
         })}

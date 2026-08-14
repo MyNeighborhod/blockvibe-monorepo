@@ -7,10 +7,8 @@ const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 const mediaBaseDir = path.resolve(dirname, "../../public/media")
 
-const SIZE_VARIANT_REGEX = /-\d+x\d+\.(jpg|jpeg|png|webp)$/i
 const MAX_DIMENSION = 2560
 const QUALITY = 82
-const MIN_SIZE_BYTES = 1.5 * 1024 * 1024 // 1.5MB
 
 async function processDirectory(dirPath: string) {
   const entries = fs.readdirSync(dirPath, { withFileTypes: true })
@@ -28,31 +26,35 @@ async function processDirectory(dirPath: string) {
     const ext = path.extname(entry.name).toLowerCase()
     if (![".jpg", ".jpeg", ".png"].includes(ext)) continue
 
-    // Skip pre-generated size variants (e.g. -1400x1867.jpg)
-    if (SIZE_VARIANT_REGEX.test(entry.name)) continue
-
-    const stats = fs.statSync(fullPath)
-    if (stats.size < MIN_SIZE_BYTES) continue
-
-    console.log(`\nProcessing master file: ${path.relative(mediaBaseDir, fullPath)} (${(stats.size / 1024 / 1024).toFixed(2)} MB)`)
-
     try {
       const metadata = await sharp(fullPath).metadata()
+      const orientation = metadata.orientation || 1
       const width = metadata.width || 0
       const height = metadata.height || 0
+      const stats = fs.statSync(fullPath)
 
-      if (width <= MAX_DIMENSION && height <= MAX_DIMENSION && ext !== ".png") {
-        console.log(`Skipping: Dimensions (${width}x${height}) are already within limits.`)
+      const needsRotation = orientation > 1
+      const needsDownsample = width > MAX_DIMENSION || height > MAX_DIMENSION
+
+      if (!needsRotation && !needsDownsample) {
         continue
       }
 
+      console.log(
+        `\nFixing image: ${path.relative(mediaBaseDir, fullPath)} (Orientation: ${orientation}, Size: ${(stats.size / 1024 / 1024).toFixed(2)} MB, Dim: ${width}x${height})`
+      )
+
       const tempPath = `${fullPath}.tmp`
-      let sharpInstance = sharp(fullPath).resize({
-        width: MAX_DIMENSION,
-        height: MAX_DIMENSION,
-        fit: "inside",
-        withoutEnlargement: true,
-      })
+      let sharpInstance = sharp(fullPath).rotate() // Automatically auto-rotates based on EXIF orientation!
+
+      if (needsDownsample) {
+        sharpInstance = sharpInstance.resize({
+          width: MAX_DIMENSION,
+          height: MAX_DIMENSION,
+          fit: "inside",
+          withoutEnlargement: true,
+        })
+      }
 
       if (ext === ".jpg" || ext === ".jpeg") {
         sharpInstance = sharpInstance.jpeg({ quality: QUALITY, mozjpeg: true })
@@ -61,18 +63,12 @@ async function processDirectory(dirPath: string) {
       }
 
       await sharpInstance.toFile(tempPath)
-      const newStats = fs.statSync(tempPath)
+      fs.renameSync(tempPath, fullPath)
 
-      if (newStats.size < stats.size) {
-        fs.renameSync(tempPath, fullPath)
-        const savedPercent = (((stats.size - newStats.size) / stats.size) * 100).toFixed(1)
-        console.log(
-          `✓ Successfully downsampled: ${(stats.size / 1024 / 1024).toFixed(2)} MB -> ${(newStats.size / 1024 / 1024).toFixed(2)} MB (Saved ${savedPercent}%)`
-        )
-      } else {
-        fs.unlinkSync(tempPath)
-        console.log("No reduction achieved, keeping original.")
-      }
+      const newStats = fs.statSync(fullPath)
+      console.log(
+        `✓ Fixed orientation/size: ${(stats.size / 1024 / 1024).toFixed(2)} MB -> ${(newStats.size / 1024 / 1024).toFixed(2)} MB`
+      )
     } catch (err) {
       console.error(`Error processing ${fullPath}:`, err)
     }
@@ -80,9 +76,9 @@ async function processDirectory(dirPath: string) {
 }
 
 async function run() {
-  console.log(`Starting media downsampling in: ${mediaBaseDir}`)
+  console.log(`Starting media orientation fix and downsampling in: ${mediaBaseDir}`)
   await processDirectory(mediaBaseDir)
-  console.log("\nDownsampling complete!")
+  console.log("\nMedia processing complete!")
 }
 
 run()
