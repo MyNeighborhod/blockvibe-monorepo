@@ -1,8 +1,9 @@
 import { formatDateTime } from "src/utilities/formatDateTime"
 import React from "react"
+import Link from "next/link"
+import { ArrowLeft, Calendar, User, Tag } from "lucide-react"
 
 import type { Post } from "@/payload-types"
-
 import { Media } from "@/components/Media"
 import { formatAuthors } from "@/utilities/formatAuthors"
 
@@ -15,59 +16,64 @@ export const PostHero: React.FC<{
     populatedAuthors && populatedAuthors.length > 0 && formatAuthors(populatedAuthors) !== ""
 
   return (
-    <div className="relative -mt-[10.4rem] flex items-end">
-      <div className="container z-10 relative lg:grid lg:grid-cols-[1fr_48rem_1fr] text-white pb-8">
-        <div className="col-start-1 col-span-1 md:col-start-2 md:col-span-2">
-          <div className="uppercase text-sm mb-6">
-            {categories?.map((category, index) => {
-              if (typeof category === "object" && category !== null) {
-                const { title: categoryTitle } = category
+    <div className="container max-w-[48rem] mx-auto pt-6 pb-2">
+      {/* Back to Blog Link */}
+      <Link
+        href="/posts"
+        className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 transition-colors mb-6 group"
+      >
+        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+        <span>Back to Blog</span>
+      </Link>
 
-                const titleToUse = categoryTitle || "Untitled category"
-
-                const isLast = index === categories.length - 1
-
-                return (
-                  <React.Fragment key={index}>
-                    {titleToUse}
-                    {!isLast && <React.Fragment>, &nbsp;</React.Fragment>}
-                  </React.Fragment>
-                )
-              }
-              return null
-            })}
-          </div>
-
-          <div className="">
-            <h1 className="mb-6 text-3xl md:text-5xl lg:text-6xl">{title}</h1>
-          </div>
-
-          <div className="flex flex-col md:flex-row gap-4 md:gap-16">
-            {hasAuthors && (
-              <div className="flex flex-col gap-4">
-                <div className="flex flex-col gap-1">
-                  <p className="text-sm">Author</p>
-
-                  <p>{formatAuthors(populatedAuthors)}</p>
-                </div>
-              </div>
-            )}
-            {publishedAt && (
-              <div className="flex flex-col gap-1">
-                <p className="text-sm">Date Published</p>
-
-                <time dateTime={publishedAt}>{formatDateTime(publishedAt)}</time>
-              </div>
-            )}
-          </div>
+      {/* Category Badges */}
+      {categories && categories.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 mb-3">
+          {categories.map((category, index) => {
+            if (typeof category === "object" && category !== null) {
+              return (
+                <span
+                  key={category.id || index}
+                  className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/80 px-2.5 py-1 rounded-full border border-emerald-200/60 dark:border-emerald-800/60"
+                >
+                  <Tag className="w-3 h-3" />
+                  {category.title || "Category"}
+                </span>
+              )
+            }
+            return null
+          })}
         </div>
-      </div>
-      <div className="min-h-[80vh] select-none">
-        {heroImage && typeof heroImage !== "string" && (
-          <Media fill priority imgClassName="-z-10 object-cover" resource={heroImage} />
+      )}
+
+      {/* Post Title */}
+      <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-slate-900 dark:text-slate-50 mb-4 leading-tight">
+        {title}
+      </h1>
+
+      {/* Author & Published Date Metadata */}
+      <div className="flex flex-wrap items-center gap-6 text-xs font-medium text-slate-500 dark:text-slate-400 pb-6 mb-6 border-b border-slate-200 dark:border-slate-800">
+        {hasAuthors && (
+          <div className="flex items-center gap-1.5">
+            <User className="w-3.5 h-3.5 text-slate-400" />
+            <span>{formatAuthors(populatedAuthors)}</span>
+          </div>
         )}
-        <div className="absolute pointer-events-none left-0 bottom-0 w-full h-1/2 bg-linear-to-t from-black to-transparent" />
+
+        {publishedAt && (
+          <div className="flex items-center gap-1.5">
+            <Calendar className="w-3.5 h-3.5 text-slate-400" />
+            <time dateTime={publishedAt}>{formatDateTime(publishedAt)}</time>
+          </div>
+        )}
       </div>
+
+      {/* Featured Image (if set) */}
+      {heroImage && typeof heroImage !== "string" && (
+        <div className="mb-8 rounded-2xl overflow-hidden shadow-md border border-slate-200/80 dark:border-slate-800">
+          <Media priority resource={heroImage} />
+        </div>
+      )}
     </div>
   )
 }
