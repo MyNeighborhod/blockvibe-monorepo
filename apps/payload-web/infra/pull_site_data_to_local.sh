@@ -196,8 +196,9 @@ if [ -n "$POSTGRES_CONTAINER" ]; then
     DELETE FROM _posts_v_rels WHERE users_id IS NOT NULL AND users_id NOT IN (SELECT id FROM users);
   " >/dev/null 2>&1 || true
 
-  echo "Seeding local dev admin users..."
+  echo "Seeding local dev admin users and blog post..."
   pnpm tsx "$PROJECT_DIR/src/scripts/seed-nog-users.ts" >/dev/null 2>&1 || true
+  pnpm tsx "$PROJECT_DIR/src/scripts/setup-nog-blog.ts" >/dev/null 2>&1 || true
 
   echo "✓ Successfully restored $ENV_LABEL site data for '$SITE_ARG' into local database '$LOCAL_DB'!"
 else
