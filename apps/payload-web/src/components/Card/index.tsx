@@ -8,7 +8,7 @@ import type { Post } from "@/payload-types"
 
 import { Media } from "@/components/Media"
 
-export type CardPostData = Pick<Post, "slug" | "categories" | "meta" | "title">
+export type CardPostData = Pick<Post, "slug" | "categories" | "meta" | "title" | "heroImage">
 
 export const Card: React.FC<{
   alignItems?: "center"
@@ -21,8 +21,9 @@ export const Card: React.FC<{
   const { card, link } = useClickableCard({})
   const { className, doc, relationTo, showCategories, title: titleFromProps } = props
 
-  const { slug, categories, meta, title } = doc || {}
+  const { slug, categories, meta, title, heroImage } = doc || {}
   const { description, image: metaImage } = meta || {}
+  const imageToUse = metaImage || heroImage
 
   const hasCategories = categories && Array.isArray(categories) && categories.length > 0
   const titleToUse = titleFromProps || title
@@ -32,15 +33,29 @@ export const Card: React.FC<{
   return (
     <article
       className={cn(
-        "border border-border rounded-lg overflow-hidden bg-card hover:cursor-pointer",
+        "border border-border rounded-lg overflow-hidden bg-card hover:cursor-pointer transition-shadow hover:shadow-md",
         className,
       )}
       /* eslint-disable-next-line react-hooks/refs */
       ref={card.ref}
     >
-      <div className="relative w-full ">
-        {!metaImage && <div className="">No image</div>}
-        {metaImage && typeof metaImage !== "string" && <Media resource={metaImage} size="33vw" />}
+      <div className="relative w-full aspect-[16/9] overflow-hidden bg-muted/30">
+        {imageToUse && typeof imageToUse !== "string" && (
+          <Media resource={imageToUse} size="33vw" className="w-full h-full object-cover" />
+        )}
+        {!imageToUse && (
+          <div className="w-full h-full bg-gradient-to-br from-emerald-950/20 via-slate-900/10 to-slate-950/20 flex items-center justify-center p-6 border-b border-border/30">
+            <img
+              src="/media/northofgrand-badge-color-blue-1.png"
+              alt="North of Grand"
+              className="max-h-16 w-auto object-contain opacity-75 drop-shadow-sm"
+              onError={(e) => {
+                // Fallback to text badge if media path differs
+                e.currentTarget.style.display = "none"
+              }}
+            />
+          </div>
+        )}
       </div>
       <div className="p-4">
         {showCategories && hasCategories && (
