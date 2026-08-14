@@ -103,28 +103,27 @@ EXCLUDE_FLAGS=(
 EXCLUDE_ARGS="${EXCLUDE_FLAGS[*]}"
 
 echo "Step 1/3: Taking sanitized database snapshot on $ENV_LABEL EC2..."
-ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "ubuntu@$IP" \
-  REMOTE_DIR="$REMOTE_DIR" REMOTE_DB_SERVICE="$REMOTE_DB_SERVICE" REMOTE_PATH="$REMOTE_PATH" EXCLUDE_ARGS="$EXCLUDE_ARGS" bash -s <<'REMOTE'
+ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no "ubuntu@$IP" bash -s <<REMOTE
 set -e
 cd "$REMOTE_DIR"
 
 DB_NAME="blockvibe-multitenant"
 if [ -f .env ]; then
-  ENV_DB_NAME=$(grep -E '^DB_NAME=' .env | head -1 | cut -d= -f2- | tr -d '"' | tr -d "'")
-  if [ -n "$ENV_DB_NAME" ]; then
-    DB_NAME="$ENV_DB_NAME"
+  ENV_DB_NAME=\$(grep -E '^DB_NAME=' .env | head -1 | cut -d= -f2- | tr -d '"' | tr -d "'")
+  if [ -n "\$ENV_DB_NAME" ]; then
+    DB_NAME="\$ENV_DB_NAME"
   fi
 fi
 
 echo "Running pg_dump inside $REMOTE_DB_SERVICE excluding sensitive tables..."
-sudo docker compose exec -T "$REMOTE_DB_SERVICE" pg_dump -U postgres -d "$DB_NAME" $EXCLUDE_ARGS > "$REMOTE_PATH"
+sudo docker compose exec -T "$REMOTE_DB_SERVICE" pg_dump -U postgres -d "\$DB_NAME" $EXCLUDE_ARGS > "$REMOTE_PATH"
 
 if [ ! -s "$REMOTE_PATH" ]; then
   echo "Error: Snapshot failed or is empty."
   rm -f "$REMOTE_PATH"
   exit 1
 fi
-echo "✓ Remote snapshot created: $REMOTE_PATH ($(du -sh "$REMOTE_PATH" | cut -f1))"
+echo "✓ Remote snapshot created: $REMOTE_PATH (\$(du -sh "$REMOTE_PATH" | cut -f1))"
 REMOTE
 
 echo ""
