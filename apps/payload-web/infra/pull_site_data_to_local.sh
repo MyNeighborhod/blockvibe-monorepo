@@ -150,6 +150,10 @@ if [ "$SITE_ARG" != "all" ]; then
     -e "ssh -i $SSH_KEY -o StrictHostKeyChecking=no" \
     "ubuntu@$IP:${REMOTE_MEDIA_DIR}/" \
     "$PROJECT_DIR/public/media/" || echo "Warning: Media sync completed with notices."
+  
+  if [ -d "$PROJECT_DIR/public/media/$SITE_ARG" ]; then
+    cp -rn "$PROJECT_DIR/public/media/$SITE_ARG/"* "$PROJECT_DIR/public/media/" 2>/dev/null || true
+  fi
 else
   rsync -avz --progress \
     -e "ssh -i $SSH_KEY -o StrictHostKeyChecking=no" \
