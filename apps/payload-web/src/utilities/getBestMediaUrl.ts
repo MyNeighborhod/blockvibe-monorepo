@@ -5,7 +5,7 @@ export type MediaSizeKey = "thumbnail" | "square" | "small" | "medium" | "large"
 
 /**
  * Returns the best media URL for a given preferred size variant.
- * Falls back in order of preference: preferredSize -> large -> medium -> small -> raw master URL.
+ * Falls back to highest quality variants first (large -> medium -> xlarge -> master URL -> small -> thumbnail).
  */
 export function getBestMediaUrl(
   media: Media | number | string | null | undefined,
@@ -22,15 +22,25 @@ export function getBestMediaUrl(
       return getMediaUrl(sizes[preferredSize]!.url, cacheTag)
     }
 
-    // 2. Fallback priorities if preferred size is missing
-    const fallbackPriority: MediaSizeKey[] = ["large", "medium", "xlarge", "small", "thumbnail"]
-    for (const sizeKey of fallbackPriority) {
+    // 2. Try high-res fallbacks
+    const highResPriority: MediaSizeKey[] = ["large", "medium", "xlarge"]
+    for (const sizeKey of highResPriority) {
       if (sizes[sizeKey]?.url) {
         return getMediaUrl(sizes[sizeKey]!.url, cacheTag)
       }
     }
   }
 
-  // 3. Fallback to raw master URL
-  return getMediaUrl(media.url, cacheTag)
+  // 3. Fall back to original master URL (ensures full resolution for images without large variants)
+  if (media.url) {
+    return getMediaUrl(media.url, cacheTag)
+  }
+
+  // 4. Final fallback to small/thumbnail if master url is unavailable
+  if (sizes) {
+    if (sizes.small?.url) return getMediaUrl(sizes.small.url, cacheTag)
+    if (sizes.thumbnail?.url) return getMediaUrl(sizes.thumbnail.url, cacheTag)
+  }
+
+  return ""
 }
