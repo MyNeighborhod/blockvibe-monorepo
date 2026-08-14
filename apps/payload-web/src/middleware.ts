@@ -18,6 +18,12 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
+  // 2. Redirect /blog and /blog/* to /posts and /posts/*
+  if (pathname === "/blog" || pathname.startsWith("/blog/")) {
+    const targetPath = pathname.replace(/^\/blog/, "/posts")
+    return NextResponse.redirect(new URL(targetPath + url.search, request.url), 308)
+  }
+
   const host = request.headers.get("host") || ""
   const hostname = host.split(":")[0]
   const tenantSlug = resolveTenantSlugFromHost(hostname)
