@@ -50,7 +50,7 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data, tenant }) => {
         {...(overDarkHero ? { "data-theme": "dark" } : theme ? { "data-theme": theme } : {})}
       >
         {/* Top-Right Utility Menu (Login / Sign Up or My Dashboard | Logout) */}
-        <div className="w-full flex justify-end pb-3 pr-2">
+        <div className="hidden md:flex w-full justify-end pb-3 pr-2">
           <TopUtilityBar overDarkHero={overDarkHero} />
         </div>
 
