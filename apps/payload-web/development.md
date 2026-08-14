@@ -101,6 +101,24 @@ If you need to seed or reset the database with tenant-specific layout configurat
   pnpm tsx src/scripts/test-seed.ts
   ```
 
+### Pulling Production Site Data to Local (Safe & Sanitized)
+
+To pull live site structures, pages, posts, categories, header, footer, and media files from production into your local environment **without** pulling user accounts, passwords, sessions, or payment secrets:
+
+```bash
+# Pull North of Grand site data & media
+pnpm db:pull:site-data nog
+
+# Pull Beaverdale site data & media
+pnpm db:pull:site-data beaverdale
+
+# Pull all sites & media
+pnpm db:pull:site-data
+```
+
+> [!SECURITY NOTE]
+> The `db:pull:site-data` script automatically excludes sensitive tables (`users`, `users_sessions`, `memberships`, `crm_fields`, `mailing_lists`, `broadcasts`, `form_submissions`, `payment_settings`, `payload_kv`, `sent_emails`). Passwords and user credentials are **never** exported or copied to localhost.
+
 ---
 
 ## 7. Stopping the Database Container
