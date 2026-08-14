@@ -66,7 +66,7 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
       .then((data) => {
         if (data?.user) setUser(data.user)
       })
-      .catch(() => {})
+      .catch(() => { })
   }, [pathname])
 
   const authButton = user ? (
@@ -105,15 +105,6 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
       ) : (
         <CMSLink key={i} {...link} appearance="link" />
       ),
-    ),
-    isNog ? (
-      <li key="businesses">
-        <Link href="/businesses" className="nav-link">BUSINESSES</Link>
-      </li>
-    ) : (
-      <Link key="businesses" href="/businesses" className="text-sm font-medium text-muted-foreground hover:text-foreground">
-        Businesses
-      </Link>
     ),
   ]
 

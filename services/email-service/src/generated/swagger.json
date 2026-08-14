@@ -89,6 +89,14 @@
 						"format": "double",
 						"description": "Payload broadcasts row id for delivery status updates"
 					},
+					"fromAddress": {
+						"type": "string",
+						"description": "SES From address override (tenant transactional email)"
+					},
+					"fromName": {
+						"type": "string",
+						"description": "SES From display name override"
+					},
 					"tenantId": {
 						"type": "number",
 						"format": "double",

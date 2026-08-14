@@ -50,6 +50,8 @@ const models: TsoaRoute.Models = {
             "delivery": {"ref":"EmailDeliveryMethod"},
             "gmail": {"ref":"GmailCampaignCredentials"},
             "broadcastId": {"dataType":"double"},
+            "fromAddress": {"dataType":"string"},
+            "fromName": {"dataType":"string"},
             "tenantId": {"dataType":"double","required":true},
             "completionToken": {"dataType":"string"},
         },
