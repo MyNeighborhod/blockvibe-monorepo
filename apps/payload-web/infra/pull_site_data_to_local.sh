@@ -183,6 +183,19 @@ if [ -n "$POSTGRES_CONTAINER" ]; then
     " >/dev/null 2>&1 || true
   fi
 
+  echo "Cleaning up orphaned user references..."
+  docker exec -i "$POSTGRES_CONTAINER" psql -U postgres -d "$LOCAL_DB" -c "
+    DELETE FROM posts_rels WHERE users_id IS NOT NULL AND users_id NOT IN (SELECT id FROM users);
+    DELETE FROM _posts_v_rels WHERE users_id IS NOT NULL AND users_id NOT IN (SELECT id FROM users);
+    DELETE FROM payments WHERE user_id IS NOT NULL AND user_id NOT IN (SELECT id FROM users);
+    DELETE FROM payments WHERE recorded_by_id IS NOT NULL AND recorded_by_id NOT IN (SELECT id FROM users);
+    DELETE FROM payload_locked_documents_rels WHERE users_id IS NOT NULL AND users_id NOT IN (SELECT id FROM users);
+    DELETE FROM payload_preferences_rels WHERE users_id IS NOT NULL AND users_id NOT IN (SELECT id FROM users);
+  " >/dev/null 2>&1 || true
+
+  echo "Seeding local dev admin users..."
+  pnpm tsx "$PROJECT_DIR/src/scripts/seed-nog-users.ts" >/dev/null 2>&1 || true
+
   echo "✓ Successfully restored $ENV_LABEL site data for '$SITE_ARG' into local database '$LOCAL_DB'!"
 else
   echo "Notice: Local Postgres container not running. You can restore manually using:"
