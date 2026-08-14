@@ -1,6 +1,6 @@
 import type { Metadata } from "next/types"
 import Link from "next/link"
-import { ArrowRight, BookOpen, Calendar, Newspaper, Sparkles } from "lucide-react"
+import { ArrowRight, BookOpen, Calendar, Newspaper } from "lucide-react"
 import configPromise from "@payload-config"
 import { getPayload } from "payload"
 import React from "react"
@@ -48,7 +48,6 @@ export default async function Page({ params: paramsPromise }: Args) {
   })
 
   const tenantId = tenantDoc.docs[0]?.id
-  const tenantName = tenantDoc.docs[0]?.name || "North of Grand"
 
   // Fetch recent posts (limit 6: 1 latest for main area + up to 5 for sidebar)
   const postsResult = await payload.find({
@@ -65,34 +64,13 @@ export default async function Page({ params: paramsPromise }: Args) {
   const recentSidebarPosts = posts.slice(0, 5)
 
   return (
-    <div className="pt-10 pb-24 min-h-screen bg-slate-50/50 dark:bg-slate-950/50">
+    <div className="pt-8 pb-24 min-h-screen">
       <PageClient />
 
       <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Page Header Banner */}
-        <div className="mb-10 pb-6 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs font-semibold uppercase tracking-wider mb-3">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>{tenantName} Blog & News</span>
-            </div>
-            <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
-              Latest Neighborhood Updates
-            </h1>
-          </div>
-
-          <Link
-            href="/posts/archive"
-            className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 transition-colors group self-start sm:self-auto"
-          >
-            <span>View All Posts ({postsResult.totalDocs})</span>
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </Link>
-        </div>
-
-        {/* 2-Column Responsive Layout: Main Latest Article on Left (Stacked 1st on mobile), Sidebar on Right (Stacked AT END on mobile) */}
+        {/* 2-Column Responsive Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
-          {/* Main Column: Latest Featured Post (8 Cols on Desktop) */}
+          {/* Main Column: Latest Featured Post */}
           <main className="lg:col-span-8 space-y-8">
             {latestPost ? (
               <article className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 md:p-10 border border-slate-200/80 dark:border-slate-800 shadow-xl shadow-slate-200/40 dark:shadow-none">
@@ -112,9 +90,9 @@ export default async function Page({ params: paramsPromise }: Args) {
                 </div>
 
                 {/* Article Title */}
-                <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 dark:text-slate-50 mb-8 leading-tight">
+                <h1 className="font-serif text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 dark:text-slate-50 mb-8 leading-tight">
                   {latestPost.title}
-                </h2>
+                </h1>
 
                 {/* Full Article Content */}
                 <div className="prose dark:prose-invert max-w-none">
@@ -130,7 +108,7 @@ export default async function Page({ params: paramsPromise }: Args) {
             )}
           </main>
 
-          {/* Sidebar Column: Recent Posts Panel (4 Cols on Desktop, Appears at END on Mobile) */}
+          {/* Sidebar Column: Recent Posts Panel */}
           <aside className="lg:col-span-4 lg:sticky lg:top-24 space-y-6">
             <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-xl shadow-slate-200/40 dark:shadow-none">
               <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100 dark:border-slate-800">
