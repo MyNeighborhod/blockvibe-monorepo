@@ -73,7 +73,7 @@ REMOTE_PATH="/home/ubuntu/site_data_${ENV_LABEL}_${SITE_ARG}_${TIMESTAMP}.sql"
 echo "========================================================"
 echo "Pulling Site Data from $ENV_LABEL (ubuntu@$IP)"
 echo "Target Site Filter: $SITE_ARG"
-echo "EXCLUDES: users, passwords, sessions, memberships, CRM, emails, payment secrets"
+echo "EXCLUDES: users, passwords, sessions, memberships, payments, CRM, emails, payment secrets"
 echo "========================================================"
 
 EXCLUDE_FLAGS=(
@@ -82,6 +82,8 @@ EXCLUDE_FLAGS=(
   "--exclude-table-data=users_tenants"
   "--exclude-table-data=memberships"
   "--exclude-table-data=invites"
+  "--exclude-table-data=payments"
+  "--exclude-table-data=payments_rels"
   "--exclude-table-data=crm_fields"
   "--exclude-table-data=crm_fields_options"
   "--exclude-table-data=mailing_lists"
@@ -183,14 +185,10 @@ if [ -n "$POSTGRES_CONTAINER" ]; then
     " >/dev/null 2>&1 || true
   fi
 
-  echo "Cleaning up orphaned user references..."
+  echo "Cleaning up orphaned author references..."
   docker exec -i "$POSTGRES_CONTAINER" psql -U postgres -d "$LOCAL_DB" -c "
     DELETE FROM posts_rels WHERE users_id IS NOT NULL AND users_id NOT IN (SELECT id FROM users);
     DELETE FROM _posts_v_rels WHERE users_id IS NOT NULL AND users_id NOT IN (SELECT id FROM users);
-    DELETE FROM payments WHERE user_id IS NOT NULL AND user_id NOT IN (SELECT id FROM users);
-    DELETE FROM payments WHERE recorded_by_id IS NOT NULL AND recorded_by_id NOT IN (SELECT id FROM users);
-    DELETE FROM payload_locked_documents_rels WHERE users_id IS NOT NULL AND users_id NOT IN (SELECT id FROM users);
-    DELETE FROM payload_preferences_rels WHERE users_id IS NOT NULL AND users_id NOT IN (SELECT id FROM users);
   " >/dev/null 2>&1 || true
 
   echo "Seeding local dev admin users..."
