@@ -1,10 +1,17 @@
 #!/bin/bash
 set -e
 
-# pull_site_data_to_local.sh
+# pull_site_data_to_local.sh [site-slug-or-domain]
+#
 # Pull site structure, pages, posts, categories, headers, footers, media metadata,
 # and media assets from production into local development environment.
-# EXCLUDES sensitive data: users, memberships, invites, crm fields, mailing lists, form submissions, emails.
+#
+# Usage:
+#   pnpm db:pull:site-data          (pulls all sites)
+#   pnpm db:pull:site-data nog      (pulls North of Grand site data & media)
+#   ./infra/pull_site_data_to_local.sh beaverdale
+
+SITE_ARG="${1:-all}"
 
 INFRA_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 PROJECT_DIR="$( dirname "$INFRA_DIR" )"
@@ -36,12 +43,13 @@ done
 SNAPSHOT_DIR="$PROJECT_DIR/dbsnapshots/prod"
 mkdir -p "$SNAPSHOT_DIR"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-LOCAL_PATH="$SNAPSHOT_DIR/site_data_${TIMESTAMP}.sql"
-REMOTE_PATH="/home/ubuntu/site_data_${TIMESTAMP}.sql"
+LOCAL_PATH="$SNAPSHOT_DIR/site_data_${SITE_ARG}_${TIMESTAMP}.sql"
+REMOTE_PATH="/home/ubuntu/site_data_${SITE_ARG}_${TIMESTAMP}.sql"
 
 echo "========================================================"
 echo "Pulling Site Data from Production (ubuntu@$IP)"
-echo "Excluding: users, memberships, invites, CRM, mailing lists, form submissions"
+echo "Target Site Filter: $SITE_ARG"
+echo "EXCLUDES: users, passwords, sessions, memberships, CRM, emails, payment secrets"
 echo "========================================================"
 
 EXCLUDE_FLAGS=(
@@ -105,28 +113,60 @@ echo "✓ Saved snapshot to: $LOCAL_PATH"
 echo ""
 echo "Step 3/3: Syncing media assets to local public/media..."
 mkdir -p "$PROJECT_DIR/public/media"
-rsync -avz --progress \
-  -e "ssh -i $SSH_KEY -o StrictHostKeyChecking=no" \
-  "ubuntu@$IP:/var/www/blockvibe/media/" \
-  "$PROJECT_DIR/public/media/" || echo "Warning: Media sync completed with non-fatal notices."
+
+if [ "$SITE_ARG" != "all" ]; then
+  echo "Syncing media specifically for site: $SITE_ARG"
+  rsync -avz --progress \
+    -e "ssh -i $SSH_KEY -o StrictHostKeyChecking=no" \
+    "ubuntu@$IP:/var/www/blockvibe/media/${SITE_ARG}/" \
+    "$PROJECT_DIR/public/media/${SITE_ARG}/" 2>/dev/null || \
+  rsync -avz --progress \
+    -e "ssh -i $SSH_KEY -o StrictHostKeyChecking=no" \
+    "ubuntu@$IP:/var/www/blockvibe/media/" \
+    "$PROJECT_DIR/public/media/" || echo "Warning: Media sync completed with notices."
+else
+  rsync -avz --progress \
+    -e "ssh -i $SSH_KEY -o StrictHostKeyChecking=no" \
+    "ubuntu@$IP:/var/www/blockvibe/media/" \
+    "$PROJECT_DIR/public/media/" || echo "Warning: Media sync completed with notices."
+fi
 
 echo ""
 echo "Restoring snapshot into local Postgres database..."
 POSTGRES_CONTAINER=$(docker ps --format '{{.Names}}' | grep postgres | head -1 || echo "")
 
 if [ -n "$POSTGRES_CONTAINER" ]; then
-  # Determine DB name locally
   LOCAL_DB="blockvibe-multitenant"
   docker exec -i "$POSTGRES_CONTAINER" psql -U postgres -d postgres -c "DROP DATABASE IF EXISTS \"$LOCAL_DB\";" >/dev/null 2>&1 || true
   docker exec -i "$POSTGRES_CONTAINER" psql -U postgres -d postgres -c "CREATE DATABASE \"$LOCAL_DB\";" >/dev/null 2>&1
   docker exec -i "$POSTGRES_CONTAINER" psql -U postgres -d "$LOCAL_DB" < "$LOCAL_PATH" >/dev/null
-  echo "✓ Successfully restored site data to local database '$LOCAL_DB'!"
+
+  if [ "$SITE_ARG" != "all" ]; then
+    echo "Filtering database to retain site data for '$SITE_ARG'..."
+    docker exec -i "$POSTGRES_CONTAINER" psql -U postgres -d "$LOCAL_DB" -c "
+      DO \$\$
+      DECLARE target_id INT;
+      BEGIN
+        SELECT id INTO target_id FROM tenants WHERE slug = '$SITE_ARG' OR domain = '$SITE_ARG' LIMIT 1;
+        IF target_id IS NOT NULL THEN
+          DELETE FROM pages WHERE tenant IS NOT NULL AND tenant != target_id;
+          DELETE FROM posts WHERE tenant IS NOT NULL AND tenant != target_id;
+          DELETE FROM header WHERE tenant IS NOT NULL AND tenant != target_id;
+          DELETE FROM footer WHERE tenant IS NOT NULL AND tenant != target_id;
+          DELETE FROM media WHERE tenant IS NOT NULL AND tenant != target_id;
+          DELETE FROM categories WHERE tenant IS NOT NULL AND tenant != target_id;
+        END IF;
+      END \$\$;
+    " >/dev/null 2>&1 || true
+  fi
+
+  echo "✓ Successfully restored site data for target '$SITE_ARG' into local database '$LOCAL_DB'!"
 else
-  echo "Notice: Local Postgres docker container not running. You can restore manually using:"
+  echo "Notice: Local Postgres container not running. You can restore manually using:"
   echo "  pnpm tsx src/scripts/restore_local_db.ts $LOCAL_PATH"
 fi
 
 echo ""
 echo "========================================================"
-echo "✓ All Done! Site structures, pages, posts, and media synced to local."
+echo "✓ All Done! Site structures, pages, posts, and media synced for [$SITE_ARG]."
 echo "========================================================"
