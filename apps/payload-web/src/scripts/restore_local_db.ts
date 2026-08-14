@@ -13,7 +13,7 @@ if (!databaseUrl) {
   process.exit(1)
 }
 
-const dbsnapshotsDir = path.join(process.cwd(), "dbsnapshots")
+const dbsnapshotsDir = path.resolve(process.cwd(), "../../dbsnapshots")
 const localDir = path.join(dbsnapshotsDir, "local")
 const prodDir = path.join(dbsnapshotsDir, "prod")
 

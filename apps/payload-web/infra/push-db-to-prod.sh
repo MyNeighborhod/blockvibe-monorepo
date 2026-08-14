@@ -57,13 +57,17 @@ for cmd in pg_dump scp ssh rsync; do
   fi
 done
 
+PARALLEL_DIR="$( cd "$PROJECT_DIR/../../.." &> /dev/null && pwd )"
+
 if [ -n "$SNAPSHOT_ARG" ]; then
   if [ -f "$SNAPSHOT_ARG" ]; then
     SNAPSHOT_PATH="$(cd "$(dirname "$SNAPSHOT_ARG")" && pwd)/$(basename "$SNAPSHOT_ARG")"
   elif [ -f "$PROJECT_DIR/$SNAPSHOT_ARG" ]; then
     SNAPSHOT_PATH="$PROJECT_DIR/$SNAPSHOT_ARG"
-  elif [ -f "$PROJECT_DIR/dbsnapshots/$SNAPSHOT_ARG" ]; then
-    SNAPSHOT_PATH="$PROJECT_DIR/dbsnapshots/$SNAPSHOT_ARG"
+  elif [ -f "$PARALLEL_DIR/dbsnapshots/$SNAPSHOT_ARG" ]; then
+    SNAPSHOT_PATH="$PARALLEL_DIR/dbsnapshots/$SNAPSHOT_ARG"
+  elif [ -f "$PARALLEL_DIR/dbsnapshots/prod/$SNAPSHOT_ARG" ]; then
+    SNAPSHOT_PATH="$PARALLEL_DIR/dbsnapshots/prod/$SNAPSHOT_ARG"
   else
     echo "Error: Snapshot not found: $SNAPSHOT_ARG"
     exit 1
@@ -80,7 +84,7 @@ else
     exit 1
   fi
 
-  SNAPSHOT_DIR="$PROJECT_DIR/dbsnapshots"
+  SNAPSHOT_DIR="$PARALLEL_DIR/dbsnapshots"
   mkdir -p "$SNAPSHOT_DIR"
   TIMESTAMP=$(date +%Y%m%d_%H%M%S)
   SNAPSHOT_PATH="$SNAPSHOT_DIR/snapshot_${TIMESTAMP}.sql"

@@ -64,7 +64,8 @@ if [ "$STAGING" -eq 1 ]; then
   ENV_LABEL="staging"
 fi
 
-SNAPSHOT_DIR="$PROJECT_DIR/dbsnapshots/$ENV_LABEL"
+PARALLEL_DIR="$( cd "$PROJECT_DIR/../../.." &> /dev/null && pwd )"
+SNAPSHOT_DIR="$PARALLEL_DIR/dbsnapshots/$ENV_LABEL"
 mkdir -p "$SNAPSHOT_DIR"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 LOCAL_PATH="$SNAPSHOT_DIR/site_data_${SITE_ARG}_${TIMESTAMP}.sql"

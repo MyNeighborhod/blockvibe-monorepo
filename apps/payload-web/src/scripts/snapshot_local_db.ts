@@ -13,8 +13,8 @@ if (!databaseUrl) {
   process.exit(1)
 }
 
-// Ensure dbsnapshots/local directory exists
-const snapshotDir = path.join(process.cwd(), "dbsnapshots", "local")
+// Ensure parallel dbsnapshots/local directory exists
+const snapshotDir = path.resolve(process.cwd(), "../../dbsnapshots/local")
 if (!fs.existsSync(snapshotDir)) {
   fs.mkdirSync(snapshotDir, { recursive: true })
 }

@@ -35,7 +35,8 @@ for cmd in pg_dump scp ssh; do
   fi
 done
 
-SNAPSHOT_DIR="$PROJECT_DIR/dbsnapshots/prod"
+PARALLEL_DIR="$( cd "$PROJECT_DIR/../../.." &> /dev/null && pwd )"
+SNAPSHOT_DIR="$PARALLEL_DIR/dbsnapshots/prod"
 mkdir -p "$SNAPSHOT_DIR"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 LOCAL_PATH="$SNAPSHOT_DIR/snapshot_${TIMESTAMP}.sql"
