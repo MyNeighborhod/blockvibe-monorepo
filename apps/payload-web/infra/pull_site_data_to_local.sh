@@ -160,9 +160,9 @@ POSTGRES_CONTAINER=$(docker ps --format '{{.Names}}' | grep postgres | head -1 |
 
 if [ -n "$POSTGRES_CONTAINER" ]; then
   LOCAL_DB="blockvibe-multitenant"
-  docker exec -i "$POSTGRES_CONTAINER" psql -U postgres -d postgres -c "DROP DATABASE IF EXISTS \"$LOCAL_DB\";" >/dev/null 2>&1 || true
+  docker exec -i "$POSTGRES_CONTAINER" psql -U postgres -d postgres -c "DROP DATABASE IF EXISTS \"$LOCAL_DB\" WITH (FORCE);" >/dev/null 2>&1 || true
   docker exec -i "$POSTGRES_CONTAINER" psql -U postgres -d postgres -c "CREATE DATABASE \"$LOCAL_DB\";" >/dev/null 2>&1
-  docker exec -i "$POSTGRES_CONTAINER" psql -U postgres -d "$LOCAL_DB" < "$LOCAL_PATH" >/dev/null
+  (echo "SET session_replication_role = 'replica';" && cat "$LOCAL_PATH") | docker exec -i "$POSTGRES_CONTAINER" psql -U postgres -d "$LOCAL_DB" >/dev/null 2>&1 || true
 
   if [ "$SITE_ARG" != "all" ]; then
     echo "Filtering database to retain site data for '$SITE_ARG'..."
