@@ -63,6 +63,9 @@ EXCLUDE_FLAGS=(
   "--exclude-table-data=payload_locked_documents_rels"
   "--exclude-table-data=payload_preferences"
   "--exclude-table-data=payload_preferences_rels"
+  "--exclude-table-data=payment_settings"
+  "--exclude-table-data=payment_settings_business_tiers"
+  "--exclude-table-data=payload_kv"
 )
 
 EXCLUDE_ARGS="${EXCLUDE_FLAGS[*]}"
