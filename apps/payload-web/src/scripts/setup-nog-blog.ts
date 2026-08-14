@@ -57,11 +57,16 @@ async function run() {
   if (page216?.layout) {
     const slideshowBlock = page216.layout.find((b: any) => b.blockType === "slideshowBlock")
     if (slideshowBlock?.images?.length > 0) {
+      const seenIds = new Set()
       slideshowImages = slideshowBlock.images
         .map((item: any) => ({
           image: typeof item.image === "object" ? item.image?.id : item.image,
         }))
-        .filter((item: any) => Boolean(item.image))
+        .filter((item: any) => {
+          if (!item.image || seenIds.has(item.image)) return false
+          seenIds.add(item.image)
+          return true
+        })
     }
   }
 

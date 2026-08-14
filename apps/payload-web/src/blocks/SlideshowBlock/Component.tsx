@@ -84,7 +84,7 @@ export const SlideshowBlock: React.FC<SlideshowBlockType> = ({ images }) => {
           const alt = media.alt || `Slide ${index + 1}`
           return (
             <div
-              key={media.id || index}
+              key={`${media.id || "media"}-${index}`}
               className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
                 index === slideIndex ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
               }`}
@@ -122,7 +122,7 @@ export const SlideshowBlock: React.FC<SlideshowBlockType> = ({ images }) => {
               const media = item.image as Media
               return (
                 <button
-                  key={media.id || index}
+                  key={`dot-${media.id || "media"}-${index}`}
                   onClick={() => setSlideIndex(index)}
                   className={`h-2.5 rounded-full transition-all duration-300 ${
                     index === slideIndex ? "w-6 bg-white" : "w-2.5 bg-white/50 hover:bg-white/80"
