@@ -52,8 +52,8 @@ async function run() {
     limit: 1,
   })
 
-  // Extract rich text content & slideshow from Page 216 if present
-  let slideshowImages: any[] = [287, 288, 289, 290, 291, 292, 293, 294, 295, 296, 297, 298, 299, 300, 301, 302].map(id => ({ image: id }))
+  // Dynamically fetch media records for slideshow images
+  let slideshowImages: any[] = []
   if (page216?.layout) {
     const slideshowBlock = page216.layout.find((b: any) => b.blockType === "slideshowBlock")
     if (slideshowBlock?.images?.length > 0) {
@@ -68,6 +68,14 @@ async function run() {
           return true
         })
     }
+  }
+
+  if (slideshowImages.length === 0) {
+    const mediaDocs = await payload.find({
+      collection: "media",
+      limit: 20,
+    })
+    slideshowImages = mediaDocs.docs.map((m: any) => ({ image: m.id }))
   }
 
   const baseRichText = page216?.layout?.[0]?.columns?.[0]?.richText || {
