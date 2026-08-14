@@ -13,8 +13,6 @@
     "db:snapshot:prod": "./infra/snapshot-prod-db.sh",
     "db:pull:site-data": "./infra/pull_site_data_to_local.sh",
     "db:restore:local": "tsx src/scripts/restore_local_db.ts",
-    "db:downsample-media": "tsx src/scripts/downsample-existing-media.ts",
-    "db:fix-rotations": "tsx src/scripts/fix-image-rotations.ts",
     "db:push:prod": "./infra/push-db-to-prod.sh",
     "seed:default-platform": "tsx src/scripts/seed-default-platform.ts",
     "seed:nog-staging": "tsx src/scripts/seed-nog-staging.ts",
