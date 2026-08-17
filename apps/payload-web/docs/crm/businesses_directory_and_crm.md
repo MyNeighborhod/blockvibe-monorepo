@@ -9,10 +9,13 @@ This feature adds a tenant-specific **Local Businesses Directory**, a public **S
 
 Implemented as a **tenant feature flag** (`enableBusinessDirectory`) with:
 
-- Image-forward cards (cover + logo), category filter pills, sort, detail panel
+- Image-forward cards (cover + logo), category filter pills, sort, infinite scroll (10 per page)
+- Dedicated detail pages at `/businesses/[slug]`
 - Configurable core fields + custom `directory-fields`
 - Tenant-scoped `business-categories`
 - NOG visual language (teal accent, serif titles) inspired by — not copied from — [The Avenues](https://www.theavenuesdsm.com/businesses/)
+
+**Admin how-to** (Settings, CRM approval, Payload edit, owner My Business): see [business_directory_feature.md — How admins edit the directory](./business_directory_feature.md#how-admins-edit-the-directory).
 
 ## Architectural Overview
 

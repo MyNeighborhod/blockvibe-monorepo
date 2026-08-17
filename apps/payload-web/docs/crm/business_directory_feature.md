@@ -116,7 +116,7 @@ In **Settings → Business Directory → Core fields**, toggle per field:
 | On | Field is part of the directory schema UX |
 | Required | Required on the public registration form |
 | Card | Shown on directory cards |
-| Detail | Shown in the detail panel |
+| Detail | Shown on `/businesses/[slug]` |
 | Form | Shown on “Add your business” |
 
 Core keys: name, logo, coverImage, address, phone, email, website, hours, about, categories, facebook, instagram.
@@ -164,11 +164,79 @@ flowchart LR
 
 ## Public UX principles
 
-- **Avenues patterns kept:** category pills, sort, image-led cards, detail contact/hours blocks, “add your business”.
+- **Avenues patterns kept:** category pills, sort, image-led cards, contact/hours on the first viewport of detail, “add your business”.
 - **NOG identity kept:** serif titles (`#42514c`), muted body (`#7b8c89`), teal accent (`#76b3b8`), soft radial wash — not Avenues black/cart chrome.
-- Cards open an in-page detail panel (no full page reload); images use `loading="lazy"`.
-+ Cards link to a dedicated detail page at `/businesses/[slug]` (Avenues-style layout, NOG styling); images use `loading="lazy"`.
-+ Each listing has a `slug` (auto from name) used in the public URL.
+- Cards link to a dedicated detail page at `/businesses/[slug]` (contact/hours left, media right on desktop; media first on mobile).
+- Each listing has a `slug` (auto from name) used in the public URL.
+- Directory list loads **10** businesses at a time; scrolling loads more with a bottom spinner until all results are shown.
+- Cards truncate About; full founder/origin-style copy lives on the detail page.
+
+## How admins edit the directory
+
+Admins manage the feature in three places. Use the lightest surface that fits the job.
+
+### 1. Dashboard → Settings → Business Directory
+
+**Who:** neighborhood **admin** / **superadmin**  
+**URL:** `/dashboard/settings` (Business Directory card)
+
+| Task | What to do |
+| ---- | ---------- |
+| Turn the feature on/off | Check **Enable Directory feature** → **Save directory settings** |
+| Page title & intro | Edit fields → Save |
+| Public registration | Toggle **Allow public registration** → Save |
+| Nav link | Toggle **Show in nav** → Save |
+| Which fields appear where | **Core fields** matrix (On / Required / Card / Detail / Form) → Save |
+| Filter categories | **Categories**: add title or delete a pill |
+| Extra registration fields | **Custom directory fields**: label, camelCase key, type → **Add field** |
+
+Changes here affect every listing’s public form and card/detail layout for that tenant. They do **not** edit an individual business’s name, hours, or logo.
+
+### 2. Dashboard → CRM → Local Businesses
+
+**Who:** neighborhood **admin** / **superadmin** (tab only when Directory is enabled)  
+**URL:** `/dashboard/crm` → **Local Businesses**
+
+| Task | What to do |
+| ---- | ---------- |
+| Approve a new listing | Open the business → turn on **Appear in Directory** (sends approval email once) |
+| Hide a listing | Turn **Appear in Directory** off |
+| Review pending vs live | Use the CRM Local Businesses list / filters |
+| Segment owners for email | Use CRM Member Type **business** and the seeded **Approved Businesses** mailing list |
+
+This is the day-to-day approval queue after someone uses **Add your business** on the public site.
+
+### 3. Payload Admin → Businesses (full listing edit)
+
+**Who:** staff with Payload Admin access for the tenant  
+**URL:** `/admin` → **Businesses** (collection)
+
+| Task | What to do |
+| ---- | ---------- |
+| Create a listing manually | **Create new** → fill name, contact, hours, about, categories, logo/cover → set tenant → set **Appear in Directory** if it should go live |
+| Edit copy, hours, address, socials | Open the document → change fields → Save |
+| Change logo / cover | Upload or replace media on the document → Save |
+| Fix slug / URL | Edit **slug** (must stay unique per tenant) → Save; public URL is `/businesses/[slug]` |
+| Assign categories | Relationship to **Business Categories** |
+| Custom attribute values | `customAttributes` JSON / fields matching directory-fields keys |
+
+**Business Categories** and **Directory Fields** collections in Admin are for advanced edits (sort order, field flags) beyond the Settings UI.
+
+### 4. Business owners (after approval)
+
+**Who:** contact with `memberType: business`  
+**URL:** Login (Forgot password first if needed) → **Dashboard → My Business**
+
+Owners can update their own listing profile and password. They cannot enable Directory for the tenant or approve other businesses.
+
+### Quick decision guide
+
+| Goal | Go to |
+| ---- | ----- |
+| Enable Directory / change page copy / field matrix | **Settings → Business Directory** |
+| Approve or unpublish a listing | **CRM → Local Businesses** |
+| Rewrite About, swap logo, fix hours/slug | **Payload Admin → Businesses** (or owner **My Business**) |
+| Add a filter pill category | **Settings → Categories** (or Admin → Business Categories) |
 
 ## Gating
 
@@ -188,6 +256,8 @@ flowchart LR
 
 - Collections: `Businesses.ts`, `BusinessCategories.ts`, `DirectoryFields.ts`, `Tenants/index.ts`
 - CRM bootstrap (mailing list, Resident Category, approval email): `src/directory/crmBootstrap.ts`
-- Public: `app/(frontend)/[tenant]/(public)/businesses/`
+- Public list + detail: `app/(frontend)/[tenant]/(public)/businesses/` (incl. `[slug]/page.tsx`)
+- Infinite scroll page size: `DIRECTORY_PAGE_SIZE` in `src/directory/constants.ts`
 - Settings UI: `dashboard/settings/DirectorySettings.tsx`
+- Demo seed (staging visuals): `src/scripts/seed-nog-directory-demo.ts` (+ Unsplash download script)
 - Constants: `src/directory/constants.ts`
