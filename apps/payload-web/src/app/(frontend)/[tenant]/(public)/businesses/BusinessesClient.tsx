@@ -116,6 +116,7 @@ export default function BusinessesClient({
   const required = (key: DirectoryCoreFieldKey) => Boolean(fieldMap.get(key)?.required)
 
   const [businesses] = useState<Business[]>(initialBusinesses)
+  const [searchQuery, setSearchQuery] = useState("")
   const [activeCategory, setActiveCategory] = useState<string>("all")
   const [sortBy, setSortBy] = useState<"name" | "name-desc">("name")
   const [selected, setSelected] = useState<Business | null>(null)
@@ -148,17 +149,36 @@ export default function BusinessesClient({
     directorySettings.pageIntro ||
     "Support local. Explore shops, restaurants, and services right here in our neighborhood."
 
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = { all: businesses.length }
+    for (const b of businesses) {
+      for (const catId of categoryIdsOf(b)) {
+        counts[catId] = (counts[catId] || 0) + 1
+      }
+    }
+    return counts
+  }, [businesses])
+
   const filtered = useMemo(() => {
     let list = [...businesses]
     if (activeCategory !== "all") {
       list = list.filter((b) => categoryIdsOf(b).includes(activeCategory))
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim()
+      list = list.filter(
+        (b) =>
+          b.name.toLowerCase().includes(q) ||
+          (b.about || "").toLowerCase().includes(q) ||
+          (b.address || "").toLowerCase().includes(q),
+      )
     }
     list.sort((a, b) => {
       const cmp = a.name.localeCompare(b.name)
       return sortBy === "name" ? cmp : -cmp
     })
     return list
-  }, [businesses, activeCategory, sortBy])
+  }, [businesses, activeCategory, searchQuery, sortBy])
 
   const readFile = (file: File, setter: (v: string) => void) => {
     const reader = new FileReader()
