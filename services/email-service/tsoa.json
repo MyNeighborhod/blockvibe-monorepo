@@ -1,0 +1,22 @@
+{
+  "entryFile": "src/server.ts",
+  "noImplicitAdditionalProperties": "throw-on-extras",
+  "controllerPathGlobs": ["src/controllers/**/*Controller.ts"],
+  "spec": {
+    "outputDirectory": "src/generated",
+    "specVersion": 3,
+    "securityDefinitions": {
+      "enqueueToken": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Short-lived HMAC-signed enqueue token minted by payload-web after admin role check"
+      }
+    }
+  },
+  "routes": {
+    "routesDir": "src/generated",
+    "esm": true,
+    "middleware": "express",
+    "authenticationModule": "src/middleware/authentication.ts"
+  }
+}

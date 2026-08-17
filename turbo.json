@@ -1,0 +1,35 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "ui": "stream",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build", "generate:types", "generate:importmap"],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**", "payload-types.ts"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "lint": {
+      "dependsOn": ["^lint"]
+    },
+    "lint:fix": {
+      "cache": false
+    },
+    "generate:types": {
+      "cache": false
+    },
+    "generate:importmap": {
+      "cache": false
+    },
+    "test": {
+      "dependsOn": ["build"]
+    },
+    "test:e2e": {
+      "cache": false
+    },
+    "test:int": {
+      "cache": false
+    }
+  }
+}

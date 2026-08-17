@@ -1,0 +1,17 @@
+node_modules
+.next
+.git
+.turbo
+apps/*/node_modules
+apps/*/.next
+packages/*/node_modules
+packages/*/.next
+*.tar.gz
+playwright-report
+test-results
+# Local dev env files must not be baked into production Docker images (contains PayPal stub URL)
+apps/payload-web/.env
+apps/payload-web/.env.staging
+apps/payload-web/.env.local
+apps/payload-web/.env.development.local
+apps/payload-web/.env.production.local

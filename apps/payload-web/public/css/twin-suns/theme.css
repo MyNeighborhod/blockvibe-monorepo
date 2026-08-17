@@ -1,0 +1,239 @@
+/* Twin Suns Theme Custom Overrides - Sci-Fi/Space Aesthetics */
+.theme-twin-suns {
+  background-color: #060913 !important;
+  color: #f1f5f9 !important;
+  font-family: var(--font-sans), sans-serif;
+  min-height: 100vh;
+}
+
+/* Base text overrides */
+.theme-twin-suns p,
+.theme-twin-suns div.paragraph,
+.theme-twin-suns .richText p {
+  font-family: var(--font-sans), sans-serif !important;
+  color: #94a3b8 !important;
+  font-size: 1.0625rem !important; /* 17px */
+  line-height: 1.8 !important;
+}
+
+.theme-twin-suns strong,
+.theme-twin-suns b {
+  color: #f1f5f9 !important;
+  text-shadow: 0 0 8px rgba(241, 245, 249, 0.2);
+}
+
+/* Headings with high-tech font and twin suns glow */
+.theme-twin-suns h1,
+.theme-twin-suns h2,
+.theme-twin-suns h3,
+.theme-twin-suns h4,
+.theme-twin-suns .hero h1 {
+  font-family: var(--font-montserrat), sans-serif !important;
+  color: #f8fafc !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  line-height: 1.25 !important;
+}
+
+.theme-twin-suns h1,
+.theme-twin-suns .hero h1 {
+  font-size: 3.5rem !important;
+  background: linear-gradient(135deg, #ffedd5 0%, #f97316 50%, #ea580c 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 15px rgba(249, 115, 22, 0.35));
+  margin-bottom: 1.5rem !important;
+}
+
+.theme-twin-suns h2 {
+  font-size: 2.25rem !important;
+  border-bottom: 2px solid rgba(249, 115, 22, 0.2);
+  padding-bottom: 0.5rem !important;
+  margin-top: 2rem !important;
+  margin-bottom: 1.25rem !important;
+}
+
+.theme-twin-suns h3 {
+  font-size: 1.5rem !important;
+  color: #fdba74 !important; /* light amber */
+  margin-top: 1.5rem !important;
+  margin-bottom: 0.75rem !important;
+}
+
+/* Links & interactive states */
+.theme-twin-suns a {
+  color: #38bdf8; /* cyber cyan */
+  text-shadow: 0 0 5px rgba(56, 189, 248, 0.3);
+  text-decoration: none;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.theme-twin-suns a:hover {
+  color: #ff7d00;
+  text-shadow: 0 0 10px rgba(255, 125, 0, 0.6);
+}
+
+/* Header style modifications */
+.theme-twin-suns header > div {
+  max-width: var(--breakpoint-2xl) !important;
+  margin: 0 auto !important;
+  padding-left: 2.5rem !important;
+  padding-right: 2.5rem !important;
+}
+
+.theme-twin-suns header nav a,
+.theme-twin-suns header nav a.nav-link {
+  font-family: var(--font-sans), sans-serif !important;
+  font-size: 0.875rem !important;
+  letter-spacing: normal !important;
+  text-transform: none !important;
+  text-decoration: none !important;
+  color: #f1f5f9 !important;
+  padding: 0.5rem 1rem !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease;
+  text-shadow: none !important;
+}
+
+.theme-twin-suns header nav a:hover,
+.theme-twin-suns header nav a.nav-link:hover {
+  color: #f97316 !important; /* Clean orange shade on hover */
+  background-color: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+.theme-twin-suns header nav a[href="/search"] svg,
+.theme-twin-suns header nav svg {
+  color: #f1f5f9 !important;
+  transition: all 0.3s ease;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.8)) !important;
+}
+
+.theme-twin-suns header nav a[href="/search"]:hover svg,
+.theme-twin-suns header nav a:hover svg {
+  color: #ff7d00 !important;
+  filter: drop-shadow(0 0 6px rgba(255, 125, 0, 0.8)) !important;
+}
+
+/* Content blocks, cards, and columns */
+.theme-twin-suns .bg-card,
+.theme-twin-suns .border-border,
+.theme-twin-suns div.content-column,
+.theme-twin-suns .grid > div {
+  background-color: rgba(15, 23, 42, 0.45) !important;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(249, 115, 22, 0.15) !important;
+  border-radius: 12px !important;
+  padding: 1.5rem;
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.4),
+    inset 0 1px 1px rgba(255, 255, 255, 0.05);
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.theme-twin-suns .bg-card:hover,
+.theme-twin-suns div.content-column:hover {
+  border-color: rgba(249, 115, 22, 0.35) !important;
+  box-shadow:
+    0 4px 25px rgba(249, 115, 22, 0.1),
+    inset 0 1px 1px rgba(255, 255, 255, 0.08);
+}
+
+/* Layout section specific tweaks */
+.theme-twin-suns section,
+.theme-twin-suns .container {
+  background-color: transparent !important;
+}
+
+/* Buttons and calls-to-action */
+.theme-twin-suns button,
+.theme-twin-suns a.button,
+.theme-twin-suns .hero a {
+  font-family: var(--font-mono), monospace !important;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  border-radius: 6px !important;
+  transition: all 0.25s ease !important;
+}
+
+.theme-twin-suns .hero a[class*="default"] {
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%) !important;
+  color: #ffffff !important;
+  border: 1px solid #ea580c !important;
+  box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4);
+}
+
+.theme-twin-suns .hero a[class*="default"]:hover {
+  background: linear-gradient(135deg, #ff8c3a 0%, #f97316 100%) !important;
+  box-shadow: 0 4px 20px rgba(249, 115, 22, 0.6);
+  transform: translateY(-1px);
+}
+
+.theme-twin-suns .hero a[class*="outline"] {
+  background: rgba(15, 23, 42, 0.6) !important;
+  color: #38bdf8 !important;
+  border: 1px solid rgba(56, 189, 248, 0.4) !important;
+  box-shadow: 0 4px 10px rgba(56, 189, 248, 0.1);
+}
+
+.theme-twin-suns .hero a[class*="outline"]:hover {
+  color: #ffffff !important;
+  border-color: #38bdf8 !important;
+  box-shadow: 0 4px 15px rgba(56, 189, 248, 0.4);
+  background: rgba(56, 189, 248, 0.1) !important;
+  transform: translateY(-1px);
+}
+
+/* Form inputs */
+.theme-twin-suns input,
+.theme-twin-suns textarea,
+.theme-twin-suns select {
+  background-color: rgba(15, 23, 42, 0.8) !important;
+  border: 1px solid rgba(249, 115, 22, 0.2) !important;
+  color: #f8fafc !important;
+  border-radius: 6px !important;
+  padding: 0.75rem 1rem !important;
+  font-family: var(--font-sans), sans-serif !important;
+  transition: all 0.25s ease;
+}
+
+.theme-twin-suns input:focus,
+.theme-twin-suns textarea:focus,
+.theme-twin-suns select:focus {
+  border-color: #38bdf8 !important;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.3) !important;
+  outline: none !important;
+}
+
+/* Footer overrides */
+.theme-twin-suns footer {
+  background-color: #04060d !important;
+  border-top: 1px solid rgba(249, 115, 22, 0.15) !important;
+  color: #64748b !important;
+  padding-top: 3rem !important;
+  padding-bottom: 3rem !important;
+}
+
+.theme-twin-suns footer nav a {
+  color: #94a3b8 !important;
+  font-family: var(--font-mono), monospace !important;
+  font-size: 0.75rem !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+  transition: color 0.2s ease !important;
+}
+
+.theme-twin-suns footer nav a:hover {
+  color: #ff7d00 !important;
+  text-shadow: 0 0 8px rgba(255, 125, 0, 0.4);
+}
+
+.theme-twin-suns footer div.text-xs {
+  color: #475569 !important;
+}

@@ -1,0 +1,40 @@
+{
+  "name": "blockvibe-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "pnpm@10.5.0",
+  "license": "MIT",
+  "engines": {
+    "node": "^18.20.2 || >=20.9.0",
+    "pnpm": "^9 || ^10"
+  },
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "lint:fix": "turbo lint:fix",
+    "clean": "turbo clean",
+    "email-service:dev": "pnpm --filter @blockvibe/email-service dev",
+    "email-service:build": "pnpm --filter @blockvibe/email-contracts build && pnpm --filter @blockvibe/email-service build && pnpm --filter @blockvibe/email-service build:lambda",
+    "email-service:deploy": "./services/email-service/infra/deploy.sh",
+    "email-service:cdk": "pnpm --filter @blockvibe/email-service-infra cdk",
+    "chat-service:dev": "pnpm --filter @blockvibe/chat-service dev",
+    "chat-service:build": "pnpm --filter @blockvibe/chat-service build && pnpm --filter @blockvibe/chat-service build:lambda",
+    "chat-service:deploy": "./services/chat-service/infra/deploy.sh",
+    "chat-service:cdk": "pnpm --filter @blockvibe/chat-service-infra cdk",
+    "test:e2e": "pnpm --filter payload-web test:e2e",
+    "test:e2e:ui": "pnpm --filter payload-web test:e2e:ui",
+    "test:e2e:prod": "pnpm --filter payload-web test:e2e:prod",
+    "test:e2e:prod:ui": "pnpm --filter payload-web test:e2e:prod:ui"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.4"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "sharp",
+      "esbuild",
+      "unrs-resolver"
+    ]
+  }
+}

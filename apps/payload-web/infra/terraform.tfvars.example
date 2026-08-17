@@ -1,0 +1,7 @@
+aws_region           = "us-east-1"
+instance_type        = "t3.micro"
+instance_name        = "blockvibe-multitenant-prod"
+domain_name          = "info.blockvibe.org"
+cloudflare_api_token = "" # optional; leave empty to skip Cloudflare DNS resources
+cloudflare_zone_id   = "" # optional
+tenant_subdomains    = ["nog", "beaverdale", "oakwood", "woodland-dsm"]

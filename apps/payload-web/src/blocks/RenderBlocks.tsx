@@ -1,0 +1,66 @@
+import React, { Fragment } from "react"
+
+import type { Page } from "@/payload-types"
+
+import { ArchiveBlock } from "@/blocks/ArchiveBlock/Component"
+import { CallToActionBlock } from "@/blocks/CallToAction/Component"
+import { ContentBlock } from "@/blocks/Content/Component"
+import { FormBlock } from "@/blocks/Form/Component"
+import { MediaBlock } from "@/blocks/MediaBlock/Component"
+import { IframeBlock } from "@/blocks/IframeBlock/Component"
+import { SlideshowBlock } from "@/blocks/SlideshowBlock/Component"
+import { FileListBlock } from "@/blocks/FileListBlock/Component"
+import { ContactBlock } from "@/blocks/ContactBlock/Component"
+import { PdfBlock } from "@/blocks/PdfBlock/Component"
+
+const blockComponents = {
+  archive: ArchiveBlock,
+  content: ContentBlock,
+  cta: CallToActionBlock,
+  formBlock: FormBlock,
+  mediaBlock: MediaBlock,
+  iframeBlock: IframeBlock,
+  slideshowBlock: SlideshowBlock,
+  fileListBlock: FileListBlock,
+  contactBlock: ContactBlock,
+  pdfBlock: PdfBlock,
+}
+
+export const RenderBlocks: React.FC<{
+  blocks: Page["layout"][0][]
+}> = (props) => {
+  const { blocks } = props
+
+  const hasBlocks = blocks && Array.isArray(blocks) && blocks.length > 0
+
+  if (hasBlocks) {
+    return (
+      <Fragment>
+        {blocks.map((block, index) => {
+          const { blockType, id, blockName } = block
+
+          if (blockType && blockType in blockComponents) {
+            const Block = blockComponents[blockType]
+
+            if (Block) {
+              return (
+                <div
+                  className="mb-12 last:mb-0"
+                  data-block-name={blockName || undefined}
+                  id={id ? `block-${id}` : undefined}
+                  key={index}
+                >
+                  {/* @ts-expect-error there may be some mismatch between the expected types here */}
+                  <Block {...block} path={`layout.${index}`} disableInnerContainer />
+                </div>
+              )
+            }
+          }
+          return null
+        })}
+      </Fragment>
+    )
+  }
+
+  return null
+}

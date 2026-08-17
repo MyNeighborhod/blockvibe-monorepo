@@ -1,0 +1,50 @@
+services:
+  payload_blue:
+    image: blockvibe-app:staging
+    container_name: payload_blue_staging
+    restart: always
+    ports:
+      - "127.0.0.1:3002:3000" # Staging Blue — avoids prod green on 3001
+    volumes:
+      - /var/www/blockvibe/media-staging/media:/app/apps/payload-web/public/media
+    depends_on:
+      - db-staging
+    env_file:
+      - .env
+    environment:
+      - APP_INSTANCE_COLOR=BLUE
+      - DATABASE_URL=postgres://${DB_USER:-postgres}:${DB_PASSWORD:-localhost}@db-staging:5432/${DB_NAME:-blockvibe-staging}
+
+  payload_green:
+    image: blockvibe-app:staging
+    container_name: payload_green_staging
+    restart: always
+    ports:
+      - "127.0.0.1:3003:3000" # Staging Green
+    volumes:
+      - /var/www/blockvibe/media-staging/media:/app/apps/payload-web/public/media
+    depends_on:
+      - db-staging
+    env_file:
+      - .env
+    environment:
+      - APP_INSTANCE_COLOR=GREEN
+      - DATABASE_URL=postgres://${DB_USER:-postgres}:${DB_PASSWORD:-localhost}@db-staging:5432/${DB_NAME:-blockvibe-staging}
+
+  db-staging:
+    image: postgres:16-alpine
+    container_name: blockvibe_db_staging
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${DB_USER:-postgres}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-localhost}
+      - POSTGRES_DB=${DB_NAME:-blockvibe-staging}
+    ports:
+      - "127.0.0.1:5433:5432" # Bind host 5433 to container 5432 (local access only)
+    volumes:
+      - pgdata-staging:/var/lib/postgresql/data
+    restart: always
+
+volumes:
+  pgdata-staging:

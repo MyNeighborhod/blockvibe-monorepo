@@ -1,0 +1,559 @@
+@import url("https://fonts.googleapis.com/css2?family=Gentium+Basic:ital,wght@0,400;0,700;1,400;1,700&display=swap");
+
+/* North Of Grand Theme Custom Overrides */
+body[data-tenant-chrome="nog"],
+.theme-nog {
+  --background: #ffffff;
+  --card: #ffffff;
+  --popover: #ffffff;
+  --font-gentium: "Gentium Basic", serif;
+  font-family: var(--font-gentium), serif;
+  color: #2a2a2a;
+  background-color: #ffffff;
+  --success: #47773e;
+}
+
+/* NOG header is taller; hero sits flush (header floats over it when data-theme="dark") */
+body[data-tenant-chrome="nog"] .high-impact-hero {
+  margin-top: 0;
+}
+
+.theme-nog p,
+.theme-nog div.paragraph {
+  font-family: var(--font-gentium), serif !important;
+  color: #7b8c89 !important;
+  font-size: 1.125rem !important; /* 18px */
+  line-height: 1.88 !important; /* ~34px */
+}
+
+/* Form message blocks and labels use Gentium Basic body styling (northofgranddsm.org) */
+.theme-nog .payload-richtext p,
+.theme-nog .prose p {
+  color: #7b8c89 !important;
+  font-size: 1.125rem !important;
+  line-height: 1.88 !important;
+}
+
+.theme-nog label {
+  color: #2a2a2a !important;
+  font-size: 1.125rem !important;
+  line-height: 1.88 !important;
+}
+
+.theme-nog h1,
+.theme-nog h2,
+.theme-nog h3,
+.theme-nog h4,
+.theme-nog .hero h1,
+.theme-nog .payload-richtext :is(h1, h2, h3, h4),
+.theme-nog .prose :is(h1, h2, h3, h4) {
+  font-family: var(--font-playfair), serif !important;
+  color: #42514c;
+  font-weight: 600 !important;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* Body copy, form labels, and inline messages — matches northofgranddsm.org */
+.theme-nog .payload-richtext :is(p, li, strong, em, a),
+.theme-nog .prose :is(p, li, strong, em, blockquote, a),
+.theme-nog label,
+.theme-nog input,
+.theme-nog textarea,
+.theme-nog select,
+.theme-nog .font-serif {
+  font-family: var(--font-gentium), serif !important;
+}
+
+.theme-nog h1 {
+  font-size: 3.75rem !important; /* 60px */
+}
+
+.theme-nog [data-block-name="Home Hero Heading"] .container {
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.theme-nog [data-block-name="Home Hero Heading"] h1 {
+  text-align: center;
+  margin-top: 0.5rem !important;
+  margin-bottom: 1.5rem !important;
+}
+
+.theme-nog [data-block-name="Home Intro Content"] .container {
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.theme-nog [data-block-name="Home Intro Content"] img {
+  max-height: 280px;
+  width: 100%;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 1rem;
+}
+
+.theme-nog [data-block-name="Home Intro Content"] h2 {
+  font-size: 1.75rem !important;
+  margin-top: 1rem !important;
+  margin-bottom: 0.75rem !important;
+}
+
+.theme-nog h2 {
+  font-size: 2.125rem !important; /* 34px */
+  margin-top: 1.5rem !important;
+  margin-bottom: 1rem !important;
+}
+
+.theme-nog h3 {
+  font-size: 1.5rem !important;
+  margin-top: 1.25rem !important;
+  margin-bottom: 0.75rem !important;
+}
+
+/* Mobile typography scale for screens <= 768px (iPhone SE, mobile devices) */
+@media (max-width: 48rem) {
+  .theme-nog h1,
+  .theme-nog [data-block-name="Home Hero Heading"] h1 {
+    font-size: 2.25rem !important; /* 36px on mobile */
+    line-height: 1.2 !important;
+    margin-bottom: 1rem !important;
+  }
+
+  .theme-nog h2,
+  .theme-nog [data-block-name="Home Intro Content"] h2 {
+    font-size: 1.5rem !important; /* 24px on mobile */
+    line-height: 1.3 !important;
+    margin-top: 1rem !important;
+    margin-bottom: 0.75rem !important;
+  }
+
+  .theme-nog h3 {
+    font-size: 1.25rem !important;
+    line-height: 1.35 !important;
+  }
+
+  .theme-nog p,
+  .theme-nog div.paragraph,
+  .theme-nog .payload-richtext p,
+  .theme-nog .prose p {
+    font-size: 1rem !important; /* 16px on mobile */
+    line-height: 1.6 !important;
+  }
+
+  .theme-nog [data-block-name="Home Intro Content"] img {
+    max-height: 220px;
+  }
+}
+
+/* Styled Editorial Lists & Auto-Linked URLs */
+.theme-nog .payload-richtext ul,
+.theme-nog .prose ul {
+  list-style: none !important;
+  padding-left: 0 !important;
+  margin-top: 1rem !important;
+  margin-bottom: 1.5rem !important;
+}
+
+.theme-nog .payload-richtext li,
+.theme-nog .prose li {
+  position: relative;
+  padding-left: 1.5rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.65;
+}
+
+.theme-nog .payload-richtext li::before,
+.theme-nog .prose li::before {
+  content: "•";
+  position: absolute;
+  left: 0.25rem;
+  color: #76b3b8;
+  font-weight: bold;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.theme-nog .payload-richtext a,
+.theme-nog .prose a {
+  color: #0a5c54 !important;
+  font-weight: 600;
+  text-decoration: underline !important;
+  text-underline-offset: 4px;
+  transition: color 0.2s ease;
+}
+
+.theme-nog .payload-richtext a:hover,
+.theme-nog .prose a:hover {
+  color: #063934 !important;
+}
+
+.theme-nog a {
+  /* color: #0a3840; */
+  text-decoration: underline;
+  transition: color 0.2s ease;
+}
+
+.theme-nog a:hover {
+  color: #47773e;
+}
+
+.theme-nog header nav a,
+.theme-nog header nav a.nav-link {
+  font-family: var(--font-montserrat), sans-serif !important;
+  font-size: 0.6875rem !important; /* 11px */
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+  text-decoration: none !important;
+  color: #484848 !important;
+  padding: 0.625rem 0.875rem !important; /* 10px 14px */
+  font-weight: 400 !important;
+  display: inline-block;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.theme-nog header nav a:hover,
+.theme-nog header nav a.nav-link:hover {
+  color: #484848 !important;
+}
+
+/* NOG nav bar — side lines, active page, hover (northofgranddsm.org) */
+.theme-nog .nog-nav-bar {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 0.125rem 0;
+  gap: 1rem;
+}
+
+@media (width >= 48rem) {
+  .theme-nog .nog-nav-bar {
+    display: flex;
+  }
+}
+
+.theme-nog .nog-nav {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.theme-nog .nog-nav::before,
+.theme-nog .nog-nav::after {
+  content: "";
+  display: block;
+  width: 4.5rem;
+  max-width: 4.5rem;
+  flex: 0 1 4.5rem;
+  min-width: 1rem;
+  height: 1px;
+  background-color: #d0d0d0;
+}
+
+/* Inner gap (toward menu) stays tight; outer ends get extra inset */
+.theme-nog .nog-nav::before {
+  margin-right: 1.75rem;
+  margin-left: 3.5rem;
+}
+
+.theme-nog .nog-nav::after {
+  margin-left: 1.75rem;
+  margin-right: 3.5rem;
+}
+
+.theme-nog .nog-nav ul {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.theme-nog .nog-nav li:hover,
+.theme-nog .nog-nav li:has([aria-current="page"]) {
+  background-color: #f8f8f8;
+}
+
+.theme-nog header nav a.nav-search {
+  color: #484848 !important;
+  padding: 0.5rem !important;
+  text-decoration: none !important;
+}
+
+.theme-nog header nav a.nav-search:hover {
+  background-color: #f6f6f6;
+  color: #484848 !important;
+}
+
+/* Mobile hamburger nav (northofgranddsm.org) */
+.theme-nog .nog-mobile-header {
+  display: grid;
+  grid-template-columns: 2.5rem 1fr 2.5rem;
+  align-items: center;
+  width: 100%;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+@media (width >= 48rem) {
+  .theme-nog .nog-mobile-header {
+    display: none;
+  }
+}
+
+.theme-nog .nog-desktop-logo {
+  display: none;
+  margin-bottom: 0.5rem;
+}
+
+@media (width >= 48rem) {
+  .theme-nog .nog-desktop-logo {
+    display: block;
+  }
+}
+
+.theme-nog .nog-nav-wrap {
+  width: 100%;
+}
+
+@media (width >= 48rem) {
+  .theme-nog .nog-nav-wrap {
+    margin-top: 1rem;
+  }
+}
+
+.theme-nog .nog-mobile-menu-trigger,
+.theme-nog .nog-mobile-menu-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #484848;
+}
+
+.theme-nog .nog-mobile-logo {
+  display: flex;
+  justify-content: center;
+  text-decoration: none !important;
+}
+
+.theme-nog .nog-mobile-menu {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+}
+
+@media (width >= 48rem) {
+  .theme-nog .nog-mobile-menu {
+    display: none !important;
+  }
+}
+
+.theme-nog .nog-mobile-overlay {
+  position: absolute;
+  inset: 0;
+  border: none;
+  background: rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+}
+
+.theme-nog .nog-mobile-drawer {
+  position: relative;
+  z-index: 1;
+  width: min(18rem, 78vw);
+  height: 100%;
+  background: #fff;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+}
+
+.theme-nog .nog-mobile-drawer-header {
+  display: flex;
+  justify-content: flex-start;
+  padding: 0.75rem 0.75rem 0.25rem;
+}
+
+.theme-nog .nog-mobile-drawer ul {
+  display: flex;
+  flex-direction: column;
+  list-style: none;
+  margin: 0;
+  padding: 0.5rem 0 1rem;
+}
+
+.theme-nog .nog-mobile-drawer li {
+  width: 100%;
+}
+
+.theme-nog .nog-mobile-drawer li:hover,
+.theme-nog .nog-mobile-drawer li:has([aria-current="page"]) {
+  background-color: #f6f6f6;
+}
+
+.theme-nog .nog-mobile-drawer .nav-link {
+  display: block;
+  width: 100%;
+  padding: 0.75rem 1.25rem !important;
+}
+
+.theme-nog .nog-mobile-drawer-search {
+  margin-top: auto;
+  padding: 1rem 1.25rem 1.5rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+[data-theme="dark"] .theme-nog .nog-mobile-header {
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+[data-theme="dark"] .theme-nog .nog-mobile-menu-trigger,
+[data-theme="dark"] .theme-nog .nog-mobile-menu-close {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .theme-nog .nog-mobile-drawer {
+  background: var(--background);
+}
+
+[data-theme="dark"] .theme-nog .nog-mobile-drawer li:hover,
+[data-theme="dark"] .theme-nog .nog-mobile-drawer li:has([aria-current="page"]) {
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+[data-theme="dark"] .theme-nog .nog-mobile-drawer-search {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Styled horizontal lines */
+.theme-nog hr.styled-hr {
+  border: 0;
+  height: 1px;
+  background-image: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0),
+    rgba(123, 140, 137, 0.4),
+    rgba(0, 0, 0, 0)
+  );
+  margin: 2.5rem 0;
+}
+
+/* High-impact hero and header-over-hero use data-theme="dark" — keep light text */
+.theme-nog [data-theme="dark"] h1,
+.theme-nog [data-theme="dark"] h2,
+.theme-nog [data-theme="dark"] h3,
+.theme-nog [data-theme="dark"] h4,
+.theme-nog [data-theme="dark"] p,
+.theme-nog [data-theme="dark"] .richText p,
+.theme-nog [data-theme="dark"] strong,
+.theme-nog [data-theme="dark"] b {
+  color: #ffffff !important;
+}
+
+.theme-nog [data-theme="dark"] a:not([class*="bg-primary"]):not([class*="bg-background"]) {
+  color: #ffffff !important;
+}
+
+.text-primary-foreground a {
+  color: #ffffff;
+}
+
+.theme-nog [data-theme="dark"] a[class*="outline"] {
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.75) !important;
+  background-color: transparent !important;
+}
+
+.theme-nog [data-theme="dark"] a[class*="outline"]:hover {
+  color: #42514c !important;
+  background-color: #ffffff !important;
+}
+
+[data-theme="dark"] .theme-nog header nav a,
+[data-theme="dark"] .theme-nog header nav a.nav-link {
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .theme-nog header nav a:hover,
+[data-theme="dark"] .theme-nog header nav a.nav-link:hover {
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .theme-nog .nog-nav::before,
+[data-theme="dark"] .theme-nog .nog-nav::after {
+  background-color: rgba(255, 255, 255, 0.35);
+}
+
+[data-theme="dark"] .theme-nog .nog-nav li:hover,
+[data-theme="dark"] .theme-nog .nog-nav li:has([aria-current="page"]) {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+[data-theme="dark"] .theme-nog header nav a.nav-search {
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .theme-nog header nav a.nav-search:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .theme-nog header nav svg {
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .theme-nog header > div > a.font-serif {
+  color: #ffffff !important;
+  text-decoration: none !important;
+}
+
+/* Dark mode styles for interactive content cards on NOG tenant */
+[data-theme="dark"] .theme-nog div.bg-white {
+  background-color: var(--card);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .theme-nog div.bg-white h3 {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .theme-nog div.bg-white label {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .theme-nog div.bg-white p {
+  color: #d4d4d8 !important;
+}
+
+[data-theme="dark"] .theme-nog div.bg-white p.text-gray-400,
+[data-theme="dark"] .theme-nog div.bg-white label.text-gray-500 {
+  color: #a1a1aa !important;
+}
+
+[data-theme="dark"] .theme-nog div.bg-white input,
+[data-theme="dark"] .theme-nog div.bg-white textarea {
+  background-color: #09090b;
+  color: #ffffff;
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .theme-nog div.bg-white input::placeholder,
+[data-theme="dark"] .theme-nog div.bg-white textarea::placeholder {
+  color: #71717a;
+}
+
+[data-theme="dark"] .theme-nog div.bg-white a.bg-teal-50 {
+  background-color: rgba(20, 184, 166, 0.1);
+  color: #5eead4 !important;
+}
+
+[data-theme="dark"] .theme-nog div.bg-white .bg-teal-50 {
+  background-color: rgba(20, 184, 166, 0.05);
+  border-color: rgba(20, 184, 166, 0.2);
+}

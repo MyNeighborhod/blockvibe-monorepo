@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Service
+  postgres:
+    restart: always
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: local
+      POSTGRES_DB: postgres
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+
+  # SMTP Mail Catcher
+  mailpit:
+    image: axllent/mailpit:v1.15
+    restart: always
+    ports:
+      - "1025:1025" # SMTP port
+      - "8025:8025" # Web UI port
+
+  # Email Service
+  email-service:
+    build:
+      context: .
+      dockerfile: services/email-service/Dockerfile
+    restart: always
+    ports:
+      - "4001:4001"
+    env_file:
+      - ./services/email-service/.env
+    environment:
+      - SMTP_HOST=mailpit # Override host port to point to the mailpit container
+    depends_on:
+      - mailpit
+
+  # Chat Service
+  chat-service:
+    build:
+      context: .
+      dockerfile: services/chat-service/Dockerfile
+    restart: always
+    ports:
+      - "4002:4002"
+    env_file:
+      - ./services/chat-service/.env
+    environment:
+      - DOCS_DIR=/app/apps/payload-web/docs # Override relative docs dir for inside the container
+
