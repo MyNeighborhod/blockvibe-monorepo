@@ -17,6 +17,9 @@ export async function loginFrontendTenant(
   const response = await page.request.post("/api/users/login", {
     data: { email, password },
   })
+  if (!response.ok()) {
+    console.error(`loginFrontendTenant failed for ${email} (${response.status()}):`, await response.text())
+  }
   expect(response.ok()).toBeTruthy()
 
   const data = await response.json()

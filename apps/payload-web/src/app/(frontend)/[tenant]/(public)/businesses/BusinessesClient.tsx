@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useMemo, useState } from "react"
+import { ShieldCheck, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -667,6 +668,7 @@ export default function BusinessesClient({
                 <FileField
                   id="cover"
                   label="Cover image"
+                  hint="Landscape image recommended (16:9 aspect ratio, max 5MB, PNG/JPG/WEBP)"
                   required={required("coverImage")}
                   preview={coverBase64}
                   onChange={(file) => {
@@ -679,6 +681,7 @@ export default function BusinessesClient({
                 <FileField
                   id="logo"
                   label="Logo"
+                  hint="Square image recommended (1:1 ratio 500x500px, max 5MB, PNG/JPG/WEBP)"
                   required={required("logo")}
                   preview={logoBase64}
                   onChange={(file) => {
@@ -818,6 +821,11 @@ export default function BusinessesClient({
                   </div>
                 ))}
 
+              <div className="text-[11px] text-muted-foreground bg-muted/20 border border-border/40 p-2.5 rounded-lg flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-[#76b3b8] shrink-0" />
+                <span>Protected by Google reCAPTCHA and spam validation.</span>
+              </div>
+
               <div className="flex justify-end gap-3 pt-4 border-t border-border/40">
                 <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)} disabled={loading}>
                   Cancel
@@ -924,12 +932,14 @@ function FileField({
   label,
   required,
   preview,
+  hint,
   onChange,
 }: {
   id: string
   label: string
   required?: boolean
   preview?: string
+  hint?: string
   onChange: (file: File | null) => void
 }) {
   return (
@@ -941,18 +951,19 @@ function FileField({
         <Input
           id={id}
           type="file"
-          accept="image/*"
+          accept="image/png, image/jpeg, image/webp, image/gif"
           required={required}
           className="cursor-pointer text-xs h-9 py-1"
           onChange={(e) => onChange(e.target.files?.[0] || null)}
         />
         {preview && (
-          <div className="w-10 h-10 rounded overflow-hidden border border-border/40 bg-muted/30 p-0.5">
+          <div className="w-10 h-10 rounded overflow-hidden border border-border/40 bg-muted/30 p-0.5 shrink-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={preview} alt="" className="max-w-full max-h-full object-contain" />
+            <img src={preview} alt="" className="w-full h-full object-contain" />
           </div>
         )}
       </div>
+      {hint && <p className="text-[10px] text-muted-foreground">{hint}</p>}
     </div>
   )
 }

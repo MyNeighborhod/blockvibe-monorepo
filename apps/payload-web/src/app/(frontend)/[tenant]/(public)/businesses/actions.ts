@@ -220,11 +220,36 @@ export async function registerBusinessAction(
     coverBase64?: string
     coverName?: string
     coverMime?: string
+    recaptchaToken?: string
   },
 ) {
   try {
     const numericTenantId = typeof tenantId === "string" ? parseInt(tenantId, 10) : tenantId
     const payload = await getPayload({ config: configPromise })
+
+    if (process.env.RECAPTCHA_SECRET_KEY) {
+      const secretKey = process.env.RECAPTCHA_SECRET_KEY
+      if (!data.recaptchaToken) {
+        throw new Error("reCAPTCHA verification is required.")
+      }
+      try {
+        const verifyRes = await fetch("https://www.google.com/recaptcha/api/siteverify", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({
+            secret: secretKey,
+            response: data.recaptchaToken,
+          }),
+        })
+        const captchaData = await verifyRes.json()
+        if (!captchaData.success) {
+          throw new Error("reCAPTCHA verification failed. Please try again.")
+        }
+      } catch (err: any) {
+        if (err.message?.includes("reCAPTCHA")) throw err
+        throw new Error("Unable to verify reCAPTCHA. Please try again.")
+      }
+    }
 
     const tenant = await payload.findByID({
       collection: "tenants",

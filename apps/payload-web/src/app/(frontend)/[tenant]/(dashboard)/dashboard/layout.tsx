@@ -21,9 +21,14 @@ export default async function DashboardLayout({ children, params }: Args) {
     nullUserRedirect: `/login`,
   })
 
-  // 2. Non-staff users belong on profile, not the admin dashboard
-  const isStaff = user.role === "superadmin" || user.role === "admin" || user.role === "editor"
-  if (!isStaff) {
+  // 2. Non-staff or non-business users belong on profile, not the dashboard
+  const isAuthorized =
+    user.role === "superadmin" ||
+    user.role === "admin" ||
+    user.role === "editor" ||
+    user.memberType === "business"
+
+  if (!isAuthorized) {
     redirect(`/profile`)
   }
 

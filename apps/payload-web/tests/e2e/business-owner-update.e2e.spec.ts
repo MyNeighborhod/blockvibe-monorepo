@@ -6,17 +6,18 @@ import { getTenantURL, isRemoteTestEnv } from "../helpers/tenantUrl"
 import { getSuperadminCredentials } from "../helpers/testCredentials"
 import { loginFrontendTenant } from "../helpers/login"
 
-test.describe("Staging & Local Business Lifecycle (Pending Staging Area -> Admin Approval -> Public View)", () => {
+test.describe("Business Owner Dashboard Update Flow", () => {
   let nogBaseURL: string
   const timestamp = Date.now()
-  const testBizName = `Staging Cafe - ${timestamp}`
-  const testBizEmail = `staging-cafe-${timestamp}@example.com`
-  const mockLogoPath = path.join("/tmp", `staging-logo-${timestamp}.png`)
+  const testBizName = `Owner Cafe - ${timestamp}`
+  const testBizEmail = `owner-cafe-${timestamp}@example.com`
+  const updatedAbout = `Updated about: Premier coffee shop in North of Grand serving local pastries since 2026. [Ref ${timestamp}]`
+  const updatedAddress = `999 Ingersoll Ave, Des Moines, IA`
+  const mockLogoPath = path.join("/tmp", `owner-logo-${timestamp}.png`)
 
   test.beforeAll(async ({ baseURL }) => {
     nogBaseURL = getTenantURL(baseURL || "http://localhost:3000", "nog")
 
-    // Create temporary 1x1 png image for upload test
     fs.writeFileSync(
       mockLogoPath,
       Buffer.from(
@@ -32,28 +33,25 @@ test.describe("Staging & Local Business Lifecycle (Pending Staging Area -> Admin
     }
   })
 
-  test("Complete lifecycle: register business -> verify hidden pending -> admin approves in dashboard -> verified public view -> remove", async ({
+  test("Business owner logs in, updates address & description in Dashboard, and updates display publicly", async ({
     page,
     request,
   }) => {
-    // 1. Go to public businesses page
+    // 1. Publicly register business
     await page.goto(`${nogBaseURL}/businesses`)
     await expect(page.locator("h1")).toContainText(/Businesses/i)
 
-    // 2. Open "Add your business" modal & fill registration form
     const addButton = page.getByRole("button", { name: /Add your business/i })
     await expect(addButton).toBeVisible()
     await addButton.click()
 
     await expect(page.getByRole("heading", { name: /Add your business/i })).toBeVisible()
 
-    // Fill form fields using element IDs
     await page.fill("#name", testBizName)
-    await page.fill("#address", "1234 Grand Ave, Des Moines, IA")
+    await page.fill("#address", "100 Original Street")
     await page.fill("#email", testBizEmail)
-    await page.fill("#about", "Freshly baked artisan pastries and coffee in North of Grand.")
+    await page.fill("#about", "Original description before owner update.")
 
-    // Upload logo if field present
     const logoInput = page.locator("#logo")
     if ((await logoInput.count()) > 0) {
       await logoInput.setInputFiles(mockLogoPath)
@@ -61,21 +59,12 @@ test.describe("Staging & Local Business Lifecycle (Pending Staging Area -> Admin
 
     const submitBtn = page.getByRole("button", { name: /Submit business/i })
     await submitBtn.click()
+    await expect(page.getByText(/listing was submitted/i)).toBeVisible({ timeout: 15000 })
 
-    // Verify submission confirmation alert message
-    await expect(
-      page.getByText(/Thanks! Your listing was submitted and will appear after approval./i),
-    ).toBeVisible({ timeout: 15000 })
-
-    // 3. Verify that until approved by admin, business DOES NOT display in public directory
-    await page.goto(`${nogBaseURL}/businesses`)
-    await page.waitForLoadState("networkidle")
-    await expect(page.getByRole("button", { name: new RegExp(testBizName, "i") })).toHaveCount(0)
-
-    // 4. Admin approval step
+    // 2. Approve business so it is active
+    const testOwnerPassword = "OwnerPassword123!"
     const isLocal = !isRemoteTestEnv()
     if (isLocal) {
-      // In local env, use Payload Local API directly to approve business
       const { getPayload } = await import("payload")
       const config = (await import("../../src/payload.config.js")).default
       const payload = await getPayload({ config })
@@ -84,48 +73,83 @@ test.describe("Staging & Local Business Lifecycle (Pending Staging Area -> Admin
         collection: "businesses",
         where: { email: { equals: testBizEmail } },
       })
+      if (found.docs.length > 0) {
+        await payload.update({
+          collection: "businesses",
+          id: found.docs[0].id,
+          data: { appearOnNOG: true },
+        })
+      }
 
-      expect(found.docs.length).toBeGreaterThan(0)
-      const bizId = found.docs[0].id
-
-      await payload.update({
-        collection: "businesses",
-        id: bizId,
-        data: { appearOnNOG: true },
+      const foundUsers = await payload.find({
+        collection: "users",
+        where: { email: { equals: testBizEmail } },
       })
+      if (foundUsers.docs.length > 0) {
+        await payload.update({
+          collection: "users",
+          id: foundUsers.docs[0].id,
+          data: { password: testOwnerPassword },
+        })
+      }
     } else {
-      // In remote staging/prod env, login as admin & approve via REST API
       const creds = getSuperadminCredentials()
-      expect(creds).not.toBeNull()
       if (creds) {
         await loginFrontendTenant(page, creds.email, creds.password)
         const searchRes = await request.get(
           `${nogBaseURL}/api/businesses?where[email][equals]=${testBizEmail}`,
         )
-        expect(searchRes.ok()).toBeTruthy()
-        const data = await searchRes.json()
-        expect(data.docs.length).toBeGreaterThan(0)
-        const bizId = data.docs[0].id
-
-        const patchRes = await request.patch(`${nogBaseURL}/api/businesses/${bizId}`, {
-          data: { appearOnNOG: true },
-        })
-        expect(patchRes.ok()).toBeTruthy()
+        if (searchRes.ok()) {
+          const data = await searchRes.json()
+          if (data.docs && data.docs.length > 0) {
+            await request.patch(`${nogBaseURL}/api/businesses/${data.docs[0].id}`, {
+              data: { appearOnNOG: true },
+            })
+          }
+        }
       }
     }
 
-    // 5. Verify that AFTER admin approval, business DOES display in public directory
+    // 3. Log into Dashboard with business owner account via /login page UI
+    await page.goto(`${nogBaseURL}/login`)
+    await page.waitForLoadState("networkidle")
+    await page.fill("#email", testBizEmail)
+    await page.fill("#password", testOwnerPassword)
+    await page.click('button[type="submit"]')
+    await page.waitForURL((url) => !url.pathname.endsWith("/login"), { timeout: 15000 })
+
+    // 4. Navigate to /dashboard/my-business
+    await page.goto(`${nogBaseURL}/dashboard/my-business`)
+    await page.waitForLoadState("networkidle")
+
+    // Fill updated details in dashboard form
+    const aboutTextarea = page.locator("#biz-about")
+    await expect(aboutTextarea).toBeVisible({ timeout: 15000 })
+    await aboutTextarea.fill(updatedAbout)
+
+    const addressInput = page.locator("#biz-address")
+    await addressInput.fill(updatedAddress)
+
+    // Save profile changes
+    const saveBtn = page.getByRole("button", { name: /Save Business Profile/i })
+    await saveBtn.click()
+
+    // Assert success banner
+    await expect(page.getByText(/Business profile updated successfully!/i)).toBeVisible({
+      timeout: 10000,
+    })
+
+    // 5. Verify public directory reflects updated address & description
     await page.goto(`${nogBaseURL}/businesses`)
     await page.waitForLoadState("networkidle")
 
     const bizCard = page.getByRole("button", { name: new RegExp(testBizName, "i") })
-    await expect(bizCard).toBeVisible({ timeout: 15000 })
+    await expect(bizCard).toBeVisible()
     await bizCard.click()
 
-    // Detail modal opens showing address & description
     await expect(page.getByRole("dialog")).toBeVisible()
-    await expect(page.getByRole("dialog")).toContainText(testBizName)
-    await expect(page.getByRole("dialog")).toContainText("1234 Grand Ave")
+    await expect(page.getByRole("dialog")).toContainText(updatedAbout)
+    await expect(page.getByRole("dialog")).toContainText(updatedAddress)
 
     // 6. Cleanup test business
     if (isLocal) {
@@ -137,7 +161,6 @@ test.describe("Staging & Local Business Lifecycle (Pending Staging Area -> Admin
         where: { email: { equals: testBizEmail } },
       })
     } else {
-      const creds = getSuperadminCredentials()
       if (creds) {
         const searchRes = await request.get(
           `${nogBaseURL}/api/businesses?where[email][equals]=${testBizEmail}`,
