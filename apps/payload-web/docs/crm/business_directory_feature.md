@@ -27,9 +27,85 @@ flowchart TD
 5. Click **Save directory settings**.
 6. Visit `/businesses` on that tenant host.
 
-First enable seeds default categories (Food & Drink, Shopping, Services, …) when none exist.
+First enable also seeds (when missing):
+
+- Default **business categories**
+- Dynamic mailing list **Approved Businesses** (`memberType equals business`)
+- CRM custom field **Resident Category** (Landlord / Tenant / Homeowner Resident / HOA Board Member)
 
 NOG is the first implementer: enable via Settings (or run `pnpm exec tsx src/scripts/enable-nog-directory.ts` locally).
+
+## CRM sync, approval email, and passwords
+
+```mermaid
+flowchart TD
+  Submit[Public: Add your business] -->|Creates business appearOnNOG=false| Pending[Pending listing]
+  Submit -->|Upserts users contact| CRMEarly[CRM user memberType=business]
+  Admin[Admin toggles Appear in Directory] -->|appearOnNOG=true| Hook[businesses afterChange]
+  Hook -->|Upsert approved CRM user| CRM[CRM Directory]
+  Hook -->|Once on transition to approved| Email[Approval email]
+  Email --> Forgot[Login → Forgot password]
+  Email --> MyBiz[Dashboard → My Business]
+  CRM --> List[Mailing list: Approved Businesses]
+```
+
+### What happens when a business registers
+
+1. A `businesses` document is created (**not** public yet).
+2. A CRM `users` contact is created or updated with `memberType: business` and a random password (owner does not receive that password).
+
+### What happens when an admin approves
+
+1. Listing appears on `/businesses`.
+2. CRM contact is marked approved / `memberType: business` again (idempotent).
+3. Owner receives an email: you’re listed; use **Forgot password** on Login (or **My Business** after sign-in) to set a password.
+4. They are included in the dynamic **Approved Businesses** mailing list via `memberType = business`.
+
+### Password options for business owners
+
+| Path | When to use |
+| ---- | ----------- |
+| **Login → Forgot password** | First-time password setup (recommended) |
+| **Dashboard → My Business** | Change password anytime after login |
+| **`/reset-password?token=…`** | Link from the forgot-password email |
+
+## CRM groups (how admins segment contacts)
+
+See also the short in-app help on **CRM → Mailing Lists**.
+
+```mermaid
+flowchart TB
+  subgraph buckets [Built-in]
+    MT[memberType: residential / business / other]
+  end
+  subgraph labels [Admin-defined labels]
+    Tags[Contact tags: Landlord, Tenant, Homeowner…]
+    Attr[Custom Attributes e.g. residentCategory]
+  end
+  subgraph targets [Who you email]
+    Dyn[Dynamic mailing lists = rules]
+    Stat[Static mailing lists = hand-picked]
+  end
+  MT --> Dyn
+  Tags --> Dyn
+  Attr --> Dyn
+  Tags --> Stat
+```
+
+| Layer | Where | Example |
+| ----- | ----- | ------- |
+| **Member Type** | CRM Directory filter | Business vs Residential |
+| **Tags** | Contact editor presets | Landlord, Tenant, Homeowner Resident |
+| **Custom Attributes** | CRM → Custom Attributes | `residentCategory` select (seeded with Directory) |
+| **Mailing Lists** | CRM → Mailing Lists | Dynamic: `memberType equals business` → **Approved Businesses** |
+
+**Recommendation:** use Member Type for hard buckets, Tags/Attributes for admin groups, and Dynamic Lists for broadcasting. No separate “Groups” collection is required.
+
+### Example: Landlords list
+
+1. Ensure **Resident Category** exists (seeded when Directory is enabled), *or* use contact **tags**.
+2. Create mailing list → type **Dynamic** → rule `customAttributes.residentCategory equals Landlord` (or tag filter when using tags).
+3. Broadcaster → select that list.
 
 ## Configure core fields (UI)
 
@@ -101,9 +177,15 @@ flowchart LR
 | CRM “Local Businesses” | Tab hidden |
 | Registration API | Rejects submissions |
 
+## Related docs
+
+- [CRM groups & segmentation](./crm_groups_and_segmentation.md)
+- [Businesses directory & CRM (legacy overview)](./businesses_directory_and_crm.md)
+
 ## Related code
 
 - Collections: `Businesses.ts`, `BusinessCategories.ts`, `DirectoryFields.ts`, `Tenants/index.ts`
+- CRM bootstrap (mailing list, Resident Category, approval email): `src/directory/crmBootstrap.ts`
 - Public: `app/(frontend)/[tenant]/(public)/businesses/`
 - Settings UI: `dashboard/settings/DirectorySettings.tsx`
 - Constants: `src/directory/constants.ts`

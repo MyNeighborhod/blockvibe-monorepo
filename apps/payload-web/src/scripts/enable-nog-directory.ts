@@ -11,6 +11,10 @@ import {
   DEFAULT_DIRECTORY_FIELD_CONFIG,
   DEFAULT_NOG_BUSINESS_CATEGORIES,
 } from "../directory/constants"
+import {
+  ensureApprovedBusinessesMailingList,
+  ensureResidentCategoryCrmField,
+} from "../directory/crmBootstrap"
 
 async function main() {
   const payload = await getPayload({ config })
@@ -71,6 +75,10 @@ async function main() {
   } else {
     console.log("Categories already present — skipped seed")
   }
+
+  await ensureApprovedBusinessesMailingList(payload, nog.id)
+  await ensureResidentCategoryCrmField(payload, nog.id)
+  console.log("Ensured Approved Businesses mailing list + Resident Category CRM field")
 
   console.log(`Enabled Business Directory for tenant slug=${nog.slug} id=${nog.id}`)
   process.exit(0)

@@ -1,6 +1,7 @@
 # Local Businesses Directory & CRM Integration
 
-> **Canonical feature doc:** [business_directory_feature.md](./business_directory_feature.md) — Enable Directory, configurable fields, mermaid design, tenant UI guide.
+> **Canonical feature doc:** [business_directory_feature.md](./business_directory_feature.md) — Enable Directory, configurable fields, CRM sync, passwords, mermaid design.  
+> **CRM groups:** [crm_groups_and_segmentation.md](./crm_groups_and_segmentation.md) — Member Type, tags/attributes, mailing lists.
 
 This feature adds a tenant-specific **Local Businesses Directory**, a public **Self-Registration Intake Form**, and integrates them with the **CRM Admin Dashboard** and **Email Broadcaster**.
 

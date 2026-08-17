@@ -161,7 +161,8 @@ test.describe("Business Owner Dashboard Update Flow", () => {
         where: { email: { equals: testBizEmail } },
       })
     } else {
-      if (creds) {
+      const cleanupCreds = getSuperadminCredentials()
+      if (cleanupCreds) {
         const searchRes = await request.get(
           `${nogBaseURL}/api/businesses?where[email][equals]=${testBizEmail}`,
         )

@@ -214,3 +214,37 @@ export async function updateMyBusinessAction(
     }
   }
 }
+
+export async function updateMyPasswordAction(newPassword: string) {
+  try {
+    const { user } = await getMeUser()
+    if (!user) {
+      throw new Error("Unauthorized. Please log in.")
+    }
+
+    if (!newPassword || newPassword.length < 8) {
+      throw new Error("Password must be at least 8 characters long.")
+    }
+
+    const payload = await getPayload({ config: configPromise })
+
+    await payload.update({
+      collection: "users",
+      id: user.id,
+      data: {
+        password: newPassword,
+      },
+      overrideAccess: true,
+    })
+
+    return {
+      success: true,
+      message: "Password updated successfully!",
+    }
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err.message || "Failed to update password.",
+    }
+  }
+}

@@ -8,6 +8,10 @@ import {
   DEFAULT_NOG_BUSINESS_CATEGORIES,
   type DirectoryFieldConfigRow,
 } from "@/directory/constants"
+import {
+  ensureApprovedBusinessesMailingList,
+  ensureResidentCategoryCrmField,
+} from "@/directory/crmBootstrap"
 
 async function assertTenantAdmin(tenantId: string | number) {
   // Access is enforced by dashboard page role check; still validate tenant exists.
@@ -92,7 +96,7 @@ export async function updateDirectoryFeatureAction(
       },
     })
 
-    // When enabling for the first time, seed default categories if none exist.
+    // When enabling for the first time, seed defaults if missing.
     if (data.enableBusinessDirectory) {
       const existing = await payload.find({
         collection: "business-categories",
@@ -113,6 +117,9 @@ export async function updateDirectoryFeatureAction(
           })
         }
       }
+
+      await ensureApprovedBusinessesMailingList(payload, numericTenantId)
+      await ensureResidentCategoryCrmField(payload, numericTenantId)
     }
 
     revalidatePath(`/${tenantSlug}/businesses`)

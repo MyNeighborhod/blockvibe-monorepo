@@ -1,13 +1,14 @@
 "use client"
 
 import React, { useState } from "react"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
-import { updateMyBusinessAction } from "./actions"
-import { Building2, CheckCircle2, Clock, Upload, Globe, Phone, MapPin, ShieldCheck, AlertCircle } from "lucide-react"
+import { updateMyBusinessAction, updateMyPasswordAction } from "./actions"
+import { Building2, CheckCircle2, Clock, Upload, Globe, Phone, MapPin, ShieldCheck, AlertCircle, KeyRound, Lock } from "lucide-react"
 
 interface MyBusinessClientProps {
   tenantId: string | number
@@ -37,6 +38,12 @@ export function MyBusinessClient({ tenantId, initialBusiness }: MyBusinessClient
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
+
+  const [newPassword, setNewPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [pwdLoading, setPwdLoading] = useState(false)
+  const [pwdError, setPwdError] = useState<string | null>(null)
+  const [pwdSuccess, setPwdSuccess] = useState<string | null>(null)
 
   function readFile(file: File, setter: (b: string) => void, nameSetter: (n: string) => void, mimeSetter: (m: string) => void) {
     nameSetter(file.name)
@@ -87,6 +94,35 @@ export function MyBusinessClient({ tenantId, initialBusiness }: MyBusinessClient
     }
   }
 
+  async function handlePasswordSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setPwdLoading(true)
+    setPwdError(null)
+    setPwdSuccess(null)
+
+    try {
+      if (newPassword.length < 8) {
+        throw new Error("Password must be at least 8 characters long.")
+      }
+      if (newPassword !== confirmPassword) {
+        throw new Error("Passwords do not match.")
+      }
+
+      const res = await updateMyPasswordAction(newPassword)
+      if (!res.success) {
+        throw new Error(res.error || "Failed to update password.")
+      }
+
+      setPwdSuccess("Password updated successfully!")
+      setNewPassword("")
+      setConfirmPassword("")
+    } catch (err: any) {
+      setPwdError(err.message || "Failed to update password.")
+    } finally {
+      setPwdLoading(false)
+    }
+  }
+
   if (!business) {
     return (
       <div className="max-w-4xl mx-auto p-6">
@@ -127,7 +163,7 @@ export function MyBusinessClient({ tenantId, initialBusiness }: MyBusinessClient
               )}
             </div>
             <p className="text-sm text-muted-foreground mt-0.5">
-              Update your business profile details, contact information, hours, and branding images.
+              Update your business profile details, contact information, hours, branding images, and account password.
             </p>
           </div>
         </div>
@@ -315,6 +351,74 @@ export function MyBusinessClient({ tenantId, initialBusiness }: MyBusinessClient
             <div className="flex justify-end pt-4 border-t border-border/40">
               <Button type="submit" disabled={loading} className="bg-[#76b3b8] hover:bg-[#649fa4] text-white font-semibold">
                 {loading ? "Saving Profile…" : "Save Business Profile"}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+
+      {/* Account Security & Password Card */}
+      <Card className="border border-border shadow-sm">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Lock className="w-5 h-5 text-primary" />
+            <CardTitle className="text-lg">Account Security & Password</CardTitle>
+          </div>
+          <CardDescription>
+            Create or change your account password for signing into your business owner dashboard.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handlePasswordSubmit} className="space-y-4">
+            {pwdError && (
+              <div className="p-3 text-xs bg-destructive/10 border border-destructive/20 text-destructive rounded-lg flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{pwdError}</span>
+              </div>
+            )}
+            {pwdSuccess && (
+              <div className="p-3 text-xs bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 rounded-lg flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+                <span>{pwdSuccess}</span>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="new-password" className="text-xs font-semibold">
+                  New Password
+                </Label>
+                <Input
+                  id="new-password"
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Minimum 8 characters"
+                  minLength={8}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="confirm-new-password" className="text-xs font-semibold">
+                  Confirm New Password
+                </Label>
+                <Input
+                  id="confirm-new-password"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Re-enter new password"
+                  minLength={8}
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pt-2">
+              <Link href="/login" className="text-xs text-primary hover:underline font-semibold flex items-center gap-1">
+                <KeyRound className="w-3.5 h-3.5" /> Request a password reset link via sign-in
+              </Link>
+              <Button type="submit" disabled={pwdLoading} variant="outline" className="text-xs font-semibold">
+                {pwdLoading ? "Updating Password…" : "Update Account Password"}
               </Button>
             </div>
           </form>

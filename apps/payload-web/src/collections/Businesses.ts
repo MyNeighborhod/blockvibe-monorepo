@@ -1,7 +1,89 @@
 import type { CollectionConfig } from "payload"
+import crypto from "crypto"
+import {
+  sendBusinessDirectoryApprovalEmail,
+} from "@/directory/crmBootstrap"
 
 export const Businesses: CollectionConfig = {
   slug: "businesses",
+  hooks: {
+    afterChange: [
+      async ({ doc, previousDoc, req }) => {
+        const justApproved = Boolean(doc.appearOnNOG) && !previousDoc?.appearOnNOG
+
+        if (!doc.appearOnNOG || !doc.email) return
+
+        try {
+          const email = String(doc.email).trim().toLowerCase()
+          const tenantId =
+            typeof doc.tenant === "object" && doc.tenant !== null ? doc.tenant.id : doc.tenant
+          if (!tenantId) return
+
+          const numericTenantId = typeof tenantId === "string" ? parseInt(tenantId, 10) : tenantId
+
+          const existingUsers = await req.payload.find({
+            collection: "users",
+            where: { email: { equals: email } },
+            limit: 1,
+          })
+
+          if (existingUsers.docs.length > 0) {
+            const existingUser = existingUsers.docs[0]
+            const tenants = existingUser.tenants || []
+            const hasTenant = tenants.some((t: any) => {
+              const tId = typeof t.tenant === "object" && t.tenant !== null ? t.tenant.id : t.tenant
+              return tId === numericTenantId
+            })
+            const updatedTenants = hasTenant ? tenants : [...tenants, { tenant: numericTenantId }]
+
+            await req.payload.update({
+              collection: "users",
+              id: existingUser.id,
+              data: {
+                status: "approved",
+                memberType: "business",
+                tenants: updatedTenants,
+              },
+              overrideAccess: true,
+            })
+          } else {
+            const randomPassword = crypto.randomBytes(16).toString("hex")
+            await req.payload.create({
+              collection: "users",
+              data: {
+                email,
+                name: doc.name || "Business Owner",
+                role: "contributor",
+                status: "approved",
+                password: randomPassword,
+                memberType: "business",
+                tenants: [{ tenant: numericTenantId }],
+              },
+              overrideAccess: true,
+            })
+          }
+
+          if (justApproved) {
+            const tenantDoc =
+              typeof doc.tenant === "object" && doc.tenant !== null
+                ? doc.tenant
+                : await req.payload.findByID({
+                    collection: "tenants",
+                    id: numericTenantId,
+                  })
+
+            await sendBusinessDirectoryApprovalEmail(req.payload, {
+              tenant: tenantDoc,
+              businessName: doc.name || "Your business",
+              email,
+            })
+          }
+        } catch (err) {
+          console.error("Failed to sync approved business to CRM users:", err)
+        }
+      },
+    ],
+  },
   access: {
     read: () => true,
     create: () => true, // Anyone can submit their business (when directory enabled)
