@@ -6,7 +6,7 @@ import { getTenantURL, isRemoteTestEnv } from "../helpers/tenantUrl"
 import { getSuperadminCredentials } from "../helpers/testCredentials"
 import { loginFrontendTenant } from "../helpers/login"
 
-test.describe("Staging & Local Business Lifecycle (Add, View, Remove)", () => {
+test.describe("Staging & Local Business Lifecycle (Pending Staging Area -> Admin Approval -> Public View)", () => {
   let nogBaseURL: string
   const timestamp = Date.now()
   const testBizName = `E2E Test Bakery - ${timestamp}`
@@ -20,7 +20,7 @@ test.describe("Staging & Local Business Lifecycle (Add, View, Remove)", () => {
     fs.writeFileSync(
       mockLogoPath,
       Buffer.from(
-        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=",
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVGPU5CYII=",
         "base64",
       ),
     )
@@ -32,7 +32,7 @@ test.describe("Staging & Local Business Lifecycle (Add, View, Remove)", () => {
     }
   })
 
-  test("Complete lifecycle: register business -> approve & view -> remove business", async ({
+  test("Complete lifecycle: register business -> verify hidden pending -> admin approves in dashboard -> verified public view -> remove", async ({
     page,
     request,
   }) => {
@@ -67,10 +67,17 @@ test.describe("Staging & Local Business Lifecycle (Add, View, Remove)", () => {
     const submitBtn = page.getByRole("button", { name: /Submit business/i })
     await submitBtn.click()
 
-    // Expect success message
+    // Expect success confirmation message
     await expect(page.getByText(/listing was submitted/i)).toBeVisible({ timeout: 15000 })
 
-    // 3. Approve business (local via Payload SDK or remote via API)
+    // 3. Verify pending state: Reload public directory & ensure unapproved business DOES NOT display
+    await page.goto(`${nogBaseURL}/businesses`)
+    await page.waitForLoadState("networkidle")
+    await expect(
+      page.getByRole("button", { name: new RegExp(testBizName, "i") }),
+    ).not.toBeVisible()
+
+    // 4. NOG Admin Approval: Log into Admin / Dashboard & approve pending business
     const isLocal = !isRemoteTestEnv()
     if (isLocal) {
       const { getPayload } = await import("payload")
@@ -109,7 +116,7 @@ test.describe("Staging & Local Business Lifecycle (Add, View, Remove)", () => {
       }
     }
 
-    // 4. Go back to public directory and verify business appears & drawer opens
+    // 5. Verify Approved State: Go back to public directory and verify business NOW appears & drawer opens
     await page.goto(`${nogBaseURL}/businesses`)
     await page.waitForLoadState("networkidle")
 
@@ -126,7 +133,7 @@ test.describe("Staging & Local Business Lifecycle (Add, View, Remove)", () => {
     const closeBtn = page.getByRole("dialog").getByRole("button").first()
     await closeBtn.click()
 
-    // 5. Delete (remove) business
+    // 6. Delete (remove) business
     if (isLocal) {
       const { getPayload } = await import("payload")
       const config = (await import("../../src/payload.config.js")).default
@@ -154,9 +161,11 @@ test.describe("Staging & Local Business Lifecycle (Add, View, Remove)", () => {
       }
     }
 
-    // 6. Reload businesses page & verify business was removed
+    // 7. Final Verification: Reload directory & verify business is removed
     await page.goto(`${nogBaseURL}/businesses`)
     await page.waitForLoadState("networkidle")
-    await expect(page.getByRole("button", { name: new RegExp(testBizName, "i") })).not.toBeVisible()
+    await expect(
+      page.getByRole("button", { name: new RegExp(testBizName, "i") }),
+    ).not.toBeVisible()
   })
 })
