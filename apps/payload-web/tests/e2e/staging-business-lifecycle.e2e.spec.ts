@@ -47,11 +47,11 @@ test.describe("Staging & Local Business Lifecycle (Add, View, Remove)", () => {
 
     await expect(page.getByRole("heading", { name: /Add your business/i })).toBeVisible()
 
-    // Fill form fields
-    await page.fill('input[placeholder="Grand Avenue Cafe"]', testBizName)
-    await page.fill('input[placeholder="3100 Grand Ave, Des Moines, IA"]', "1234 Grand Ave, Des Moines, IA")
-    await page.fill('input[type="email"]', testBizEmail)
-    await page.fill('textarea[placeholder*="Describe your business"]', "Freshly baked artisan pastries and coffee in North of Grand.")
+    // Fill form fields using element IDs
+    await page.fill("#name", testBizName)
+    await page.fill("#address", "1234 Grand Ave, Des Moines, IA")
+    await page.fill("#email", testBizEmail)
+    await page.fill("#about", "Freshly baked artisan pastries and coffee in North of Grand.")
 
     // Upload logo
     const logoInput = page.locator('input[type="file"]').first()
