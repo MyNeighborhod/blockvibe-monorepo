@@ -61,7 +61,7 @@ test.describe("Staging & Local Business Lifecycle (Pending Staging Area -> Admin
 
     await page.goto(`${nogBaseURL}/businesses`)
     await page.waitForLoadState("networkidle")
-    await expect(page.getByRole("button", { name: new RegExp(testBizName, "i") })).toHaveCount(0)
+    await expect(page.getByRole("link", { name: new RegExp(testBizName, "i") })).toHaveCount(0)
 
     const isLocal = !isRemoteTestEnv()
     if (isLocal) {
@@ -108,13 +108,13 @@ test.describe("Staging & Local Business Lifecycle (Pending Staging Area -> Admin
     await page.goto(`${nogBaseURL}/businesses`)
     await page.waitForLoadState("networkidle")
 
-    const bizCard = page.getByRole("button", { name: new RegExp(testBizName, "i") })
+    const bizCard = page.getByRole("link", { name: new RegExp(testBizName, "i") })
     await expect(bizCard).toBeVisible({ timeout: 15000 })
     await bizCard.click()
+    await page.waitForURL(/\/businesses\/[^/]+$/)
 
-    await expect(page.getByRole("dialog")).toBeVisible()
-    await expect(page.getByRole("dialog")).toContainText(testBizName)
-    await expect(page.getByRole("dialog")).toContainText("1234 Grand Ave")
+    await expect(page.getByRole("heading", { level: 1, name: new RegExp(testBizName, "i") })).toBeVisible()
+    await expect(page.getByText("1234 Grand Ave")).toBeVisible()
 
     if (isLocal) {
       const { getPayload } = await import("payload")

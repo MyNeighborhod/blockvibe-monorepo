@@ -1316,9 +1316,17 @@ export interface Business {
   id: number;
   tenant?: (number | null) | Tenant;
   name: string;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  /**
+   * URL path under /businesses/[slug]. Auto-generated from name if empty.
+   */
+  slug?: string | null;
   logo?: (number | null) | Media;
   /**
-   * Hero / cover photo shown on directory cards and the detail view (Avenues-style).
+   * Hero / cover photo shown on directory cards and the detail page.
    */
   coverImage?: (number | null) | Media;
   address?: string | null;
@@ -2396,6 +2404,8 @@ export interface MailingListsSelect<T extends boolean = true> {
 export interface BusinessesSelect<T extends boolean = true> {
   tenant?: T;
   name?: T;
+  generateSlug?: T;
+  slug?: T;
   logo?: T;
   coverImage?: T;
   address?: T;

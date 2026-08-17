@@ -148,13 +148,14 @@ test.describe("Business Owner Dashboard Update Flow", () => {
     await page.goto(`${nogBaseURL}/businesses`)
     await page.waitForLoadState("networkidle")
 
-    const bizCard = page.getByRole("button", { name: new RegExp(testBizName, "i") })
+    const bizCard = page.getByRole("link", { name: new RegExp(testBizName, "i") })
     await expect(bizCard).toBeVisible()
     await bizCard.click()
+    await page.waitForURL(/\/businesses\/[^/]+$/)
 
-    await expect(page.getByRole("dialog")).toBeVisible()
-    await expect(page.getByRole("dialog")).toContainText(updatedAbout)
-    await expect(page.getByRole("dialog")).toContainText(updatedAddress)
+    await expect(page.getByRole("heading", { level: 1, name: new RegExp(testBizName, "i") })).toBeVisible()
+    await expect(page.getByText(updatedAbout)).toBeVisible()
+    await expect(page.getByText(updatedAddress)).toBeVisible()
 
     // 6. Cleanup test business
     if (isLocal) {

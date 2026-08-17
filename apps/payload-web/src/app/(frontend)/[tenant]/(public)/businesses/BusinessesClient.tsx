@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useMemo, useState } from "react"
+import Link from "next/link"
 import { ShieldCheck, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -12,15 +13,21 @@ import {
   type DirectoryCoreFieldKey,
   type DirectoryFieldConfigRow,
   isFieldEnabled,
-  mapsDirectionsUrl,
   resolveFieldConfig,
 } from "@/directory/constants"
+import {
+  businessDetailPath,
+  cardMediaPresentation,
+  categoryIdsOf as categoryIdsOfShared,
+  categoryTitlesOf,
+} from "@/directory/businessMedia"
 
 type MediaLike = { url?: string | null; alt?: string | null } | string | number | null | undefined
 
 interface Business {
   id: string | number
   name: string
+  slug?: string | null
   address?: string | null
   website?: string | null
   about?: string | null
@@ -72,47 +79,8 @@ interface BusinessesClientProps {
   tenantName: string
 }
 
-function mediaUrl(media: MediaLike): string | null {
-  if (!media || typeof media !== "object") return null
-  return media.url || null
-}
-
-/** Cover photo vs logo-only: logos should not use object-cover (looks cropped/broken). */
-function cardMediaPresentation(biz: Business): {
-  mode: "photo" | "logo" | "monogram"
-  photoUrl: string | null
-  logoUrl: string | null
-} {
-  const logoUrl = mediaUrl(biz.logo)
-  const coverUrl = mediaUrl(biz.coverImage)
-  if (coverUrl && logoUrl && coverUrl !== logoUrl) {
-    return { mode: "photo", photoUrl: coverUrl, logoUrl }
-  }
-  if (coverUrl && !logoUrl) {
-    return { mode: "photo", photoUrl: coverUrl, logoUrl: null }
-  }
-  if (logoUrl) {
-    return { mode: "logo", photoUrl: null, logoUrl }
-  }
-  return { mode: "monogram", photoUrl: null, logoUrl: null }
-}
-
-function normalizeSocialUrl(value: string, kind: "facebook" | "instagram"): string {
-  if (value.startsWith("http")) return value
-  if (kind === "facebook") return `https://facebook.com/${value.replace(/^@/, "")}`
-  return `https://instagram.com/${value.replace(/^@/, "")}`
-}
-
 function categoryIdsOf(biz: Business): string[] {
-  if (!biz.categories?.length) return []
-  return biz.categories.map((c) => (typeof c === "object" && c ? String(c.id) : String(c)))
-}
-
-function categoryTitlesOf(biz: Business): string[] {
-  if (!biz.categories?.length) return []
-  return biz.categories
-    .map((c) => (typeof c === "object" && c ? c.title || "" : ""))
-    .filter(Boolean) as string[]
+  return categoryIdsOfShared(biz as any)
 }
 
 export default function BusinessesClient({
@@ -132,7 +100,6 @@ export default function BusinessesClient({
 
   const show = (key: DirectoryCoreFieldKey) => isFieldEnabled(fieldMap, key)
   const onCard = (key: DirectoryCoreFieldKey) => show(key) && fieldMap.get(key)?.showOnCard
-  const onDetail = (key: DirectoryCoreFieldKey) => show(key) && fieldMap.get(key)?.showOnDetail !== false
   const onForm = (key: DirectoryCoreFieldKey) => show(key) && fieldMap.get(key)?.showInRegistration !== false
   const required = (key: DirectoryCoreFieldKey) => Boolean(fieldMap.get(key)?.required)
 
@@ -140,7 +107,6 @@ export default function BusinessesClient({
   const [searchQuery, setSearchQuery] = useState("")
   const [activeCategory, setActiveCategory] = useState<string>("all")
   const [sortBy, setSortBy] = useState<"name" | "name-desc">("name")
-  const [selected, setSelected] = useState<Business | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -402,12 +368,11 @@ export default function BusinessesClient({
               const media = cardMediaPresentation(biz)
               const cats = categoryTitlesOf(biz)
               return (
-                <button
+                <Link
                   key={biz.id}
-                  type="button"
-                  onClick={() => setSelected(biz)}
+                  href={biz.slug ? businessDetailPath(biz.slug) : `/businesses?highlight=${biz.id}`}
                   className={cn(
-                    "group text-left overflow-hidden rounded-2xl border bg-card/90 backdrop-blur-sm transition-all duration-300",
+                    "group text-left overflow-hidden rounded-2xl border bg-card/90 backdrop-blur-sm transition-all duration-300 block",
                     "hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2",
                     accentRing,
                     isNog ? "border-[#d5e3e0] shadow-[0_1px_0_rgba(66,81,76,0.04)]" : "border-border/70 shadow-sm",
@@ -509,196 +474,12 @@ export default function BusinessesClient({
                       )}
                     </div>
                   </div>
-                </button>
+                </Link>
               )
             })}
           </div>
         )}
       </div>
-
-      {/* Detail drawer / modal — Avenues contact block energy, NOG type */}
-      {selected && (() => {
-        const selectedMedia = cardMediaPresentation(selected)
-        return (
-        <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-6">
-          <button
-            type="button"
-            className="absolute inset-0 bg-[#2a2a2a]/45 backdrop-blur-[2px] animate-in fade-in duration-200"
-            aria-label="Dismiss details"
-            onClick={() => setSelected(null)}
-          />
-          <article
-            role="dialog"
-            aria-modal="true"
-            aria-label={selected.name}
-            className={cn(
-              "relative z-10 w-full md:max-w-2xl max-h-[92vh] overflow-y-auto rounded-t-3xl md:rounded-3xl bg-card shadow-2xl animate-in slide-in-from-bottom-4 md:zoom-in-95 duration-300",
-              isNog && "theme-nog",
-            )}
-          >
-            <div
-              className={cn(
-                "relative overflow-hidden",
-                selectedMedia.mode === "photo" ? "aspect-[16/9] bg-muted" : "aspect-[2/1]",
-                selectedMedia.mode === "logo" && (isNog ? "bg-[#eef6f5]" : "bg-muted/50"),
-                selectedMedia.mode === "monogram" && (isNog ? "bg-[#e8f3f2]" : "bg-muted"),
-              )}
-            >
-              {selectedMedia.mode === "photo" && selectedMedia.photoUrl && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={selectedMedia.photoUrl} alt="" className="h-full w-full object-cover" />
-              )}
-              {selectedMedia.mode === "logo" && selectedMedia.logoUrl && (
-                <div className="absolute inset-0 flex items-center justify-center p-10">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={selectedMedia.logoUrl}
-                    alt=""
-                    className="max-h-full max-w-[55%] object-contain"
-                  />
-                </div>
-              )}
-              {selectedMedia.mode === "monogram" && (
-                <div
-                  className={cn(
-                    "flex h-full w-full items-center justify-center text-5xl font-serif",
-                    isNog ? "text-[#76b3b8]" : "text-muted-foreground",
-                  )}
-                >
-                  {selected.name.charAt(0)}
-                </div>
-              )}
-              <button
-                type="button"
-                onClick={() => setSelected(null)}
-                className="absolute right-4 top-4 z-20 rounded-full bg-black/45 text-white px-3 py-1 text-sm hover:bg-black/60"
-              >
-                Close
-              </button>
-            </div>
-
-            <div className="p-6 md:p-8 space-y-6">
-              <div>
-                {onDetail("categories") && categoryTitlesOf(selected).length > 0 && (
-                  <div className="mb-2 flex flex-wrap gap-1.5">
-                    {categoryTitlesOf(selected).map((t) => (
-                      <span
-                        key={t}
-                        className={cn(
-                          "text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full",
-                          isNog ? "bg-[#76b3b8]/12 text-[#4a7c80]" : "bg-primary/10 text-primary",
-                        )}
-                      >
-                        {t}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                <h2 className={cn("text-3xl font-semibold", isNog ? "font-serif text-[#42514c]" : "text-foreground")}>
-                  {selected.name}
-                </h2>
-              </div>
-
-              {onDetail("about") && selected.about && (
-                <p className={cn("text-base leading-relaxed", isNog ? "text-[#7b8c89]" : "text-muted-foreground")}>
-                  {selected.about}
-                </p>
-              )}
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                {onDetail("address") && selected.address && (
-                  <DetailBlock label="Contact" isNog={isNog}>
-                    <p className="font-medium text-foreground">{selected.name}</p>
-                    <p>{selected.address}</p>
-                    <a
-                      href={mapsDirectionsUrl(selected.address)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={cn("inline-block mt-1 font-semibold hover:underline", accent)}
-                    >
-                      Get directions
-                    </a>
-                  </DetailBlock>
-                )}
-                {onDetail("hours") && selected.hours && (
-                  <DetailBlock label="Hours" isNog={isNog}>
-                    <p>{selected.hours}</p>
-                  </DetailBlock>
-                )}
-                {onDetail("phone") && selected.phone && (
-                  <DetailBlock label="Phone" isNog={isNog}>
-                    <a href={`tel:${selected.phone}`} className={cn("font-semibold hover:underline", accent)}>
-                      {selected.phone}
-                    </a>
-                  </DetailBlock>
-                )}
-                {onDetail("email") && selected.email && (
-                  <DetailBlock label="Email" isNog={isNog}>
-                    <a href={`mailto:${selected.email}`} className={cn("font-semibold hover:underline", accent)}>
-                      {selected.email}
-                    </a>
-                  </DetailBlock>
-                )}
-              </div>
-
-              <div className="flex flex-wrap gap-3 pt-2">
-                {onDetail("website") && selected.website && (
-                  <a
-                    href={
-                      selected.website.startsWith("http") ? selected.website : `https://${selected.website}`
-                    }
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={cn("inline-flex items-center rounded-lg px-4 py-2 text-sm font-semibold", accentBtn)}
-                  >
-                    Visit website
-                  </a>
-                )}
-                {onDetail("facebook") && selected.facebook && (
-                  <a
-                    href={normalizeSocialUrl(selected.facebook, "facebook")}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center rounded-lg border border-border px-4 py-2 text-sm font-semibold hover:bg-muted/40"
-                  >
-                    Facebook
-                  </a>
-                )}
-                {onDetail("instagram") && selected.instagram && (
-                  <a
-                    href={normalizeSocialUrl(selected.instagram, "instagram")}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center rounded-lg border border-border px-4 py-2 text-sm font-semibold hover:bg-muted/40"
-                  >
-                    Instagram
-                  </a>
-                )}
-              </div>
-
-              {customFields.some((f) => f.showOnDetail !== false) && selected.customAttributes && (
-                <div className="border-t border-border/50 pt-4 space-y-2">
-                  {customFields
-                    .filter((f) => f.showOnDetail !== false)
-                    .map((f) => {
-                      const val = selected.customAttributes?.[f.key]
-                      if (val === undefined || val === null || val === "") return null
-                      return (
-                        <div key={f.key} className="text-sm">
-                          <span className="font-semibold text-foreground">{f.label}: </span>
-                          <span className="text-muted-foreground">
-                            {typeof val === "boolean" ? (val ? "Yes" : "No") : String(val)}
-                          </span>
-                        </div>
-                      )
-                    })}
-                </div>
-              )}
-            </div>
-          </article>
-        </div>
-        )
-      })()}
 
       {/* Registration modal */}
       {isModalOpen && allowRegistration && (
@@ -945,31 +726,6 @@ function FilterPill({
   )
 }
 
-function DetailBlock({
-  label,
-  children,
-  isNog,
-}: {
-  label: string
-  children: React.ReactNode
-  isNog: boolean
-}) {
-  return (
-    <div>
-      <h4
-        className={cn(
-          "text-[11px] uppercase tracking-[0.18em] font-semibold mb-1.5",
-          isNog ? "text-[#76b3b8]" : "text-primary",
-        )}
-      >
-        {label}
-      </h4>
-      <div className={cn("text-sm leading-relaxed", isNog ? "text-[#7b8c89]" : "text-muted-foreground")}>
-        {children}
-      </div>
-    </div>
-  )
-}
 
 function TextField({
   id,

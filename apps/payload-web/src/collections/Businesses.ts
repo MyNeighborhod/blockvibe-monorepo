@@ -1,12 +1,74 @@
-import type { CollectionConfig } from "payload"
+import type { CollectionConfig, PayloadRequest } from "payload"
 import crypto from "crypto"
+import { slugField } from "payload"
 import {
   sendBusinessDirectoryApprovalEmail,
 } from "@/directory/crmBootstrap"
 
+function slugifyBusinessName(name: string): string {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/['’]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80) || "business"
+}
+
+async function ensureUniqueBusinessSlug(
+  req: PayloadRequest,
+  baseSlug: string,
+  tenantId: string | number,
+  excludeId?: string | number,
+): Promise<string> {
+  let candidate = baseSlug
+  for (let i = 0; i < 50; i++) {
+    const where: any = {
+      and: [{ tenant: { equals: tenantId } }, { slug: { equals: candidate } }],
+    }
+    if (excludeId != null) {
+      where.and.push({ id: { not_equals: excludeId } })
+    }
+    const existing = await req.payload.find({
+      collection: "businesses",
+      where,
+      limit: 1,
+      overrideAccess: true,
+    })
+    if (existing.docs.length === 0) return candidate
+    candidate = `${baseSlug}-${i + 2}`
+  }
+  return `${baseSlug}-${Date.now().toString(36)}`
+}
+
 export const Businesses: CollectionConfig = {
   slug: "businesses",
   hooks: {
+    beforeChange: [
+      async ({ data, req, operation, originalDoc }) => {
+        if (!data) return data
+        const name = data.name || originalDoc?.name
+        const tenantId =
+          data.tenant ??
+          (typeof originalDoc?.tenant === "object" && originalDoc?.tenant !== null
+            ? originalDoc.tenant.id
+            : originalDoc?.tenant)
+
+        if (!name || tenantId == null) return data
+
+        const currentSlug = (data.slug || originalDoc?.slug || "").trim()
+        if (operation === "create" || !currentSlug) {
+          const base = slugifyBusinessName(String(name))
+          data.slug = await ensureUniqueBusinessSlug(
+            req,
+            base,
+            tenantId,
+            operation === "update" ? originalDoc?.id : undefined,
+          )
+        }
+        return data
+      },
+    ],
     afterChange: [
       async ({ doc, previousDoc, req }) => {
         const justApproved = Boolean(doc.appearOnNOG) && !previousDoc?.appearOnNOG
@@ -86,7 +148,7 @@ export const Businesses: CollectionConfig = {
   },
   access: {
     read: () => true,
-    create: () => true, // Anyone can submit their business (when directory enabled)
+    create: () => true,
     update: ({ req: { user } }) => {
       const isStaff = user?.role === "superadmin" || user?.role === "admin" || user?.role === "editor"
       return Boolean(isStaff)
@@ -98,7 +160,7 @@ export const Businesses: CollectionConfig = {
   },
   admin: {
     useAsTitle: "name",
-    defaultColumns: ["name", "email", "website", "appearOnNOG"],
+    defaultColumns: ["name", "slug", "email", "appearOnNOG"],
     description:
       "Local business listings for the public directory. Visibility is controlled by Appear in Directory.",
   },
@@ -108,6 +170,22 @@ export const Businesses: CollectionConfig = {
       type: "text",
       required: true,
     },
+    slugField({
+      useAsSlug: "name",
+      // Unique per tenant via beforeChange; not globally unique.
+      disableUnique: true,
+      required: false,
+      overrides: (field) => {
+        const slugText = field.fields.find(
+          (f) => typeof f === "object" && f && "name" in f && f.name === "slug",
+        ) as any
+        if (slugText?.admin) {
+          slugText.admin.description =
+            "URL path under /businesses/[slug]. Auto-generated from name if empty."
+        }
+        return field
+      },
+    }),
     {
       name: "logo",
       type: "upload",
@@ -120,7 +198,7 @@ export const Businesses: CollectionConfig = {
       relationTo: "media",
       required: false,
       admin: {
-        description: "Hero / cover photo shown on directory cards and the detail view (Avenues-style).",
+        description: "Hero / cover photo shown on directory cards and the detail page.",
       },
     },
     {

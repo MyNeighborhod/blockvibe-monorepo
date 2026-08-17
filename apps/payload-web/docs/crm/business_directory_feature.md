@@ -167,6 +167,8 @@ flowchart LR
 - **Avenues patterns kept:** category pills, sort, image-led cards, detail contact/hours blocks, “add your business”.
 - **NOG identity kept:** serif titles (`#42514c`), muted body (`#7b8c89`), teal accent (`#76b3b8`), soft radial wash — not Avenues black/cart chrome.
 - Cards open an in-page detail panel (no full page reload); images use `loading="lazy"`.
++ Cards link to a dedicated detail page at `/businesses/[slug]` (Avenues-style layout, NOG styling); images use `loading="lazy"`.
++ Each listing has a `slug` (auto from name) used in the public URL.
 
 ## Gating
 
