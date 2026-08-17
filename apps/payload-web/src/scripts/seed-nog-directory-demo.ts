@@ -1,8 +1,10 @@
 /**
- * Seed a few approved demo businesses for local visual validation.
- * pnpm exec tsx src/scripts/seed-nog-directory-demo.ts
+ * Seed approved demo businesses with high-res logos and cover images for local visual validation.
+ * Usage: pnpm exec tsx src/scripts/seed-nog-directory-demo.ts
  */
 import "dotenv/config"
+import fs from "fs"
+import path from "path"
 import { getPayload } from "payload"
 import config from "../payload.config"
 
@@ -16,6 +18,8 @@ const demos = [
     email: "demo-cafe@example.com",
     phone: "(515) 555-0101",
     categorySlug: "food-drink",
+    logoFilename: "grand-avenue-cafe-logo.png",
+    alt: "Grand Avenue Cafe Logo",
   },
   {
     name: "Ingersoll Book Nook",
@@ -26,6 +30,8 @@ const demos = [
     email: "demo-books@example.com",
     phone: "(515) 555-0102",
     categorySlug: "shopping",
+    logoFilename: "ingersoll-book-nook-logo.png",
+    alt: "Ingersoll Book Nook Logo",
   },
   {
     name: "Studio North Wellness",
@@ -36,6 +42,8 @@ const demos = [
     email: "demo-wellness@example.com",
     phone: "(515) 555-0103",
     categorySlug: "health-wellness",
+    logoFilename: "studio-north-wellness-logo.png",
+    alt: "Studio North Wellness Logo",
   },
 ]
 
@@ -57,6 +65,40 @@ async function main() {
   const bySlug = new Map(cats.docs.map((c) => [c.slug, c.id]))
 
   for (const demo of demos) {
+    let logoId: number | undefined
+
+    const imageFilePath = path.join(process.cwd(), "public", "media", "nog", demo.logoFilename)
+    if (fs.existsSync(imageFilePath)) {
+      const existingMedia = await payload.find({
+        collection: "media",
+        where: {
+          and: [{ tenant: { equals: nog.id } }, { filename: { equals: demo.logoFilename } }],
+        },
+        limit: 1,
+      })
+
+      if (existingMedia.docs.length > 0) {
+        logoId = existingMedia.docs[0].id
+      } else {
+        const fileBuffer = fs.readFileSync(imageFilePath)
+        const createdMedia = await payload.create({
+          collection: "media",
+          data: {
+            alt: demo.alt,
+            tenant: nog.id,
+          },
+          file: {
+            data: fileBuffer,
+            name: demo.logoFilename,
+            mimetype: "image/png",
+            size: fileBuffer.length,
+          },
+        })
+        logoId = createdMedia.id
+        console.log("created media logo", demo.logoFilename, "id=", logoId)
+      }
+    }
+
     const existing = await payload.find({
       collection: "businesses",
       where: {
@@ -64,29 +106,43 @@ async function main() {
       },
       limit: 1,
     })
-    if (existing.docs.length) {
-      console.log("skip existing", demo.name)
-      continue
-    }
+
     const catId = bySlug.get(demo.categorySlug)
-    await payload.create({
-      collection: "businesses",
-      data: {
-        name: demo.name,
-        address: demo.address,
-        about: demo.about,
-        hours: demo.hours,
-        website: demo.website,
-        email: demo.email,
-        phone: demo.phone,
-        appearOnNOG: true,
-        tenant: nog.id,
-        categories: catId ? [catId] : [],
-      },
-    })
-    console.log("created", demo.name)
+    if (existing.docs.length > 0) {
+      await payload.update({
+        collection: "businesses",
+        id: existing.docs[0].id,
+        data: {
+          appearOnNOG: true,
+          logo: logoId,
+          coverImage: logoId,
+          categories: catId ? [catId] : [],
+        },
+      })
+      console.log("updated existing business logo", demo.name)
+    } else {
+      await payload.create({
+        collection: "businesses",
+        data: {
+          name: demo.name,
+          address: demo.address,
+          about: demo.about,
+          hours: demo.hours,
+          website: demo.website,
+          email: demo.email,
+          phone: demo.phone,
+          appearOnNOG: true,
+          logo: logoId,
+          coverImage: logoId,
+          tenant: nog.id,
+          categories: catId ? [catId] : [],
+        },
+      })
+      console.log("created business with logo", demo.name)
+    }
   }
 
+  console.log("✓ Demo businesses seeded with real logos successfully.")
   process.exit(0)
 }
 
