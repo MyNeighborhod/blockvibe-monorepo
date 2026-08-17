@@ -436,7 +436,7 @@ export default function BusinessesClient({
                     key={biz.id}
                     href={biz.slug ? businessDetailPath(biz.slug) : `/businesses?highlight=${biz.id}`}
                     className={cn(
-                      "group text-left overflow-hidden rounded-2xl border bg-card/90 backdrop-blur-sm transition-all duration-300 block no-underline",
+                      "group text-left overflow-hidden rounded-2xl border bg-card/90 backdrop-blur-sm transition-all duration-300 block no-underline [&_*]:no-underline",
                       "hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2",
                       accentRing,
                       isNog ? "border-[#d5e3e0] shadow-[0_1px_0_rgba(66,81,76,0.04)]" : "border-border/70 shadow-sm",
@@ -504,7 +504,7 @@ export default function BusinessesClient({
                             <span
                               key={t}
                               className={cn(
-                                "text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full",
+                                "text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full no-underline",
                                 isNog ? "bg-[#76b3b8]/12 text-[#4a7c80]" : "bg-primary/10 text-primary",
                               )}
                             >
@@ -515,26 +515,26 @@ export default function BusinessesClient({
                       )}
                       <h3
                         className={cn(
-                          "text-xl font-semibold leading-snug line-clamp-2 group-hover:underline decoration-1 underline-offset-4",
+                          "text-xl font-semibold leading-snug line-clamp-2 group-hover:underline decoration-1 underline-offset-4 no-underline",
                           isNog ? "font-serif text-[#42514c]" : "text-foreground",
                         )}
                       >
                         {biz.name}
                       </h3>
                       {onCard("address") && biz.address && (
-                        <p className={cn("mt-1.5 text-sm line-clamp-1", isNog ? "text-[#7b8c89]" : "text-muted-foreground")}>
+                        <p className={cn("mt-1.5 text-sm line-clamp-1 no-underline", isNog ? "text-[#7b8c89]" : "text-muted-foreground")}>
                           {biz.address}
                         </p>
                       )}
                       {onCard("about") && biz.about && (
-                        <p className={cn("mt-3 text-sm leading-relaxed line-clamp-3", isNog ? "text-[#7b8c89]" : "text-muted-foreground")}>
+                        <p className={cn("mt-3 text-sm leading-relaxed line-clamp-3 no-underline", isNog ? "text-[#7b8c89]" : "text-muted-foreground")}>
                           {biz.about}
                         </p>
                       )}
-                      <div className="mt-4 flex items-center justify-between text-xs font-semibold">
-                        <span className={accent}>View details</span>
+                      <div className="mt-4 flex items-center justify-between text-xs font-semibold no-underline">
+                        <span className={cn(accent, "no-underline")}>View details</span>
                         {onCard("hours") && biz.hours && (
-                          <span className="text-muted-foreground font-normal truncate max-w-[50%]">{biz.hours}</span>
+                          <span className="text-muted-foreground font-normal truncate max-w-[50%] no-underline">{biz.hours}</span>
                         )}
                       </div>
                     </div>
