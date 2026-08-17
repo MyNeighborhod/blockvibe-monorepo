@@ -157,6 +157,9 @@ export const DEFAULT_DIRECTORY_FIELD_CONFIG: DirectoryFieldConfigRow[] = [
   },
 ]
 
+/** Public directory list page size (infinite scroll loads subsequent pages). */
+export const DIRECTORY_PAGE_SIZE = 10
+
 export const DEFAULT_NOG_BUSINESS_CATEGORIES = [
   { title: "Food & Drink", slug: "food-drink" },
   { title: "Shopping", slug: "shopping" },

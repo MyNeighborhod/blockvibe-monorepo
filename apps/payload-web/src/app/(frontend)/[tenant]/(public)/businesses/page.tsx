@@ -52,6 +52,10 @@ export default async function Page({ params: paramsPromise }: Args) {
   return (
     <BusinessesClient
       initialBusinesses={(res.businesses || []) as any}
+      initialHasNextPage={Boolean(res.hasNextPage)}
+      initialTotalDocs={res.totalDocs || 0}
+      initialPage={res.page || 1}
+      categoryCounts={res.categoryCounts || { all: 0 }}
       categories={(res.categories || []) as any}
       customFields={(res.customFields || []) as any}
       directorySettings={

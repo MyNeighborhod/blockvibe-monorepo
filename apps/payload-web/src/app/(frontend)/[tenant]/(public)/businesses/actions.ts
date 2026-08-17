@@ -6,10 +6,65 @@ import crypto from "crypto"
 import { z } from "zod"
 import {
   DEFAULT_DIRECTORY_FIELD_CONFIG,
+  DIRECTORY_PAGE_SIZE,
   isFieldEnabled,
   resolveFieldConfig,
   type DirectoryCoreFieldKey,
 } from "@/directory/constants"
+
+type DirectorySort = "name" | "name-desc"
+
+function directorySortValue(sortBy: DirectorySort = "name") {
+  return sortBy === "name-desc" ? "-name" : "name"
+}
+
+function buildDirectoryBusinessWhere(
+  numericTenantId: number,
+  opts?: { categoryId?: string | null; search?: string | null },
+) {
+  const and: any[] = [
+    { tenant: { equals: numericTenantId } },
+    { appearOnNOG: { equals: true } },
+  ]
+
+  if (opts?.categoryId && opts.categoryId !== "all") {
+    const catId =
+      typeof opts.categoryId === "string" ? parseInt(opts.categoryId, 10) : opts.categoryId
+    if (!Number.isNaN(catId)) {
+      and.push({ categories: { in: [catId] } })
+    }
+  }
+
+  const q = (opts?.search || "").trim()
+  if (q) {
+    and.push({
+      or: [
+        { name: { contains: q } },
+        { about: { contains: q } },
+        { address: { contains: q } },
+      ],
+    })
+  }
+
+  return { and }
+}
+
+function emptyDirectoryBootstrap(error?: string) {
+  return {
+    success: !error,
+    error,
+    enabled: false,
+    businesses: [] as any[],
+    categories: [] as any[],
+    customFields: [] as any[],
+    directorySettings: null as any,
+    page: 1,
+    pageSize: DIRECTORY_PAGE_SIZE,
+    totalDocs: 0,
+    hasNextPage: false,
+    categoryCounts: { all: 0 } as Record<string, number>,
+  }
+}
 
 export async function getDirectoryBootstrapAction(tenantId: string | number) {
   try {
@@ -22,27 +77,18 @@ export async function getDirectoryBootstrapAction(tenantId: string | number) {
     })
 
     if (!tenant || !(tenant as any).enableBusinessDirectory) {
-      return {
-        success: true,
-        enabled: false,
-        businesses: [],
-        categories: [],
-        customFields: [],
-        directorySettings: null,
-      }
+      return emptyDirectoryBootstrap()
     }
 
-    const [businesses, categories, customFields] = await Promise.all([
+    const baseWhere = buildDirectoryBusinessWhere(numericTenantId)
+
+    const [businesses, categories, customFields, categoryIndex] = await Promise.all([
       payload.find({
         collection: "businesses",
-        where: {
-          and: [
-            { tenant: { equals: numericTenantId } },
-            { appearOnNOG: { equals: true } },
-          ],
-        },
+        where: baseWhere,
         sort: "name",
-        limit: 500,
+        limit: DIRECTORY_PAGE_SIZE,
+        page: 1,
         depth: 1,
       }),
       payload.find({
@@ -59,7 +105,25 @@ export async function getDirectoryBootstrapAction(tenantId: string | number) {
         limit: 100,
         depth: 0,
       }),
+      payload.find({
+        collection: "businesses",
+        where: baseWhere,
+        limit: 1000,
+        depth: 0,
+        select: { categories: true },
+      }),
     ])
+
+    const categoryCounts: Record<string, number> = { all: categoryIndex.totalDocs }
+    for (const doc of categoryIndex.docs) {
+      const cats = (doc as any).categories
+      if (!Array.isArray(cats)) continue
+      for (const cat of cats) {
+        const id = typeof cat === "object" && cat !== null ? String(cat.id) : String(cat)
+        if (!id || id === "undefined") continue
+        categoryCounts[id] = (categoryCounts[id] || 0) + 1
+      }
+    }
 
     return {
       success: true,
@@ -74,16 +138,76 @@ export async function getDirectoryBootstrapAction(tenantId: string | number) {
         showInNav: true,
         fieldConfig: DEFAULT_DIRECTORY_FIELD_CONFIG,
       },
+      page: businesses.page || 1,
+      pageSize: DIRECTORY_PAGE_SIZE,
+      totalDocs: businesses.totalDocs,
+      hasNextPage: Boolean(businesses.hasNextPage),
+      categoryCounts,
+    }
+  } catch (err: any) {
+    return emptyDirectoryBootstrap(err.message || "Failed to load directory.")
+  }
+}
+
+export async function loadDirectoryBusinessesAction(
+  tenantId: string | number,
+  opts: {
+    page: number
+    sortBy?: DirectorySort
+    categoryId?: string | null
+    search?: string | null
+  },
+) {
+  try {
+    const numericTenantId = typeof tenantId === "string" ? parseInt(tenantId, 10) : tenantId
+    const page = Math.max(1, opts.page || 1)
+    const payload = await getPayload({ config: configPromise })
+
+    const tenant = await payload.findByID({
+      collection: "tenants",
+      id: numericTenantId,
+    })
+
+    if (!tenant || !(tenant as any).enableBusinessDirectory) {
+      return {
+        success: true,
+        businesses: [],
+        page,
+        pageSize: DIRECTORY_PAGE_SIZE,
+        totalDocs: 0,
+        hasNextPage: false,
+      }
+    }
+
+    const result = await payload.find({
+      collection: "businesses",
+      where: buildDirectoryBusinessWhere(numericTenantId, {
+        categoryId: opts.categoryId,
+        search: opts.search,
+      }),
+      sort: directorySortValue(opts.sortBy || "name"),
+      limit: DIRECTORY_PAGE_SIZE,
+      page,
+      depth: 1,
+    })
+
+    return {
+      success: true,
+      businesses: result.docs,
+      page: result.page || page,
+      pageSize: DIRECTORY_PAGE_SIZE,
+      totalDocs: result.totalDocs,
+      hasNextPage: Boolean(result.hasNextPage),
     }
   } catch (err: any) {
     return {
       success: false,
-      error: err.message || "Failed to load directory.",
-      enabled: false,
+      error: err.message || "Failed to load businesses.",
       businesses: [],
-      categories: [],
-      customFields: [],
-      directorySettings: null,
+      page: opts.page || 1,
+      pageSize: DIRECTORY_PAGE_SIZE,
+      totalDocs: 0,
+      hasNextPage: false,
     }
   }
 }

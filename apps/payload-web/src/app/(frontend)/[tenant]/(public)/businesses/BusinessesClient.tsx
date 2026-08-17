@@ -1,13 +1,13 @@
 "use client"
 
-import React, { useMemo, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react"
 import Link from "next/link"
-import { ShieldCheck, Plus } from "lucide-react"
+import { ShieldCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { registerBusinessAction } from "./actions"
+import { loadDirectoryBusinessesAction, registerBusinessAction } from "./actions"
 import { cn } from "@/utilities/ui"
 import {
   type DirectoryCoreFieldKey,
@@ -18,7 +18,6 @@ import {
 import {
   businessDetailPath,
   cardMediaPresentation,
-  categoryIdsOf as categoryIdsOfShared,
   categoryTitlesOf,
 } from "@/directory/businessMedia"
 
@@ -71,6 +70,10 @@ interface Category {
 
 interface BusinessesClientProps {
   initialBusinesses: Business[]
+  initialHasNextPage: boolean
+  initialTotalDocs: number
+  initialPage: number
+  categoryCounts: Record<string, number>
   categories: Category[]
   customFields: CustomField[]
   directorySettings: DirectorySettings
@@ -79,12 +82,12 @@ interface BusinessesClientProps {
   tenantName: string
 }
 
-function categoryIdsOf(biz: Business): string[] {
-  return categoryIdsOfShared(biz as any)
-}
-
 export default function BusinessesClient({
   initialBusinesses,
+  initialHasNextPage,
+  initialTotalDocs,
+  initialPage,
+  categoryCounts,
   categories,
   customFields,
   directorySettings,
@@ -103,10 +106,17 @@ export default function BusinessesClient({
   const onForm = (key: DirectoryCoreFieldKey) => show(key) && fieldMap.get(key)?.showInRegistration !== false
   const required = (key: DirectoryCoreFieldKey) => Boolean(fieldMap.get(key)?.required)
 
-  const [businesses] = useState<Business[]>(initialBusinesses)
-  const [searchQuery, setSearchQuery] = useState("")
+  const [businesses, setBusinesses] = useState<Business[]>(initialBusinesses)
+  const [page, setPage] = useState(initialPage)
+  const [hasNextPage, setHasNextPage] = useState(initialHasNextPage)
+  const [totalDocs, setTotalDocs] = useState(initialTotalDocs)
   const [activeCategory, setActiveCategory] = useState<string>("all")
   const [sortBy, setSortBy] = useState<"name" | "name-desc">("name")
+  const [isFilterPending, startFilterTransition] = useTransition()
+  const [loadingMore, setLoadingMore] = useState(false)
+  const loadMoreLock = useRef(false)
+  const sentinelRef = useRef<HTMLDivElement | null>(null)
+
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -136,36 +146,80 @@ export default function BusinessesClient({
     directorySettings.pageIntro ||
     "Support local. Explore shops, restaurants, and services right here in our neighborhood."
 
-  const categoryCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: businesses.length }
-    for (const b of businesses) {
-      for (const catId of categoryIdsOf(b)) {
-        counts[catId] = (counts[catId] || 0) + 1
-      }
-    }
-    return counts
-  }, [businesses])
+  const fetchPage = useCallback(
+    async (nextPage: number, mode: "replace" | "append", category = activeCategory, sort = sortBy) => {
+      const res = await loadDirectoryBusinessesAction(tenantId, {
+        page: nextPage,
+        sortBy: sort,
+        categoryId: category,
+      })
+      if (!res.success) return false
 
-  const filtered = useMemo(() => {
-    let list = [...businesses]
-    if (activeCategory !== "all") {
-      list = list.filter((b) => categoryIdsOf(b).includes(activeCategory))
+      setBusinesses((prev) => {
+        if (mode === "replace") return (res.businesses || []) as Business[]
+        const seen = new Set(prev.map((b) => String(b.id)))
+        const incoming = ((res.businesses || []) as Business[]).filter((b) => !seen.has(String(b.id)))
+        return [...prev, ...incoming]
+      })
+      setPage(res.page || nextPage)
+      setHasNextPage(Boolean(res.hasNextPage))
+      setTotalDocs(res.totalDocs || 0)
+      return true
+    },
+    [tenantId, sortBy, activeCategory],
+  )
+
+  const resetAndLoad = useCallback(
+    (category: string, sort: "name" | "name-desc") => {
+      startFilterTransition(async () => {
+        loadMoreLock.current = true
+        try {
+          await fetchPage(1, "replace", category, sort)
+        } finally {
+          loadMoreLock.current = false
+        }
+      })
+    },
+    [fetchPage],
+  )
+
+  const onCategoryChange = (category: string) => {
+    setActiveCategory(category)
+    resetAndLoad(category, sortBy)
+  }
+
+  const onSortChange = (sort: "name" | "name-desc") => {
+    setSortBy(sort)
+    resetAndLoad(activeCategory, sort)
+  }
+
+  const loadMore = useCallback(async () => {
+    if (!hasNextPage || loadingMore || loadMoreLock.current || isFilterPending) return
+    loadMoreLock.current = true
+    setLoadingMore(true)
+    try {
+      await fetchPage(page + 1, "append")
+    } finally {
+      setLoadingMore(false)
+      loadMoreLock.current = false
     }
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim()
-      list = list.filter(
-        (b) =>
-          b.name.toLowerCase().includes(q) ||
-          (b.about || "").toLowerCase().includes(q) ||
-          (b.address || "").toLowerCase().includes(q),
-      )
-    }
-    list.sort((a, b) => {
-      const cmp = a.name.localeCompare(b.name)
-      return sortBy === "name" ? cmp : -cmp
-    })
-    return list
-  }, [businesses, activeCategory, searchQuery, sortBy])
+  }, [hasNextPage, loadingMore, isFilterPending, fetchPage, page])
+
+  useEffect(() => {
+    const node = sentinelRef.current
+    if (!node || !hasNextPage) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          void loadMore()
+        }
+      },
+      { rootMargin: "240px 0px" },
+    )
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [hasNextPage, loadMore])
 
   const readFile = (file: File, setter: (v: string) => void) => {
     const reader = new FileReader()
@@ -312,27 +366,31 @@ export default function BusinessesClient({
           <div className="flex flex-wrap gap-2">
             <FilterPill
               active={activeCategory === "all"}
-              onClick={() => setActiveCategory("all")}
+              onClick={() => onCategoryChange("all")}
               isNog={isNog}
             >
-              All
+              All{typeof categoryCounts.all === "number" ? ` (${categoryCounts.all})` : ""}
             </FilterPill>
-            {categories.map((cat) => (
+            {categories.map((cat) => {
+              const id = String(cat.id)
+              const count = categoryCounts[id]
+              return (
               <FilterPill
                 key={cat.id}
-                active={activeCategory === String(cat.id)}
-                onClick={() => setActiveCategory(String(cat.id))}
+                active={activeCategory === id}
+                onClick={() => onCategoryChange(id)}
                 isNog={isNog}
               >
-                {cat.title}
+                {cat.title}{typeof count === "number" ? ` (${count})` : ""}
               </FilterPill>
-            ))}
+              )
+            })}
           </div>
           <label className="flex items-center gap-2 text-sm text-muted-foreground">
             <span className="whitespace-nowrap">Sort</span>
             <select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as "name" | "name-desc")}
+              onChange={(e) => onSortChange(e.target.value as "name" | "name-desc")}
               className="h-9 rounded-md border border-border/70 bg-background/80 px-2 text-sm text-foreground"
             >
               <option value="name">Name A–Z</option>
@@ -341,7 +399,7 @@ export default function BusinessesClient({
           </label>
         </div>
 
-        {filtered.length === 0 ? (
+        {businesses.length === 0 && !isFilterPending ? (
           <div
             className={cn(
               "text-center py-20 border border-dashed rounded-2xl",
@@ -363,121 +421,143 @@ export default function BusinessesClient({
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-7">
-            {filtered.map((biz, index) => {
-              const media = cardMediaPresentation(biz)
-              const cats = categoryTitlesOf(biz)
-              return (
-                <Link
-                  key={biz.id}
-                  href={biz.slug ? businessDetailPath(biz.slug) : `/businesses?highlight=${biz.id}`}
-                  className={cn(
-                    "group text-left overflow-hidden rounded-2xl border bg-card/90 backdrop-blur-sm transition-all duration-300 block",
-                    "hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2",
-                    accentRing,
-                    isNog ? "border-[#d5e3e0] shadow-[0_1px_0_rgba(66,81,76,0.04)]" : "border-border/70 shadow-sm",
-                  )}
-                  style={{ animationDelay: `${Math.min(index, 12) * 40}ms` }}
-                >
-                  <div
+          <>
+            <div
+              className={cn(
+                "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-7 transition-opacity",
+                isFilterPending && "opacity-60",
+              )}
+            >
+              {businesses.map((biz, index) => {
+                const media = cardMediaPresentation(biz)
+                const cats = categoryTitlesOf(biz)
+                return (
+                  <Link
+                    key={biz.id}
+                    href={biz.slug ? businessDetailPath(biz.slug) : `/businesses?highlight=${biz.id}`}
                     className={cn(
-                      "relative overflow-hidden",
-                      media.mode === "photo" ? "aspect-[16/10]" : "aspect-[5/3]",
-                      media.mode === "logo" && (isNog ? "bg-[#eef6f5]" : "bg-muted/50"),
-                      media.mode === "monogram" && (isNog ? "bg-[#e8f3f2]" : "bg-muted"),
+                      "group text-left overflow-hidden rounded-2xl border bg-card/90 backdrop-blur-sm transition-all duration-300 block",
+                      "hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2",
+                      accentRing,
+                      isNog ? "border-[#d5e3e0] shadow-[0_1px_0_rgba(66,81,76,0.04)]" : "border-border/70 shadow-sm",
                     )}
+                    style={{ animationDelay: `${Math.min(index, 12) * 40}ms` }}
                   >
-                    {media.mode === "photo" && media.photoUrl && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={media.photoUrl}
-                        alt=""
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-                        loading="lazy"
-                      />
-                    )}
-                    {media.mode === "logo" && media.logoUrl && (
-                      <div className="absolute inset-0 flex items-center justify-center p-8 md:p-10">
-                        <div
-                          className={cn(
-                            "absolute inset-0 opacity-70",
-                            isNog
-                              ? "bg-[radial-gradient(ellipse_at_center,_rgba(118,179,184,0.22)_0%,_transparent_65%)]"
-                              : "bg-[radial-gradient(ellipse_at_center,_rgba(0,0,0,0.06)_0%,_transparent_65%)]",
-                          )}
-                        />
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={media.logoUrl}
-                          alt=""
-                          className="relative z-[1] max-h-full max-w-[70%] object-contain drop-shadow-sm transition-transform duration-500 group-hover:scale-[1.04]"
-                          loading="lazy"
-                        />
-                      </div>
-                    )}
-                    {media.mode === "monogram" && (
-                      <div
-                        className={cn(
-                          "flex h-full w-full items-center justify-center text-4xl font-serif",
-                          isNog ? "text-[#76b3b8]" : "text-muted-foreground",
-                        )}
-                      >
-                        {biz.name.charAt(0)}
-                      </div>
-                    )}
-                    {media.mode === "photo" && media.logoUrl && onCard("logo") && (
-                      <div className="absolute bottom-3 left-3 h-12 w-12 rounded-lg border border-white/70 bg-white/95 p-1 shadow-sm overflow-hidden">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={media.logoUrl} alt="" className="h-full w-full object-contain" loading="lazy" />
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="p-5">
-                    {onCard("categories") && cats.length > 0 && (
-                      <div className="mb-2 flex flex-wrap gap-1.5">
-                        {cats.slice(0, 2).map((t) => (
-                          <span
-                            key={t}
-                            className={cn(
-                              "text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full",
-                              isNog ? "bg-[#76b3b8]/12 text-[#4a7c80]" : "bg-primary/10 text-primary",
-                            )}
-                          >
-                            {t}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                    <h3
+                    <div
                       className={cn(
-                        "text-xl font-semibold leading-snug line-clamp-2 group-hover:underline decoration-1 underline-offset-4",
-                        isNog ? "font-serif text-[#42514c]" : "text-foreground",
+                        "relative overflow-hidden",
+                        media.mode === "photo" ? "aspect-[16/10]" : "aspect-[5/3]",
+                        media.mode === "logo" && (isNog ? "bg-[#eef6f5]" : "bg-muted/50"),
+                        media.mode === "monogram" && (isNog ? "bg-[#e8f3f2]" : "bg-muted"),
                       )}
                     >
-                      {biz.name}
-                    </h3>
-                    {onCard("address") && biz.address && (
-                      <p className={cn("mt-1.5 text-sm line-clamp-1", isNog ? "text-[#7b8c89]" : "text-muted-foreground")}>
-                        {biz.address}
-                      </p>
-                    )}
-                    {onCard("about") && biz.about && (
-                      <p className={cn("mt-3 text-sm leading-relaxed line-clamp-3", isNog ? "text-[#7b8c89]" : "text-muted-foreground")}>
-                        {biz.about}
-                      </p>
-                    )}
-                    <div className="mt-4 flex items-center justify-between text-xs font-semibold">
-                      <span className={accent}>View details</span>
-                      {onCard("hours") && biz.hours && (
-                        <span className="text-muted-foreground font-normal truncate max-w-[50%]">{biz.hours}</span>
+                      {media.mode === "photo" && media.photoUrl && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={media.photoUrl}
+                          alt=""
+                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                          loading="lazy"
+                        />
+                      )}
+                      {media.mode === "logo" && media.logoUrl && (
+                        <div className="absolute inset-0 flex items-center justify-center p-8 md:p-10">
+                          <div
+                            className={cn(
+                              "absolute inset-0 opacity-70",
+                              isNog
+                                ? "bg-[radial-gradient(ellipse_at_center,_rgba(118,179,184,0.22)_0%,_transparent_65%)]"
+                                : "bg-[radial-gradient(ellipse_at_center,_rgba(0,0,0,0.06)_0%,_transparent_65%)]",
+                            )}
+                          />
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={media.logoUrl}
+                            alt=""
+                            className="relative z-[1] max-h-full max-w-[70%] object-contain drop-shadow-sm transition-transform duration-500 group-hover:scale-[1.04]"
+                            loading="lazy"
+                          />
+                        </div>
+                      )}
+                      {media.mode === "monogram" && (
+                        <div
+                          className={cn(
+                            "flex h-full w-full items-center justify-center text-4xl font-serif",
+                            isNog ? "text-[#76b3b8]" : "text-muted-foreground",
+                          )}
+                        >
+                          {biz.name.charAt(0)}
+                        </div>
+                      )}
+                      {media.mode === "photo" && media.logoUrl && onCard("logo") && (
+                        <div className="absolute bottom-3 left-3 h-12 w-12 rounded-lg border border-white/70 bg-white/95 p-1 shadow-sm overflow-hidden">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={media.logoUrl} alt="" className="h-full w-full object-contain" loading="lazy" />
+                        </div>
                       )}
                     </div>
-                  </div>
-                </Link>
-              )
-            })}
-          </div>
+
+                    <div className="p-5">
+                      {onCard("categories") && cats.length > 0 && (
+                        <div className="mb-2 flex flex-wrap gap-1.5">
+                          {cats.slice(0, 2).map((t) => (
+                            <span
+                              key={t}
+                              className={cn(
+                                "text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full",
+                                isNog ? "bg-[#76b3b8]/12 text-[#4a7c80]" : "bg-primary/10 text-primary",
+                              )}
+                            >
+                              {t}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      <h3
+                        className={cn(
+                          "text-xl font-semibold leading-snug line-clamp-2 group-hover:underline decoration-1 underline-offset-4",
+                          isNog ? "font-serif text-[#42514c]" : "text-foreground",
+                        )}
+                      >
+                        {biz.name}
+                      </h3>
+                      {onCard("address") && biz.address && (
+                        <p className={cn("mt-1.5 text-sm line-clamp-1", isNog ? "text-[#7b8c89]" : "text-muted-foreground")}>
+                          {biz.address}
+                        </p>
+                      )}
+                      {onCard("about") && biz.about && (
+                        <p className={cn("mt-3 text-sm leading-relaxed line-clamp-3", isNog ? "text-[#7b8c89]" : "text-muted-foreground")}>
+                          {biz.about}
+                        </p>
+                      )}
+                      <div className="mt-4 flex items-center justify-between text-xs font-semibold">
+                        <span className={accent}>View details</span>
+                        {onCard("hours") && biz.hours && (
+                          <span className="text-muted-foreground font-normal truncate max-w-[50%]">{biz.hours}</span>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+
+            <div ref={sentinelRef} className="h-10 w-full" aria-hidden />
+            <div className="mt-2 mb-4 flex flex-col items-center gap-2 text-sm text-muted-foreground">
+              {loadingMore && <p>Loading more businesses…</p>}
+              {!hasNextPage && businesses.length > 0 && (
+                <p>
+                  Showing all {totalDocs} business{totalDocs === 1 ? "" : "es"}
+                </p>
+              )}
+              {hasNextPage && !loadingMore && (
+                <Button type="button" variant="outline" size="sm" onClick={() => void loadMore()}>
+                  Load more
+                </Button>
+              )}
+            </div>
+          </>
         )}
       </div>
 
