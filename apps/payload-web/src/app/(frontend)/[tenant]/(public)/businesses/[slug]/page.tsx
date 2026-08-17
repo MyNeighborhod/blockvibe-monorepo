@@ -186,9 +186,9 @@ export default async function BusinessDetailPage({ params: paramsPromise }: Args
           />
         </header>
 
-        {/* First viewport: photo + contact/hours sidebar */}
+        {/* First viewport: contact/hours left, media right; mobile = media first */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
-          <div className="lg:col-span-8">
+          <div className="lg:col-span-8 lg:order-2">
             <div
               className={cn(
                 "relative w-full overflow-hidden rounded-sm",
@@ -234,7 +234,7 @@ export default async function BusinessDetailPage({ params: paramsPromise }: Args
             </div>
           </div>
 
-          <aside className="lg:col-span-4 space-y-7 lg:pt-1">
+          <aside className="lg:col-span-4 lg:order-1 space-y-7 lg:pt-1">
             <section>
               <SectionLabel isNog={isNog}>Contact</SectionLabel>
               <div className={cn("space-y-1.5 text-[15px] leading-relaxed", body)}>
