@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react"
 import Link from "next/link"
-import { ShieldCheck } from "lucide-react"
+import { Loader2, ShieldCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -543,19 +543,30 @@ export default function BusinessesClient({
               })}
             </div>
 
-            <div ref={sentinelRef} className="h-10 w-full" aria-hidden />
-            <div className="mt-2 mb-4 flex flex-col items-center gap-2 text-sm text-muted-foreground">
-              {loadingMore && <p>Loading more businesses…</p>}
-              {!hasNextPage && businesses.length > 0 && (
-                <p>
+            <div
+              ref={sentinelRef}
+              className="mt-6 mb-8 flex min-h-14 flex-col items-center justify-center gap-2"
+              aria-live="polite"
+            >
+              {hasNextPage ? (
+                <>
+                  <Loader2
+                    className={cn(
+                      "h-8 w-8 animate-spin",
+                      isNog ? "text-[#76b3b8]" : "text-primary",
+                      !loadingMore && !isFilterPending && "opacity-70",
+                    )}
+                    aria-hidden
+                  />
+                  <span className="sr-only">
+                    {loadingMore || isFilterPending ? "Loading more businesses" : "More businesses available"}
+                  </span>
+                </>
+              ) : businesses.length > 0 ? (
+                <p className={cn("text-sm", isNog ? "text-[#7b8c89]" : "text-muted-foreground")}>
                   Showing all {totalDocs} business{totalDocs === 1 ? "" : "es"}
                 </p>
-              )}
-              {hasNextPage && !loadingMore && (
-                <Button type="button" variant="outline" size="sm" onClick={() => void loadMore()}>
-                  Load more
-                </Button>
-              )}
+              ) : null}
             </div>
           </>
         )}
