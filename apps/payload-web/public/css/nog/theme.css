@@ -188,7 +188,7 @@ body[data-tenant-chrome="nog"] .high-impact-hero {
   color: #063934 !important;
 }
 
-.theme-nog a {
+.theme-nog a:not(.no-underline):not([class*="no-underline"]) {
   /* color: #0a3840; */
   text-decoration: underline;
   transition: color 0.2s ease;
