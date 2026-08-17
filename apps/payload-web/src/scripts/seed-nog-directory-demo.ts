@@ -1,6 +1,8 @@
 /**
- * Seed approved demo businesses with high-res logos (when present) for visual validation.
- * Usage: pnpm exec tsx src/scripts/seed-nog-directory-demo.ts
+ * Seed approved demo businesses with logos (bundled PNGs or Unsplash JPGs) for visual validation.
+ * Usage:
+ *   pnpm exec tsx src/scripts/download-demo-unsplash-logos.ts
+ *   pnpm exec tsx src/scripts/seed-nog-directory-demo.ts
  */
 import "dotenv/config"
 import fs from "fs"
@@ -8,6 +10,28 @@ import path from "path"
 import { getPayload } from "payload"
 import config from "../payload.config"
 import { DEMO_BUSINESSES } from "./seed-nog-directory-demo-data"
+import {
+  SKIP_LOGO_EMAILS,
+  UNSPLASH_LOGO_BY_EMAIL,
+  logoFilenameForEmail,
+} from "./seed-nog-directory-demo-logos"
+
+function mimeForFilename(filename: string) {
+  const lower = filename.toLowerCase()
+  if (lower.endsWith(".png")) return "image/png"
+  if (lower.endsWith(".webp")) return "image/webp"
+  if (lower.endsWith(".gif")) return "image/gif"
+  return "image/jpeg"
+}
+
+function resolveLogoFilename(demo: (typeof DEMO_BUSINESSES)[number]): string | undefined {
+  if (SKIP_LOGO_EMAILS.has(demo.email)) return undefined
+  if (demo.logoFilename) return demo.logoFilename
+  if (UNSPLASH_LOGO_BY_EMAIL[demo.email]) {
+    return logoFilenameForEmail(demo.email) || undefined
+  }
+  return undefined
+}
 
 async function main() {
   const payload = await getPayload({ config })
@@ -28,17 +52,20 @@ async function main() {
 
   let created = 0
   let updated = 0
+  let logosAttached = 0
+  let monograms = 0
 
   for (const demo of DEMO_BUSINESSES) {
-    let logoId: number | undefined
+    let logoId: number | null | undefined
+    const logoFilename = resolveLogoFilename(demo)
 
-    if (demo.logoFilename) {
-      const imageFilePath = path.join(process.cwd(), "public", "media", "nog", demo.logoFilename)
+    if (logoFilename) {
+      const imageFilePath = path.join(process.cwd(), "public", "media", "nog", logoFilename)
       if (fs.existsSync(imageFilePath)) {
         const existingMedia = await payload.find({
           collection: "media",
           where: {
-            and: [{ tenant: { equals: nog.id } }, { filename: { equals: demo.logoFilename } }],
+            and: [{ tenant: { equals: nog.id } }, { filename: { equals: logoFilename } }],
           },
           limit: 1,
         })
@@ -50,20 +77,28 @@ async function main() {
           const createdMedia = await payload.create({
             collection: "media",
             data: {
-              alt: demo.alt || `${demo.name} Logo`,
+              alt: demo.alt || `${demo.name} logo`,
               tenant: nog.id,
             },
             file: {
               data: fileBuffer,
-              name: demo.logoFilename,
-              mimetype: "image/png",
+              name: logoFilename,
+              mimetype: mimeForFilename(logoFilename),
               size: fileBuffer.length,
             },
           })
           logoId = createdMedia.id
-          console.log("created media logo", demo.logoFilename, "id=", logoId)
+          console.log("created media logo", logoFilename, "id=", logoId)
         }
+        logosAttached += 1
+      } else {
+        console.warn("missing logo file", logoFilename, "for", demo.name)
+        logoId = null
+        monograms += 1
       }
+    } else {
+      logoId = null
+      monograms += 1
     }
 
     const existing = await payload.find({
@@ -97,19 +132,19 @@ async function main() {
         data: updateData,
       })
       updated += 1
-      console.log("updated", demo.name)
+      console.log("updated", demo.name, logoId ? `logo=${logoId}` : "(monogram)")
     } else {
       await payload.create({
         collection: "businesses",
         data,
       })
       created += 1
-      console.log("created", demo.name)
+      console.log("created", demo.name, logoId ? `logo=${logoId}` : "(monogram)")
     }
   }
 
   console.log(
-    `✓ Demo businesses seeded (${DEMO_BUSINESSES.length} total: ${created} created, ${updated} updated).`,
+    `✓ Demo businesses seeded (${DEMO_BUSINESSES.length} total: ${created} created, ${updated} updated; ${logosAttached} with logos, ${monograms} monogram examples).`,
   )
   process.exit(0)
 }
