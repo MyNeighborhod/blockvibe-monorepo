@@ -176,9 +176,11 @@ ssh -i "$SSH_KEY" ubuntu@$IP "
   echo \"Hot-swapping Caddy upstream to port \$NEW_PORT...\"
   sudo cp /tmp/Caddyfile /etc/caddy/Caddyfile
   if [ \"\$STAGING\" -eq 1 ]; then
-    sudo sed -i \"s/127.0.0.1:3002/127.0.0.1:\$NEW_PORT/g\" /etc/caddy/Caddyfile
+    # Scope rewrite to the staging site block only (never retarget production).
+    sudo perl -i -0pe 's/(staging\\.blockvibe\\.org[\\s\\S]*?reverse_proxy )127\\.0\\.0\\.1:\\d+/\${1}127.0.0.1:'"\$NEW_PORT"'/s' /etc/caddy/Caddyfile
   else
-    sudo sed -i \"s/127.0.0.1:3000/127.0.0.1:\$NEW_PORT/g\" /etc/caddy/Caddyfile
+    # Scope rewrite to the production site block only.
+    sudo perl -i -0pe 's/(^blockvibe\\.org[\\s\\S]*?reverse_proxy )127\\.0\\.0\\.1:\\d+/\${1}127.0.0.1:'"\$NEW_PORT"'/ms' /etc/caddy/Caddyfile
   fi
   sudo systemctl reload caddy
 
