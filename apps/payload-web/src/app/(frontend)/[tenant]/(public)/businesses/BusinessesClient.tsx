@@ -479,6 +479,9 @@ export default function BusinessesClient({
             onClick={() => setSelected(null)}
           />
           <article
+            role="dialog"
+            aria-modal="true"
+            aria-label={selected.name}
             className={cn(
               "relative z-10 w-full md:max-w-2xl max-h-[92vh] overflow-y-auto rounded-t-3xl md:rounded-3xl bg-card shadow-2xl animate-in slide-in-from-bottom-4 md:zoom-in-95 duration-300",
               isNog && "theme-nog",
