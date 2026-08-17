@@ -45,7 +45,7 @@ test.describe("Staging & Local Business Lifecycle (Add, View, Remove)", () => {
     await expect(addButton).toBeVisible()
     await addButton.click()
 
-    await expect(page.getByRole("heading", { name: /Register Your Business/i })).toBeVisible()
+    await expect(page.getByRole("heading", { name: /Add your business/i })).toBeVisible()
 
     // Fill form fields
     await page.fill('input[placeholder="Grand Avenue Cafe"]', testBizName)
