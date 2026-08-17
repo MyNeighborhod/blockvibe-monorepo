@@ -75,7 +75,7 @@ async function main() {
     })
 
     const catId = bySlug.get(demo.categorySlug)
-    const shared: Record<string, unknown> = {
+    const data = {
       name: demo.name,
       address: demo.address,
       about: demo.about,
@@ -83,27 +83,25 @@ async function main() {
       website: demo.website,
       email: demo.email,
       phone: demo.phone,
-      appearOnNOG: true,
+      appearOnNOG: true as const,
+      logo: logoId,
       categories: catId ? [catId] : [],
+      tenant: nog.id,
     }
-    if (logoId) shared.logo = logoId
-    // Don't set cover from logo — card UI treats logo-only listings with contain + wash.
 
     if (existing.docs.length > 0) {
+      const { tenant: _tenant, ...updateData } = data
       await payload.update({
         collection: "businesses",
         id: existing.docs[0].id,
-        data: shared,
+        data: updateData,
       })
       updated += 1
       console.log("updated", demo.name)
     } else {
       await payload.create({
         collection: "businesses",
-        data: {
-          ...shared,
-          tenant: nog.id,
-        },
+        data,
       })
       created += 1
       console.log("created", demo.name)
