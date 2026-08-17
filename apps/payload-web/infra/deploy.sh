@@ -165,8 +165,8 @@ ssh -i "$SSH_KEY" ubuntu@$IP "
 
   echo \"Warming up Next.js on port \$NEW_PORT...\"
   for i in \$(seq 1 30); do
-    STATUS=\$(curl -s -o /null -w '%{http_code}' http://127.0.0.1:\$NEW_PORT/ || true)
-    if [ \"\$STATUS\" -eq 200 ] || [ \"\$STATUS\" -eq 302 ]; then
+    STATUS=\$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:\$NEW_PORT/ || true)
+    if [ \"\$STATUS\" = \"200\" ] || [ \"\$STATUS\" = \"302\" ]; then
       echo \"✓ New instance on port \$NEW_PORT is healthy (HTTP \$STATUS)!\"
       break
     fi
@@ -175,7 +175,8 @@ ssh -i "$SSH_KEY" ubuntu@$IP "
 
   echo \"Hot-swapping Caddy upstream to port \$NEW_PORT...\"
   sudo cp /tmp/Caddyfile /etc/caddy/Caddyfile
-  if [ \"\$STAGING\" -eq 1 ]; then
+  # STAGING expands on the deploy host (0|1), not on EC2.
+  if [ \"$STAGING\" -eq 1 ]; then
     # Scope rewrite to the staging site block only (never retarget production).
     sudo perl -i -0pe 's/(staging\\.blockvibe\\.org[\\s\\S]*?reverse_proxy )127\\.0\\.0\\.1:\\d+/\${1}127.0.0.1:'"\$NEW_PORT"'/s' /etc/caddy/Caddyfile
   else
