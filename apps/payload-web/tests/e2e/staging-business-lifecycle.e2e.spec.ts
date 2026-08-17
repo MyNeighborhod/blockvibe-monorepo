@@ -53,9 +53,15 @@ test.describe("Staging & Local Business Lifecycle (Add, View, Remove)", () => {
     await page.fill("#email", testBizEmail)
     await page.fill("#about", "Freshly baked artisan pastries and coffee in North of Grand.")
 
-    // Upload logo
-    const logoInput = page.locator('input[type="file"]').first()
-    await logoInput.setInputFiles(mockLogoPath)
+    // Upload cover image & logo if present
+    const coverInput = page.locator("#cover")
+    if (await coverInput.count() > 0) {
+      await coverInput.setInputFiles(mockLogoPath)
+    }
+    const logoInput = page.locator("#logo")
+    if (await logoInput.count() > 0) {
+      await logoInput.setInputFiles(mockLogoPath)
+    }
 
     // Submit form
     const submitBtn = page.getByRole("button", { name: /Submit business/i })
