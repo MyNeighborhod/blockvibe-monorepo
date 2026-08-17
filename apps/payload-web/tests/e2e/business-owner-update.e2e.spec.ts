@@ -4,7 +4,7 @@ import fs from "fs"
 import path from "path"
 import { getTenantURL, isRemoteTestEnv } from "../helpers/tenantUrl"
 import { getSuperadminCredentials } from "../helpers/testCredentials"
-import { loginFrontendTenant } from "../helpers/login"
+import { createAuthenticatedApiContext, loginFrontendTenant } from "../helpers/login"
 
 test.describe("Business Owner Dashboard Update Flow", () => {
   let nogBaseURL: string
@@ -35,7 +35,6 @@ test.describe("Business Owner Dashboard Update Flow", () => {
 
   test("Business owner logs in, updates address & description in Dashboard, and updates display publicly", async ({
     page,
-    request,
   }) => {
     // 1. Publicly register business
     await page.goto(`${nogBaseURL}/businesses`)
@@ -94,31 +93,37 @@ test.describe("Business Owner Dashboard Update Flow", () => {
       }
     } else {
       const creds = getSuperadminCredentials()
-      if (creds) {
-        await loginFrontendTenant(page, creds.email, creds.password)
-        const searchRes = await request.get(
-          `${nogBaseURL}/api/businesses?where[email][equals]=${testBizEmail}`,
+      expect(creds).not.toBeNull()
+      const api = await createAuthenticatedApiContext(nogBaseURL, creds!.email, creds!.password)
+      try {
+        const searchRes = await api.get(
+          `/api/businesses?where[email][equals]=${encodeURIComponent(testBizEmail)}`,
         )
-        if (searchRes.ok()) {
-          const data = await searchRes.json()
-          if (data.docs && data.docs.length > 0) {
-            await request.patch(`${nogBaseURL}/api/businesses/${data.docs[0].id}`, {
-              data: { appearOnNOG: true },
-            })
-          }
-        }
+        expect(searchRes.ok()).toBeTruthy()
+        const data = await searchRes.json()
+        expect(data.docs.length).toBeGreaterThan(0)
+        const patchRes = await api.patch(`/api/businesses/${data.docs[0].id}`, {
+          data: { appearOnNOG: true },
+        })
+        expect(patchRes.ok(), `Approve PATCH failed: ${patchRes.status()}`).toBeTruthy()
+
+        const usersRes = await api.get(
+          `/api/users?where[email][equals]=${encodeURIComponent(testBizEmail)}&limit=1`,
+        )
+        expect(usersRes.ok()).toBeTruthy()
+        const users = await usersRes.json()
+        expect(users.docs.length).toBeGreaterThan(0)
+        const pwdRes = await api.patch(`/api/users/${users.docs[0].id}`, {
+          data: { password: testOwnerPassword },
+        })
+        expect(pwdRes.ok(), `Set owner password failed: ${pwdRes.status()}`).toBeTruthy()
+      } finally {
+        await api.dispose()
       }
     }
 
     // 3. Log into Dashboard with business owner account via /login page UI
-    await page.goto(`${nogBaseURL}/login`)
-    await page.waitForLoadState("networkidle")
-    await page.fill("#email", testBizEmail)
-    await page.fill("#password", testOwnerPassword)
-    await page.click('button[type="submit"]')
-    await page.waitForURL((url) => !url.pathname.endsWith("/login"), { timeout: 15000 })
-
-    // 4. Navigate to /dashboard/my-business
+    await loginFrontendTenant(page, testBizEmail, testOwnerPassword, { baseURL: nogBaseURL })
     await page.goto(`${nogBaseURL}/dashboard/my-business`)
     await page.waitForLoadState("networkidle")
 
@@ -162,16 +167,24 @@ test.describe("Business Owner Dashboard Update Flow", () => {
       })
     } else {
       const cleanupCreds = getSuperadminCredentials()
-      if (cleanupCreds) {
-        const searchRes = await request.get(
-          `${nogBaseURL}/api/businesses?where[email][equals]=${testBizEmail}`,
+      expect(cleanupCreds).not.toBeNull()
+      const api = await createAuthenticatedApiContext(
+        nogBaseURL,
+        cleanupCreds!.email,
+        cleanupCreds!.password,
+      )
+      try {
+        const searchRes = await api.get(
+          `/api/businesses?where[email][equals]=${encodeURIComponent(testBizEmail)}`,
         )
         if (searchRes.ok()) {
           const data = await searchRes.json()
-          if (data.docs && data.docs.length > 0) {
-            await request.delete(`${nogBaseURL}/api/businesses/${data.docs[0].id}`)
+          if (data.docs?.length > 0) {
+            await api.delete(`/api/businesses/${data.docs[0].id}`)
           }
         }
+      } finally {
+        await api.dispose()
       }
     }
   })

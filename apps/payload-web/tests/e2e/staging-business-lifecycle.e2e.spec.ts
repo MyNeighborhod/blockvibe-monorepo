@@ -4,7 +4,7 @@ import fs from "fs"
 import path from "path"
 import { getTenantURL, isRemoteTestEnv } from "../helpers/tenantUrl"
 import { getSuperadminCredentials } from "../helpers/testCredentials"
-import { loginFrontendTenant } from "../helpers/login"
+import { createAuthenticatedApiContext, loginFrontendTenant } from "../helpers/login"
 
 test.describe("Staging & Local Business Lifecycle (Pending Staging Area -> Admin Approval -> Public View)", () => {
   let nogBaseURL: string
@@ -16,7 +16,6 @@ test.describe("Staging & Local Business Lifecycle (Pending Staging Area -> Admin
   test.beforeAll(async ({ baseURL }) => {
     nogBaseURL = getTenantURL(baseURL || "http://localhost:3000", "nog")
 
-    // Create temporary 1x1 png image for upload test
     fs.writeFileSync(
       mockLogoPath,
       Buffer.from(
@@ -34,48 +33,38 @@ test.describe("Staging & Local Business Lifecycle (Pending Staging Area -> Admin
 
   test("Complete lifecycle: register business -> verify hidden pending -> admin approves in dashboard -> verified public view -> remove", async ({
     page,
-    request,
   }) => {
-    // 1. Go to public businesses page
     await page.goto(`${nogBaseURL}/businesses`)
     await expect(page.locator("h1")).toContainText(/Businesses/i)
 
-    // 2. Open "Add your business" modal & fill registration form
     const addButton = page.getByRole("button", { name: /Add your business/i })
     await expect(addButton).toBeVisible()
     await addButton.click()
 
     await expect(page.getByRole("heading", { name: /Add your business/i })).toBeVisible()
 
-    // Fill form fields using element IDs
     await page.fill("#name", testBizName)
     await page.fill("#address", "1234 Grand Ave, Des Moines, IA")
     await page.fill("#email", testBizEmail)
     await page.fill("#about", "Freshly baked artisan pastries and coffee in North of Grand.")
 
-    // Upload logo if field present
     const logoInput = page.locator("#logo")
     if ((await logoInput.count()) > 0) {
       await logoInput.setInputFiles(mockLogoPath)
     }
 
-    const submitBtn = page.getByRole("button", { name: /Submit business/i })
-    await submitBtn.click()
+    await page.getByRole("button", { name: /Submit business/i }).click()
 
-    // Verify submission confirmation alert message
     await expect(
       page.getByText(/Thanks! Your listing was submitted and will appear after approval./i),
     ).toBeVisible({ timeout: 15000 })
 
-    // 3. Verify that until approved by admin, business DOES NOT display in public directory
     await page.goto(`${nogBaseURL}/businesses`)
     await page.waitForLoadState("networkidle")
     await expect(page.getByRole("button", { name: new RegExp(testBizName, "i") })).toHaveCount(0)
 
-    // 4. Admin approval step
     const isLocal = !isRemoteTestEnv()
     if (isLocal) {
-      // In local env, use Payload Local API directly to approve business
       const { getPayload } = await import("payload")
       const config = (await import("../../src/payload.config.js")).default
       const payload = await getPayload({ config })
@@ -86,35 +75,36 @@ test.describe("Staging & Local Business Lifecycle (Pending Staging Area -> Admin
       })
 
       expect(found.docs.length).toBeGreaterThan(0)
-      const bizId = found.docs[0].id
-
       await payload.update({
         collection: "businesses",
-        id: bizId,
+        id: found.docs[0].id,
         data: { appearOnNOG: true },
       })
     } else {
-      // In remote staging/prod env, login as admin & approve via REST API
       const creds = getSuperadminCredentials()
       expect(creds).not.toBeNull()
-      if (creds) {
-        await loginFrontendTenant(page, creds.email, creds.password)
-        const searchRes = await request.get(
-          `${nogBaseURL}/api/businesses?where[email][equals]=${testBizEmail}`,
-        )
-        expect(searchRes.ok()).toBeTruthy()
-        const data = await searchRes.json()
-        expect(data.docs.length).toBeGreaterThan(0)
-        const bizId = data.docs[0].id
 
-        const patchRes = await request.patch(`${nogBaseURL}/api/businesses/${bizId}`, {
-          data: { appearOnNOG: true },
-        })
-        expect(patchRes.ok()).toBeTruthy()
+      // Form login so dashboard SSR gets a real browser session cookie.
+      await loginFrontendTenant(page, creds!.email, creds!.password, { baseURL: nogBaseURL })
+      await page.goto(`${nogBaseURL}/dashboard/crm`)
+      await page.waitForLoadState("networkidle")
+      await expect(page.getByRole("heading", { name: /Resident Directory/i })).toBeVisible({
+        timeout: 15000,
+      })
+
+      await page.getByRole("button", { name: /Local Businesses/i }).click()
+      const row = page.locator("tr", { hasText: testBizName })
+      await expect(row).toBeVisible({ timeout: 15000 })
+      const toggle = row.locator("input.crm-business-approval-toggle")
+      await expect(toggle).toBeVisible()
+      // Controlled React checkbox: click + wait for label (check() fails when state flips async).
+      if (!(await toggle.isChecked())) {
+        await toggle.click()
       }
+      await expect(row.getByText(/Approved/i)).toBeVisible({ timeout: 15000 })
+      await expect(toggle).toBeChecked({ timeout: 5000 })
     }
 
-    // 5. Verify that AFTER admin approval, business DOES display in public directory
     await page.goto(`${nogBaseURL}/businesses`)
     await page.waitForLoadState("networkidle")
 
@@ -122,12 +112,10 @@ test.describe("Staging & Local Business Lifecycle (Pending Staging Area -> Admin
     await expect(bizCard).toBeVisible({ timeout: 15000 })
     await bizCard.click()
 
-    // Detail modal opens showing address & description
     await expect(page.getByRole("dialog")).toBeVisible()
     await expect(page.getByRole("dialog")).toContainText(testBizName)
     await expect(page.getByRole("dialog")).toContainText("1234 Grand Ave")
 
-    // 6. Cleanup test business
     if (isLocal) {
       const { getPayload } = await import("payload")
       const config = (await import("../../src/payload.config.js")).default
@@ -138,16 +126,20 @@ test.describe("Staging & Local Business Lifecycle (Pending Staging Area -> Admin
       })
     } else {
       const creds = getSuperadminCredentials()
-      if (creds) {
-        const searchRes = await request.get(
-          `${nogBaseURL}/api/businesses?where[email][equals]=${testBizEmail}`,
+      expect(creds).not.toBeNull()
+      const api = await createAuthenticatedApiContext(nogBaseURL, creds!.email, creds!.password)
+      try {
+        const searchRes = await api.get(
+          `/api/businesses?where[email][equals]=${encodeURIComponent(testBizEmail)}`,
         )
-        if (searchRes.ok()) {
-          const data = await searchRes.json()
-          if (data.docs && data.docs.length > 0) {
-            await request.delete(`${nogBaseURL}/api/businesses/${data.docs[0].id}`)
-          }
+        expect(searchRes.ok()).toBeTruthy()
+        const data = await searchRes.json()
+        if (data.docs?.length > 0) {
+          const delRes = await api.delete(`/api/businesses/${data.docs[0].id}`)
+          expect(delRes.ok(), `Cleanup DELETE failed: ${delRes.status()}`).toBeTruthy()
         }
+      } finally {
+        await api.dispose()
       }
     }
   })

@@ -1,31 +1,61 @@
-import type { Page } from "@playwright/test"
-import { expect } from "@playwright/test"
+import type { APIRequestContext, Page } from "@playwright/test"
+import { expect, request as playwrightRequest } from "@playwright/test"
 
 function isStaffRole(role: string | null | undefined): boolean {
   return role === "superadmin" || role === "admin" || role === "editor"
 }
 
+function resolveOrigin(page: Page, baseURL?: string): string {
+  if (baseURL) return new URL(baseURL).origin
+  const current = page.url()
+  if (current && current.startsWith("http")) return new URL(current).origin
+  throw new Error("loginFrontendTenant requires an absolute page URL or baseURL")
+}
+
 /**
- * Logs in via the tenant frontend API so the session cookie is stored reliably
- * before full-page navigations (e.g. dashboard access checks).
+ * Logs in via the tenant login form so the browser document session cookie is set
+ * the same way a real user would (needed for SSR dashboard routes).
  */
 export async function loginFrontendTenant(
   page: Page,
   email: string,
   password: string,
+  opts?: { baseURL?: string },
 ): Promise<void> {
-  const response = await page.request.post("/api/users/login", {
+  const origin = resolveOrigin(page, opts?.baseURL)
+  await page.goto(`${origin}/login`)
+  await page.waitForLoadState("domcontentloaded")
+  await page.locator('input[type="email"], #email').fill(email)
+  await page.locator('input[type="password"], #password').fill(password)
+  await page.getByRole("button", { name: /Sign In/i }).click()
+  await page.waitForURL((url) => !url.pathname.endsWith("/login"), { timeout: 20000 })
+}
+
+/**
+ * Authenticated Payload REST context for remote e2e (staging/prod).
+ * Prefer this over Playwright's isolated `request` fixture after `page` login —
+ * and over assuming `page.request` cookies always authorize collection updates.
+ */
+export async function createAuthenticatedApiContext(
+  baseURL: string,
+  email: string,
+  password: string,
+): Promise<APIRequestContext> {
+  const origin = new URL(baseURL).origin
+  const ctx = await playwrightRequest.newContext({ baseURL: origin })
+  const loginRes = await ctx.post("/api/users/login", {
     data: { email, password },
   })
-  if (!response.ok()) {
-    console.error(`loginFrontendTenant failed for ${email} (${response.status()}):`, await response.text())
+  if (!loginRes.ok()) {
+    console.error(
+      `createAuthenticatedApiContext login failed (${loginRes.status()}):`,
+      await loginRes.text(),
+    )
   }
-  expect(response.ok()).toBeTruthy()
-
-  const data = await response.json()
-  const destination = isStaffRole(data.user?.role) ? "/dashboard" : "/profile"
-  await page.goto(destination)
-  await page.waitForURL(`**${destination}`)
+  expect(loginRes.ok()).toBeTruthy()
+  const data = await loginRes.json()
+  expect(isStaffRole(data.user?.role)).toBeTruthy()
+  return ctx
 }
 
 export interface LoginOptions {
