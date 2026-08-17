@@ -10,28 +10,36 @@ interface TopUtilityBarProps {
   className?: string
 }
 
+type AuthUser = {
+  name?: string | null
+  email?: string | null
+} | null
+
 export function TopUtilityBar({ overDarkHero = false, className }: TopUtilityBarProps) {
-  const [user, setUser] = useState<any>(null)
+  // undefined = still resolving session (avoid flashing Login before My Dashboard)
+  const [user, setUser] = useState<AuthUser | undefined>(undefined)
   const pathname = usePathname()
   const router = useRouter()
 
   useEffect(() => {
-    fetch("/api/users/me")
+    let cancelled = false
+    fetch("/api/users/me", { credentials: "include" })
       .then((res) => res.json())
       .then((data) => {
-        if (data?.user) {
-          setUser(data.user)
-        } else {
-          setUser(null)
-        }
+        if (!cancelled) setUser(data?.user ?? null)
       })
-      .catch(() => setUser(null))
+      .catch(() => {
+        if (!cancelled) setUser(null)
+      })
+    return () => {
+      cancelled = true
+    }
   }, [pathname])
 
   const handleLogout = async (e: React.MouseEvent) => {
     e.preventDefault()
     try {
-      await fetch("/api/users/logout", { method: "POST" })
+      await fetch("/api/users/logout", { method: "POST", credentials: "include" })
       setUser(null)
       router.push("/")
       router.refresh()
@@ -48,18 +56,26 @@ export function TopUtilityBar({ overDarkHero = false, className }: TopUtilityBar
   return (
     <div
       className={cn(
-        "flex items-center gap-2 text-xs font-semibold uppercase tracking-wider select-none",
+        "flex items-center gap-2 text-xs font-semibold uppercase tracking-wider select-none min-h-4",
         className,
       )}
     >
-      {user ? (
+      {user === undefined ? (
+        <span
+          className={cn(
+            "inline-block h-3.5 w-36 rounded animate-pulse",
+            overDarkHero ? "bg-white/25" : "bg-slate-200 dark:bg-slate-700",
+          )}
+          aria-hidden
+        />
+      ) : user ? (
         <>
           <Link
             href="/dashboard"
             className={cn("transition-colors flex items-center gap-1.5 no-underline", textColor)}
           >
             <span className="w-4 h-4 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[9px] font-bold">
-              {user.name ? user.name[0].toUpperCase() : user.email[0].toUpperCase()}
+              {user.name ? user.name[0].toUpperCase() : (user.email?.[0] || "?").toUpperCase()}
             </span>
             <span>My Dashboard</span>
           </Link>
@@ -67,7 +83,10 @@ export function TopUtilityBar({ overDarkHero = false, className }: TopUtilityBar
           <button
             type="button"
             onClick={handleLogout}
-            className={cn("transition-colors cursor-pointer bg-transparent border-0 p-0 font-semibold no-underline", textColor)}
+            className={cn(
+              "transition-colors cursor-pointer bg-transparent border-0 p-0 font-semibold no-underline",
+              textColor,
+            )}
           >
             Logout
           </button>
