@@ -58,7 +58,7 @@ test.describe("Staging & Local Business Lifecycle (Add, View, Remove)", () => {
     await logoInput.setInputFiles(mockLogoPath)
 
     // Submit form
-    const submitBtn = page.getByRole("button", { name: /Submit registration/i })
+    const submitBtn = page.getByRole("button", { name: /Submit business/i })
     await submitBtn.click()
 
     // Expect success message
