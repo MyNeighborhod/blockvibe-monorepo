@@ -62,7 +62,7 @@ test.describe("Staging & Local Business Lifecycle (Add, View, Remove)", () => {
     await submitBtn.click()
 
     // Expect success message
-    await expect(page.getByText(/Business registered!/i)).toBeVisible({ timeout: 15000 })
+    await expect(page.getByText(/listing was submitted/i)).toBeVisible({ timeout: 15000 })
 
     // 3. Login as Admin & approve business
     const creds = getSuperadminCredentials()
