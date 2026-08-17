@@ -436,7 +436,7 @@ export default function BusinessesClient({
                     key={biz.id}
                     href={biz.slug ? businessDetailPath(biz.slug) : `/businesses?highlight=${biz.id}`}
                     className={cn(
-                      "group text-left overflow-hidden rounded-2xl border bg-card/90 backdrop-blur-sm transition-all duration-300 block",
+                      "group text-left overflow-hidden rounded-2xl border bg-card/90 backdrop-blur-sm transition-all duration-300 block no-underline",
                       "hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2",
                       accentRing,
                       isNog ? "border-[#d5e3e0] shadow-[0_1px_0_rgba(66,81,76,0.04)]" : "border-border/70 shadow-sm",
