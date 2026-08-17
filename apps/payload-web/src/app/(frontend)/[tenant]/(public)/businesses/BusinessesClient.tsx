@@ -311,39 +311,20 @@ export default function BusinessesClient({
 
   return (
     <div className={cn("relative", isNog && "theme-nog")}>
-      {/* Soft atmospheric wash — NOG palette, not flat white */}
-      <div
-        aria-hidden
-        className={cn(
-          "pointer-events-none absolute inset-x-0 top-0 h-[28rem]",
-          isNog
-            ? "bg-[radial-gradient(ellipse_at_top,_rgba(118,179,184,0.18),_transparent_60%),linear-gradient(180deg,_#f7faf9_0%,_transparent_100%)]"
-            : "bg-[radial-gradient(ellipse_at_top,_hsl(var(--primary)/0.12),_transparent_55%)]",
-        )}
-      />
-
       <div className="container relative py-10 md:py-14 px-4 md:px-8">
-        {/* Header — one composition: title, intro, CTA */}
+        {/* Header — one composition: intro, CTA */}
         <header className="mb-10 md:mb-12 max-w-3xl">
           <p
             className={cn(
               "text-xs uppercase tracking-[0.2em] mb-3 font-semibold",
-              isNog ? "text-[#76b3b8]" : "text-primary",
+              isNog ? "text-[#7b8c89]" : "text-muted-foreground",
             )}
           >
             Local directory
           </p>
-          <h1
-            className={cn(
-              "text-4xl md:text-5xl font-semibold tracking-tight text-foreground leading-tight",
-              isNog && "font-serif text-[#42514c]",
-            )}
-          >
-            {pageTitle}
-          </h1>
           <p
             className={cn(
-              "mt-4 text-base md:text-lg leading-relaxed max-w-2xl",
+              "mt-2 text-base md:text-lg leading-relaxed max-w-2xl",
               isNog ? "text-[#7b8c89]" : "text-muted-foreground",
             )}
           >
