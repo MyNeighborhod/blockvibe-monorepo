@@ -21,6 +21,8 @@ import { Broadcasts } from "./collections/Broadcasts"
 import { CRMFields } from "./collections/CRMFields"
 import { MailingLists } from "./collections/MailingLists"
 import { Businesses } from "./collections/Businesses"
+import { BusinessCategories } from "./collections/BusinessCategories"
+import { DirectoryFields } from "./collections/DirectoryFields"
 import { Memberships } from "./collections/Memberships"
 import { Payments } from "./collections/Payments"
 import { PaymentSettings } from "./globals/PaymentSettings"
@@ -106,6 +108,8 @@ export default buildConfig({
     CRMFields,
     MailingLists,
     Businesses,
+    BusinessCategories,
+    DirectoryFields,
     Memberships,
     Payments,
   ],

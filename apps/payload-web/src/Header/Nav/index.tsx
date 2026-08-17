@@ -18,6 +18,7 @@ type HeaderNavProps = {
   logoUrl?: string | null
   tenantName?: string
   overDarkHero?: boolean
+  showDirectoryLink?: boolean
 }
 
 export const HeaderNav: React.FC<HeaderNavProps> = ({
@@ -26,11 +27,19 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
   logoUrl,
   tenantName,
   overDarkHero = false,
+  showDirectoryLink = false,
 }) => {
   const navItems = data?.navItems || []
   const isNog = variant === "nog"
   const pathname = usePathname()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+
+  const hasBusinessesLink = navItems.some((item) => {
+    const link = item?.link as any
+    const url = link?.url || ""
+    const label = (link?.label || "").toLowerCase()
+    return url.includes("/businesses") || label.includes("business")
+  })
 
   useEffect(() => {
     setIsMenuOpen(false)
@@ -107,6 +116,28 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
       ),
     ),
   ]
+
+  if (showDirectoryLink && !hasBusinessesLink) {
+    if (isNog) {
+      links.push(
+        <li key="directory-nav">
+          <Link
+            href="/businesses"
+            className="nav-link"
+            aria-current={pathname?.includes("/businesses") ? "page" : undefined}
+          >
+            BUSINESSES
+          </Link>
+        </li>,
+      )
+    } else {
+      links.push(
+        <Link key="directory-nav" href="/businesses" className="text-primary">
+          Businesses
+        </Link>,
+      )
+    }
+  }
 
   const search = (
     <Link href="/search" className="nav-search shrink-0" aria-label="Search">

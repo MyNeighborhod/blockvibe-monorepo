@@ -64,10 +64,19 @@ interface CRMTabsProps {
   initialFields: CRMField[]
   initialLists: MailingList[]
   initialBusinesses: any[]
+  directoryEnabled?: boolean
 }
 
-export function CRMTabs({ tenantId, initialFields, initialLists, initialBusinesses }: CRMTabsProps) {
-  const [activeTab, setActiveTab] = useState<"directory" | "lists" | "fields" | "businesses">("directory")
+export function CRMTabs({
+  tenantId,
+  initialFields,
+  initialLists,
+  initialBusinesses,
+  directoryEnabled = false,
+}: CRMTabsProps) {
+  const [activeTab, setActiveTab] = useState<"directory" | "lists" | "fields" | "businesses">(
+    "directory",
+  )
 
   // --- Businesses State ---
   const [businesses, setBusinesses] = useState<any[]>(initialBusinesses)
@@ -396,16 +405,18 @@ export function CRMTabs({ tenantId, initialFields, initialLists, initialBusiness
         >
           Custom Attributes
         </button>
-        <button
-          onClick={() => setActiveTab("businesses")}
-          className={`px-4 py-2 font-medium text-sm border-b-2 -mb-px transition-colors ${
-            activeTab === "businesses"
-              ? "border-primary text-primary"
-              : "border-transparent text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          Local Businesses
-        </button>
+        {directoryEnabled && (
+          <button
+            onClick={() => setActiveTab("businesses")}
+            className={`px-4 py-2 font-medium text-sm border-b-2 -mb-px transition-colors ${
+              activeTab === "businesses"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Local Businesses
+          </button>
+        )}
       </div>
 
       {/* --- TAB 1: DIRECTORY --- */}
@@ -668,7 +679,7 @@ export function CRMTabs({ tenantId, initialFields, initialLists, initialBusiness
       )}
 
       {/* --- TAB 4: LOCAL BUSINESSES --- */}
-      {activeTab === "businesses" && (
+      {directoryEnabled && activeTab === "businesses" && (
         <div className="space-y-6">
           <Card className="backdrop-blur-md bg-card/60 border border-border/40">
             <CardHeader>
@@ -687,7 +698,7 @@ export function CRMTabs({ tenantId, initialFields, initialLists, initialBusiness
                     <th className="p-4">Address</th>
                     <th className="p-4">Website</th>
                     <th className="p-4">Hours</th>
-                    <th className="p-4">Appear on NOG</th>
+                    <th className="p-4">Appear in Directory</th>
                     <th className="p-4 text-right">Actions</th>
                   </tr>
                 </thead>

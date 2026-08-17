@@ -81,6 +81,8 @@ export interface Config {
     'crm-fields': CrmField;
     'mailing-lists': MailingList;
     businesses: Business;
+    'business-categories': BusinessCategory;
+    'directory-fields': DirectoryField;
     memberships: Membership;
     payments: Payment;
     redirects: Redirect;
@@ -114,6 +116,8 @@ export interface Config {
     'crm-fields': CrmFieldsSelect<false> | CrmFieldsSelect<true>;
     'mailing-lists': MailingListsSelect<false> | MailingListsSelect<true>;
     businesses: BusinessesSelect<false> | BusinessesSelect<true>;
+    'business-categories': BusinessCategoriesSelect<false> | BusinessCategoriesSelect<true>;
+    'directory-fields': DirectoryFieldsSelect<false> | DirectoryFieldsSelect<true>;
     memberships: MembershipsSelect<false> | MembershipsSelect<true>;
     payments: PaymentsSelect<false> | PaymentsSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
@@ -291,6 +295,55 @@ export interface Tenant {
    * Display name for transactional email From header.
    */
   transactionalEmailFromName?: string | null;
+  /**
+   * When enabled, the public /businesses page, CRM Local Businesses tab, and optional nav link become available.
+   */
+  enableBusinessDirectory?: boolean | null;
+  directorySettings?: {
+    /**
+     * Heading on the public directory page.
+     */
+    pageTitle?: string | null;
+    /**
+     * Short supporting sentence under the heading.
+     */
+    pageIntro?: string | null;
+    allowPublicRegistration?: boolean | null;
+    /**
+     * Injects a Businesses link when the CMS header does not already include one.
+     */
+    showInNav?: boolean | null;
+    /**
+     * Turn core Avenues-style fields on/off and choose where they appear. Custom fields are managed under Directory Fields.
+     */
+    fieldConfig?:
+      | {
+          fieldKey:
+            | 'name'
+            | 'logo'
+            | 'coverImage'
+            | 'address'
+            | 'phone'
+            | 'email'
+            | 'website'
+            | 'hours'
+            | 'about'
+            | 'categories'
+            | 'facebook'
+            | 'instagram';
+          /**
+           * Optional display label override.
+           */
+          label?: string | null;
+          enabled?: boolean | null;
+          required?: boolean | null;
+          showOnCard?: boolean | null;
+          showOnDetail?: boolean | null;
+          showInRegistration?: boolean | null;
+          id?: string | null;
+        }[]
+      | null;
+  };
   updatedAt: string;
   createdAt: string;
 }
@@ -1254,6 +1307,8 @@ export interface CrmField {
   createdAt: string;
 }
 /**
+ * Local business listings for the public directory. Visibility is controlled by Appear in Directory.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "businesses".
  */
@@ -1261,13 +1316,101 @@ export interface Business {
   id: number;
   tenant?: (number | null) | Tenant;
   name: string;
-  address: string;
-  website: string;
-  about: string;
-  email: string;
+  logo?: (number | null) | Media;
+  /**
+   * Hero / cover photo shown on directory cards and the detail view (Avenues-style).
+   */
+  coverImage?: (number | null) | Media;
+  address?: string | null;
+  phone?: string | null;
+  website?: string | null;
+  email?: string | null;
   hours?: string | null;
-  logo: number | Media;
+  about?: string | null;
+  /**
+   * Used for public directory filter pills.
+   */
+  categories?: (number | BusinessCategory)[] | null;
+  /**
+   * Full URL or page handle.
+   */
+  facebook?: string | null;
+  /**
+   * Full URL or @handle.
+   */
+  instagram?: string | null;
+  /**
+   * Values for custom Directory Fields (key → value). Prefer editing via the dashboard when possible.
+   */
+  customAttributes?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * When checked, this business is shown on the public directory (after Directory feature is enabled for the tenant).
+   */
   appearOnNOG?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Categories used to filter the public business directory (when Directory is enabled).
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "business-categories".
+ */
+export interface BusinessCategory {
+  id: number;
+  tenant?: (number | null) | Tenant;
+  title: string;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  /**
+   * Lower numbers appear first in directory filter pills.
+   */
+  sortOrder?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Add custom directory fields for your neighborhood (e.g. parking notes, dietary tags). Managed in Dashboard → Settings → Business Directory.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "directory-fields".
+ */
+export interface DirectoryField {
+  id: number;
+  tenant?: (number | null) | Tenant;
+  label: string;
+  /**
+   * Unique camelCase key stored in business customAttributes (e.g. acceptsReservations).
+   */
+  key: string;
+  fieldType: 'text' | 'number' | 'checkbox' | 'select' | 'url';
+  /**
+   * Options for dropdown fields.
+   */
+  options?:
+    | {
+        value: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Require this field on the public registration form when shown there.
+   */
+  required?: boolean | null;
+  showInRegistration?: boolean | null;
+  showOnCard?: boolean | null;
+  showOnDetail?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1602,6 +1745,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'businesses';
         value: number | Business;
+      } | null)
+    | ({
+        relationTo: 'business-categories';
+        value: number | BusinessCategory;
+      } | null)
+    | ({
+        relationTo: 'directory-fields';
+        value: number | DirectoryField;
       } | null)
     | ({
         relationTo: 'memberships';
@@ -2089,6 +2240,27 @@ export interface TenantsSelect<T extends boolean = true> {
   emailDeliveryDefault?: T;
   transactionalEmailFrom?: T;
   transactionalEmailFromName?: T;
+  enableBusinessDirectory?: T;
+  directorySettings?:
+    | T
+    | {
+        pageTitle?: T;
+        pageIntro?: T;
+        allowPublicRegistration?: T;
+        showInNav?: T;
+        fieldConfig?:
+          | T
+          | {
+              fieldKey?: T;
+              label?: T;
+              enabled?: T;
+              required?: T;
+              showOnCard?: T;
+              showOnDetail?: T;
+              showInRegistration?: T;
+              id?: T;
+            };
+      };
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2224,13 +2396,54 @@ export interface MailingListsSelect<T extends boolean = true> {
 export interface BusinessesSelect<T extends boolean = true> {
   tenant?: T;
   name?: T;
+  logo?: T;
+  coverImage?: T;
   address?: T;
+  phone?: T;
   website?: T;
-  about?: T;
   email?: T;
   hours?: T;
-  logo?: T;
+  about?: T;
+  categories?: T;
+  facebook?: T;
+  instagram?: T;
+  customAttributes?: T;
   appearOnNOG?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "business-categories_select".
+ */
+export interface BusinessCategoriesSelect<T extends boolean = true> {
+  tenant?: T;
+  title?: T;
+  generateSlug?: T;
+  slug?: T;
+  sortOrder?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "directory-fields_select".
+ */
+export interface DirectoryFieldsSelect<T extends boolean = true> {
+  tenant?: T;
+  label?: T;
+  key?: T;
+  fieldType?: T;
+  options?:
+    | T
+    | {
+        value?: T;
+        id?: T;
+      };
+  required?: T;
+  showInRegistration?: T;
+  showOnCard?: T;
+  showOnDetail?: T;
   updatedAt?: T;
   createdAt?: T;
 }
