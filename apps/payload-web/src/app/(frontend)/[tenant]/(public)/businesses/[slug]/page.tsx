@@ -74,6 +74,19 @@ export async function generateMetadata({ params: paramsPromise }: Args) {
   }
 }
 
+function SectionLabel({ children, isNog }: { children: React.ReactNode; isNog: boolean }) {
+  return (
+    <h2
+      className={cn(
+        "text-[11px] font-bold uppercase tracking-[0.16em] mb-3",
+        isNog ? "text-[#42514c]" : "text-foreground",
+      )}
+    >
+      {children}
+    </h2>
+  )
+}
+
 export default async function BusinessDetailPage({ params: paramsPromise }: Args) {
   const { tenant: tenantSlug, slug } = await paramsPromise
   const { payload, tenant } = await resolveTenant(tenantSlug)
@@ -122,241 +135,233 @@ export default async function BusinessDetailPage({ params: paramsPromise }: Args
   const media = cardMediaPresentation(business)
   const cats = categoryTitlesOf(business)
   const accent = isNog ? "text-[#76b3b8]" : "text-primary"
+  const body = isNog ? "text-[#42514c]" : "text-foreground"
+  const muted = isNog ? "text-[#7b8c89]" : "text-muted-foreground"
+
+  const hasOnline =
+    (show("website") && business.website) ||
+    (show("facebook") && business.facebook) ||
+    (show("instagram") && business.instagram)
 
   return (
-    <div
-      className={cn(
-        "min-h-screen",
-        isNog &&
-          "bg-[radial-gradient(ellipse_at_top,_rgba(118,179,184,0.14)_0%,_transparent_55%),linear-gradient(to_bottom,#fafbfa,#f3f6f5)]",
-      )}
-    >
-      <div className="container max-w-4xl py-10 md:py-14">
+    <div className={cn("min-h-screen bg-background", isNog && "bg-[#fafbfa]")}>
+      <div className="container max-w-6xl py-8 md:py-12">
         <Link
           href="/businesses"
-          className={cn(
-            "inline-flex items-center gap-1.5 text-sm font-semibold mb-8 hover:underline",
-            accent,
-          )}
+          className={cn("inline-flex text-sm font-semibold mb-6 md:mb-8 hover:underline", accent)}
         >
           ← All businesses
         </Link>
 
-        <div
-          className={cn(
-            "overflow-hidden rounded-3xl border bg-card/95 shadow-sm",
-            isNog ? "border-[#d5e3e0]" : "border-border/70",
+        {/* Title first — Avenues pattern: name is immediately visible */}
+        <header className="mb-6 md:mb-8 text-center md:text-left">
+          {cats.length > 0 && (
+            <div className="mb-3 flex flex-wrap justify-center md:justify-start gap-1.5">
+              {cats.map((t) => (
+                <span
+                  key={t}
+                  className={cn(
+                    "text-[10px] uppercase tracking-wider font-semibold px-2.5 py-0.5 rounded-full",
+                    isNog ? "bg-[#76b3b8]/15 text-[#3d6f74]" : "bg-primary/10 text-primary",
+                  )}
+                >
+                  {t}
+                </span>
+              ))}
+            </div>
           )}
-        >
-          <div
+          <h1
             className={cn(
-              "relative overflow-hidden",
-              media.mode === "photo" ? "aspect-[21/9] bg-muted" : "aspect-[2.4/1]",
-              media.mode === "logo" && (isNog ? "bg-[#eef6f5]" : "bg-muted/50"),
-              media.mode === "monogram" && (isNog ? "bg-[#e8f3f2]" : "bg-muted"),
+              "text-3xl sm:text-4xl md:text-[2.75rem] font-semibold tracking-tight leading-tight",
+              isNog ? "font-serif text-[#42514c]" : "text-foreground",
             )}
           >
-            {media.mode === "photo" && media.photoUrl && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={media.photoUrl} alt="" className="h-full w-full object-cover" />
+            {business.name}
+          </h1>
+          <div
+            className={cn(
+              "mt-5 h-px w-full",
+              isNog ? "bg-[#d5e3e0]" : "bg-border",
             )}
-            {media.mode === "logo" && media.logoUrl && (
-              <div className="absolute inset-0 flex items-center justify-center p-10 md:p-14">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={media.logoUrl}
-                  alt=""
-                  className="max-h-full max-w-[50%] object-contain drop-shadow-sm"
-                />
-              </div>
-            )}
-            {media.mode === "monogram" && (
-              <div
-                className={cn(
-                  "flex h-full w-full items-center justify-center text-6xl font-serif",
-                  isNog ? "text-[#76b3b8]" : "text-muted-foreground",
-                )}
-              >
-                {business.name.charAt(0)}
-              </div>
-            )}
-            {media.mode === "photo" && media.logoUrl && (
-              <div className="absolute bottom-4 left-4 h-16 w-16 rounded-xl border border-white/80 bg-white p-1.5 shadow-md overflow-hidden">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={media.logoUrl} alt="" className="h-full w-full object-contain" />
-              </div>
-            )}
-          </div>
+          />
+        </header>
 
-          <div className="p-6 md:p-10 space-y-8">
-            <header>
-              {cats.length > 0 && (
-                <div className="mb-3 flex flex-wrap gap-1.5">
-                  {cats.map((t) => (
-                    <span
-                      key={t}
-                      className={cn(
-                        "text-[10px] uppercase tracking-wider font-semibold px-2.5 py-0.5 rounded-full",
-                        isNog ? "bg-[#76b3b8]/12 text-[#4a7c80]" : "bg-primary/10 text-primary",
-                      )}
-                    >
-                      {t}
-                    </span>
-                  ))}
+        {/* First viewport: photo + contact/hours sidebar */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
+          <div className="lg:col-span-8">
+            <div
+              className={cn(
+                "relative w-full overflow-hidden rounded-sm",
+                media.mode === "photo" ? "aspect-[16/10] bg-muted" : "aspect-[16/10]",
+                media.mode === "logo" && (isNog ? "bg-[#e8f3f2]" : "bg-muted/60"),
+                media.mode === "monogram" && (isNog ? "bg-[#e8f3f2]" : "bg-muted"),
+              )}
+            >
+              {media.mode === "photo" && media.photoUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={media.photoUrl}
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
+              )}
+              {media.mode === "logo" && media.logoUrl && (
+                <div className="absolute inset-0 flex items-center justify-center p-8 md:p-12">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={media.logoUrl}
+                    alt={`${business.name} logo`}
+                    className="max-h-[85%] max-w-[70%] object-contain"
+                  />
                 </div>
               )}
-              <h1
-                className={cn(
-                  "text-3xl md:text-4xl font-semibold tracking-tight",
-                  isNog ? "font-serif text-[#42514c]" : "text-foreground",
-                )}
-              >
-                {business.name}
-              </h1>
-            </header>
-
-            {show("about") && business.about && (
-              <p
-                className={cn(
-                  "text-base md:text-lg leading-relaxed whitespace-pre-line",
-                  isNog ? "text-[#5f716d]" : "text-muted-foreground",
-                )}
-              >
-                {business.about}
-              </p>
-            )}
-
-            <div className="grid gap-8 sm:grid-cols-2 border-t border-border/40 pt-8">
-              <section>
-                <h2
+              {media.mode === "monogram" && (
+                <div
                   className={cn(
-                    "text-xs font-bold uppercase tracking-[0.14em] mb-3",
-                    isNog ? "text-[#76b3b8]" : "text-primary",
+                    "flex h-full w-full items-center justify-center text-7xl font-serif",
+                    isNog ? "text-[#76b3b8]" : "text-muted-foreground",
                   )}
                 >
-                  Contact
-                </h2>
-                <div className={cn("space-y-1 text-sm", isNog ? "text-[#42514c]" : "text-foreground")}>
-                  <p className="font-semibold">{business.name}</p>
-                  {show("address") && business.address && <p>{business.address}</p>}
-                  {show("phone") && business.phone && (
-                    <p>
-                      <a href={`tel:${business.phone.replace(/\s/g, "")}`} className={cn("hover:underline", accent)}>
-                        {business.phone}
-                      </a>
-                    </p>
-                  )}
-                  {show("email") && business.email && (
-                    <p>
-                      <a href={`mailto:${business.email}`} className={cn("hover:underline", accent)}>
-                        Email
-                      </a>
-                    </p>
-                  )}
-                  {show("address") && business.address && (
-                    <p className="pt-2">
-                      <a
-                        href={mapsDirectionsUrl(business.address)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={cn("font-semibold hover:underline", accent)}
-                      >
-                        Get directions
-                      </a>
-                    </p>
-                  )}
+                  {business.name.charAt(0)}
                 </div>
-              </section>
-
-              <section>
-                <h2
-                  className={cn(
-                    "text-xs font-bold uppercase tracking-[0.14em] mb-3",
-                    isNog ? "text-[#76b3b8]" : "text-primary",
-                  )}
-                >
-                  Hours
-                </h2>
-                {show("hours") && business.hours ? (
-                  <p className={cn("text-sm whitespace-pre-line", isNog ? "text-[#42514c]" : "text-foreground")}>
-                    {business.hours}
-                  </p>
-                ) : (
-                  <p className="text-sm text-muted-foreground">Hours not listed</p>
-                )}
-
-                {(show("website") && business.website) ||
-                (show("facebook") && business.facebook) ||
-                (show("instagram") && business.instagram) ? (
-                  <div className="mt-8">
-                    <h2
-                      className={cn(
-                        "text-xs font-bold uppercase tracking-[0.14em] mb-3",
-                        isNog ? "text-[#76b3b8]" : "text-primary",
-                      )}
-                    >
-                      Visit online
-                    </h2>
-                    <ul className="space-y-1.5 text-sm font-semibold">
-                      {show("website") && business.website && (
-                        <li>
-                          <a
-                            href={
-                              business.website.startsWith("http")
-                                ? business.website
-                                : `https://${business.website}`
-                            }
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={cn("hover:underline", accent)}
-                          >
-                            Website
-                          </a>
-                        </li>
-                      )}
-                      {show("facebook") && business.facebook && (
-                        <li>
-                          <a
-                            href={normalizeSocialUrl(business.facebook, "facebook")}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={cn("hover:underline", accent)}
-                          >
-                            Facebook
-                          </a>
-                        </li>
-                      )}
-                      {show("instagram") && business.instagram && (
-                        <li>
-                          <a
-                            href={normalizeSocialUrl(business.instagram, "instagram")}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={cn("hover:underline", accent)}
-                          >
-                            Instagram
-                          </a>
-                        </li>
-                      )}
-                    </ul>
-                  </div>
-                ) : null}
-              </section>
+              )}
+              {media.mode === "photo" && media.logoUrl && (
+                <div className="absolute bottom-4 left-4 h-16 w-16 rounded-md border border-white bg-white p-1.5 shadow-md overflow-hidden">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={media.logoUrl} alt="" className="h-full w-full object-contain" />
+                </div>
+              )}
             </div>
           </div>
+
+          <aside className="lg:col-span-4 space-y-7 lg:pt-1">
+            <section>
+              <SectionLabel isNog={isNog}>Contact</SectionLabel>
+              <div className={cn("space-y-1.5 text-[15px] leading-relaxed", body)}>
+                <p className="font-semibold">{business.name}</p>
+                {show("address") && business.address && <p>{business.address}</p>}
+                {show("phone") && business.phone && (
+                  <p>
+                    <a
+                      href={`tel:${business.phone.replace(/\s/g, "")}`}
+                      className={cn("hover:underline", body)}
+                    >
+                      {business.phone}
+                    </a>
+                  </p>
+                )}
+                {show("email") && business.email && (
+                  <p>
+                    <a href={`mailto:${business.email}`} className={cn("hover:underline", muted)}>
+                      Email
+                    </a>
+                  </p>
+                )}
+                {show("address") && business.address && (
+                  <p className="pt-2">
+                    <a
+                      href={mapsDirectionsUrl(business.address)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={cn("font-semibold hover:underline", accent)}
+                    >
+                      Get directions
+                    </a>
+                  </p>
+                )}
+              </div>
+            </section>
+
+            <section>
+              <SectionLabel isNog={isNog}>Hours</SectionLabel>
+              {show("hours") && business.hours ? (
+                <p className={cn("text-[15px] leading-relaxed whitespace-pre-line", body)}>
+                  {business.hours}
+                </p>
+              ) : (
+                <p className={cn("text-[15px]", muted)}>Hours not listed</p>
+              )}
+            </section>
+
+            {hasOnline && (
+              <section>
+                <SectionLabel isNog={isNog}>Visit online</SectionLabel>
+                <ul className="space-y-1.5 text-[15px]">
+                  {show("website") && business.website && (
+                    <li>
+                      <a
+                        href={
+                          business.website.startsWith("http")
+                            ? business.website
+                            : `https://${business.website}`
+                        }
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={cn("hover:underline", muted)}
+                      >
+                        Website
+                      </a>
+                    </li>
+                  )}
+                  {show("facebook") && business.facebook && (
+                    <li>
+                      <a
+                        href={normalizeSocialUrl(business.facebook, "facebook")}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={cn("hover:underline", muted)}
+                      >
+                        Facebook
+                      </a>
+                    </li>
+                  )}
+                  {show("instagram") && business.instagram && (
+                    <li>
+                      <a
+                        href={normalizeSocialUrl(business.instagram, "instagram")}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={cn("hover:underline", muted)}
+                      >
+                        Instagram
+                      </a>
+                    </li>
+                  )}
+                </ul>
+              </section>
+            )}
+          </aside>
         </div>
 
-        <nav className="mt-10 flex items-center justify-between gap-4 text-sm font-semibold">
+        {/* About below the fold — secondary after the key facts */}
+        {show("about") && business.about && (
+          <div className="mt-10 md:mt-14 max-w-3xl">
+            <SectionLabel isNog={isNog}>About</SectionLabel>
+            <p className={cn("text-base md:text-lg leading-relaxed whitespace-pre-line", muted)}>
+              {business.about}
+            </p>
+          </div>
+        )}
+
+        <nav
+          className={cn(
+            "mt-12 pt-6 flex items-center justify-between gap-4 text-sm font-semibold border-t",
+            isNog ? "border-[#d5e3e0]" : "border-border",
+          )}
+        >
           {prev?.slug ? (
             <Link href={businessDetailPath(prev.slug)} className={cn("hover:underline", accent)}>
-              ← {prev.name}
+              ← Previous
             </Link>
           ) : (
             <span />
           )}
           {next?.slug ? (
-            <Link href={businessDetailPath(next.slug)} className={cn("hover:underline text-right", accent)}>
-              {next.name} →
+            <Link
+              href={businessDetailPath(next.slug)}
+              className={cn("hover:underline text-right", accent)}
+            >
+              Next →
             </Link>
           ) : (
             <span />
