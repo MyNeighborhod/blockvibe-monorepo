@@ -77,6 +77,26 @@ function mediaUrl(media: MediaLike): string | null {
   return media.url || null
 }
 
+/** Cover photo vs logo-only: logos should not use object-cover (looks cropped/broken). */
+function cardMediaPresentation(biz: Business): {
+  mode: "photo" | "logo" | "monogram"
+  photoUrl: string | null
+  logoUrl: string | null
+} {
+  const logoUrl = mediaUrl(biz.logo)
+  const coverUrl = mediaUrl(biz.coverImage)
+  if (coverUrl && logoUrl && coverUrl !== logoUrl) {
+    return { mode: "photo", photoUrl: coverUrl, logoUrl }
+  }
+  if (coverUrl && !logoUrl) {
+    return { mode: "photo", photoUrl: coverUrl, logoUrl: null }
+  }
+  if (logoUrl) {
+    return { mode: "logo", photoUrl: null, logoUrl }
+  }
+  return { mode: "monogram", photoUrl: null, logoUrl: null }
+}
+
 function normalizeSocialUrl(value: string, kind: "facebook" | "instagram"): string {
   if (value.startsWith("http")) return value
   if (kind === "facebook") return `https://facebook.com/${value.replace(/^@/, "")}`
@@ -379,8 +399,7 @@ export default function BusinessesClient({
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-7">
             {filtered.map((biz, index) => {
-              const cover = mediaUrl(biz.coverImage) || mediaUrl(biz.logo)
-              const logo = mediaUrl(biz.logo)
+              const media = cardMediaPresentation(biz)
               const cats = categoryTitlesOf(biz)
               return (
                 <button
@@ -395,29 +414,56 @@ export default function BusinessesClient({
                   )}
                   style={{ animationDelay: `${Math.min(index, 12) * 40}ms` }}
                 >
-                  <div className="relative aspect-[16/10] overflow-hidden bg-muted/40">
-                    {cover ? (
+                  <div
+                    className={cn(
+                      "relative overflow-hidden",
+                      media.mode === "photo" ? "aspect-[16/10]" : "aspect-[5/3]",
+                      media.mode === "logo" && (isNog ? "bg-[#eef6f5]" : "bg-muted/50"),
+                      media.mode === "monogram" && (isNog ? "bg-[#e8f3f2]" : "bg-muted"),
+                    )}
+                  >
+                    {media.mode === "photo" && media.photoUrl && (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
-                        src={cover}
+                        src={media.photoUrl}
                         alt=""
                         className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                         loading="lazy"
                       />
-                    ) : (
+                    )}
+                    {media.mode === "logo" && media.logoUrl && (
+                      <div className="absolute inset-0 flex items-center justify-center p-8 md:p-10">
+                        <div
+                          className={cn(
+                            "absolute inset-0 opacity-70",
+                            isNog
+                              ? "bg-[radial-gradient(ellipse_at_center,_rgba(118,179,184,0.22)_0%,_transparent_65%)]"
+                              : "bg-[radial-gradient(ellipse_at_center,_rgba(0,0,0,0.06)_0%,_transparent_65%)]",
+                          )}
+                        />
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={media.logoUrl}
+                          alt=""
+                          className="relative z-[1] max-h-full max-w-[70%] object-contain drop-shadow-sm transition-transform duration-500 group-hover:scale-[1.04]"
+                          loading="lazy"
+                        />
+                      </div>
+                    )}
+                    {media.mode === "monogram" && (
                       <div
                         className={cn(
                           "flex h-full w-full items-center justify-center text-4xl font-serif",
-                          isNog ? "bg-[#e8f3f2] text-[#76b3b8]" : "bg-muted text-muted-foreground",
+                          isNog ? "text-[#76b3b8]" : "text-muted-foreground",
                         )}
                       >
                         {biz.name.charAt(0)}
                       </div>
                     )}
-                    {logo && cover && logo !== cover && onCard("logo") && (
+                    {media.mode === "photo" && media.logoUrl && onCard("logo") && (
                       <div className="absolute bottom-3 left-3 h-12 w-12 rounded-lg border border-white/70 bg-white/95 p-1 shadow-sm overflow-hidden">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={logo} alt="" className="h-full w-full object-contain" loading="lazy" />
+                        <img src={media.logoUrl} alt="" className="h-full w-full object-contain" loading="lazy" />
                       </div>
                     )}
                   </div>
@@ -471,7 +517,9 @@ export default function BusinessesClient({
       </div>
 
       {/* Detail drawer / modal — Avenues contact block energy, NOG type */}
-      {selected && (
+      {selected && (() => {
+        const selectedMedia = cardMediaPresentation(selected)
+        return (
         <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-6">
           <button
             type="button"
@@ -488,14 +536,37 @@ export default function BusinessesClient({
               isNog && "theme-nog",
             )}
           >
-            <div className="relative aspect-[16/9] bg-muted">
-              {(mediaUrl(selected.coverImage) || mediaUrl(selected.logo)) && (
+            <div
+              className={cn(
+                "relative overflow-hidden",
+                selectedMedia.mode === "photo" ? "aspect-[16/9] bg-muted" : "aspect-[2/1]",
+                selectedMedia.mode === "logo" && (isNog ? "bg-[#eef6f5]" : "bg-muted/50"),
+                selectedMedia.mode === "monogram" && (isNog ? "bg-[#e8f3f2]" : "bg-muted"),
+              )}
+            >
+              {selectedMedia.mode === "photo" && selectedMedia.photoUrl && (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={(mediaUrl(selected.coverImage) || mediaUrl(selected.logo))!}
-                  alt=""
-                  className="h-full w-full object-cover"
-                />
+                <img src={selectedMedia.photoUrl} alt="" className="h-full w-full object-cover" />
+              )}
+              {selectedMedia.mode === "logo" && selectedMedia.logoUrl && (
+                <div className="absolute inset-0 flex items-center justify-center p-10">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={selectedMedia.logoUrl}
+                    alt=""
+                    className="max-h-full max-w-[55%] object-contain"
+                  />
+                </div>
+              )}
+              {selectedMedia.mode === "monogram" && (
+                <div
+                  className={cn(
+                    "flex h-full w-full items-center justify-center text-5xl font-serif",
+                    isNog ? "text-[#76b3b8]" : "text-muted-foreground",
+                  )}
+                >
+                  {selected.name.charAt(0)}
+                </div>
               )}
               <button
                 type="button"
@@ -626,7 +697,8 @@ export default function BusinessesClient({
             </div>
           </article>
         </div>
-      )}
+        )
+      })()}
 
       {/* Registration modal */}
       {isModalOpen && allowRegistration && (

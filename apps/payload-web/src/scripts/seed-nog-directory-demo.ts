@@ -115,7 +115,8 @@ async function main() {
         data: {
           appearOnNOG: true,
           logo: logoId,
-          coverImage: logoId,
+          // Don't duplicate logo as cover — card UI treats logo-only listings with contain + wash.
+          coverImage: undefined,
           categories: catId ? [catId] : [],
         },
       })
@@ -133,7 +134,6 @@ async function main() {
           phone: demo.phone,
           appearOnNOG: true,
           logo: logoId,
-          coverImage: logoId,
           tenant: nog.id,
           categories: catId ? [catId] : [],
         },
