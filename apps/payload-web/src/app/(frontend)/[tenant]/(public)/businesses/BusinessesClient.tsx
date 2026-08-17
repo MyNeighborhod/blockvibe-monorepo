@@ -322,9 +322,17 @@ export default function BusinessesClient({
           >
             Local directory
           </p>
+          <h1
+            className={cn(
+              "text-4xl md:text-5xl font-semibold tracking-tight text-foreground leading-tight",
+              isNog && "font-serif text-[#42514c]",
+            )}
+          >
+            {pageTitle}
+          </h1>
           <p
             className={cn(
-              "mt-2 text-base md:text-lg leading-relaxed max-w-2xl",
+              "mt-4 text-base md:text-lg leading-relaxed max-w-2xl",
               isNog ? "text-[#7b8c89]" : "text-muted-foreground",
             )}
           >
