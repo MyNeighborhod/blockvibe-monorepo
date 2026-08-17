@@ -10,6 +10,7 @@ import {
 } from "@/utilities/gmailOAuth"
 import { getEmailAccountForTenant } from "@/utilities/emailSrvAccount"
 import { GmailEmailSettings } from "./GmailEmailSettings"
+import { DirectorySettings } from "./DirectorySettings"
 
 type Args = {
   params: Promise<{
@@ -66,9 +67,11 @@ export default async function SettingsDashboardPage({ params, searchParams }: Ar
       <div className="flex flex-col gap-2">
         <h1 className="font-sans text-3xl font-bold tracking-tight text-foreground">Settings</h1>
         <p className="text-muted-foreground">
-          Neighborhood email delivery, Gmail OAuth, and broadcaster defaults.
+          Neighborhood modules, email delivery, Gmail OAuth, and broadcaster defaults.
         </p>
       </div>
+
+      <DirectorySettings tenantId={tenant.id} tenantSlug={tenantSlug} />
 
       <GmailEmailSettings
         tenantId={tenant.id}

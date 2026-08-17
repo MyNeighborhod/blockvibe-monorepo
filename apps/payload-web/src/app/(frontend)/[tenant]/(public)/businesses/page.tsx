@@ -3,8 +3,9 @@ import { notFound } from "next/navigation"
 import { getPayload } from "payload"
 import configPromise from "@payload-config"
 import { isDefaultNogTenant } from "@/utilities/resolveTenantSlug"
-import { getBusinessesAction } from "./actions"
+import { getDirectoryBootstrapAction } from "./actions"
 import BusinessesClient from "./BusinessesClient"
+import { DEFAULT_DIRECTORY_FIELD_CONFIG } from "@/directory/constants"
 
 type Args = {
   params: Promise<{
@@ -16,7 +17,6 @@ export default async function Page({ params: paramsPromise }: Args) {
   const { tenant: tenantSlug } = await paramsPromise
   const payload = await getPayload({ config: configPromise })
 
-  // 1. Resolve tenant ID
   let tenantDoc = await payload.find({
     collection: "tenants",
     where: {
@@ -40,13 +40,29 @@ export default async function Page({ params: paramsPromise }: Args) {
     notFound()
   }
 
-  // 2. Fetch businesses
-  const res = await getBusinessesAction(tenant.id)
-  const initialBusinesses = res.success && res.businesses ? res.businesses : []
+  if (!(tenant as any).enableBusinessDirectory) {
+    notFound()
+  }
+
+  const res = await getDirectoryBootstrapAction(tenant.id)
+  if (!res.success || !res.enabled) {
+    notFound()
+  }
 
   return (
     <BusinessesClient
-      initialBusinesses={initialBusinesses as any}
+      initialBusinesses={(res.businesses || []) as any}
+      categories={(res.categories || []) as any}
+      customFields={(res.customFields || []) as any}
+      directorySettings={
+        (res.directorySettings as any) || {
+          pageTitle: "Businesses",
+          pageIntro: "",
+          allowPublicRegistration: true,
+          showInNav: true,
+          fieldConfig: DEFAULT_DIRECTORY_FIELD_CONFIG,
+        }
+      }
       tenantId={tenant.id}
       tenantSlug={tenant.slug || ""}
       tenantName={tenant.name || ""}
