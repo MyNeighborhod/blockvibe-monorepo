@@ -5,6 +5,7 @@ import { SlideshowBlock } from "@/blocks/SlideshowBlock/Component"
 import { ContactBlock } from "@/blocks/ContactBlock/Component"
 import { IframeBlock } from "@/blocks/IframeBlock/Component"
 import { colSpanMap } from "./utils"
+import { MediaPickerField } from "./MediaPickerModal"
 
 export const puckConfig: PuckConfig = {
   components: {
@@ -21,7 +22,7 @@ export const puckConfig: PuckConfig = {
         },
       },
       defaultProps: {
-        title: "North of Grand Neighborhood",
+        title: "Welcome to Our Community",
         subheading: "Connecting neighbors, supporting local businesses, and hosting community events.",
         align: "center",
       },
@@ -63,7 +64,12 @@ export const puckConfig: PuckConfig = {
         },
         col1Title: { type: "text" },
         col1Text: { type: "textarea" },
-        col1ImageUrl: { type: "text" },
+        col1ImageUrl: {
+          type: "custom",
+          render: ({ value, onChange }) => (
+            <MediaPickerField value={value} onChange={onChange} label="Column 1 Image" />
+          ),
+        },
         col1Caption: { type: "text" },
 
         // --- COLUMN 2 ---
@@ -85,7 +91,12 @@ export const puckConfig: PuckConfig = {
         },
         col2Title: { type: "text" },
         col2Text: { type: "textarea" },
-        col2ImageUrl: { type: "text" },
+        col2ImageUrl: {
+          type: "custom",
+          render: ({ value, onChange }) => (
+            <MediaPickerField value={value} onChange={onChange} label="Column 2 Image" />
+          ),
+        },
         col2Caption: { type: "text" },
 
         // --- COLUMN 3 ---
@@ -107,30 +118,35 @@ export const puckConfig: PuckConfig = {
         },
         col3Title: { type: "text" },
         col3Text: { type: "textarea" },
-        col3ImageUrl: { type: "text" },
+        col3ImageUrl: {
+          type: "custom",
+          render: ({ value, onChange }) => (
+            <MediaPickerField value={value} onChange={onChange} label="Column 3 Image" />
+          ),
+        },
         col3Caption: { type: "text" },
       },
       defaultProps: {
         columnsCount: "1",
         col1Type: "text",
         col1Size: "full",
-        col1Title: "About Our Neighborhood",
-        col1Text: "The North of Grand neighborhood offers a harmonious blend of urban convenience and historic charm.",
-        col1ImageUrl: "/media/nog/nog-board_orig-1.jpg",
+        col1Title: "About Our Community",
+        col1Text: "Our neighborhood offers a harmonious blend of urban convenience and historic charm.",
+        col1ImageUrl: "",
         col1Caption: "",
 
         col2Type: "text",
         col2Size: "half",
-        col2Title: "Community Projects",
-        col2Text: "We host Ingersoll Live and seasonal neighborhood cleanups.",
-        col2ImageUrl: "/media/nog/nog-board_orig-1.jpg",
+        col2Title: "Community Initiatives",
+        col2Text: "We organize local events, volunteer drives, and seasonal cleanups.",
+        col2ImageUrl: "",
         col2Caption: "",
 
         col3Type: "text",
         col3Size: "oneThird",
-        col3Title: "Local Support",
-        col3Text: "Partnering with local neighborhood businesses.",
-        col3ImageUrl: "/media/nog/nog-board_orig-1.jpg",
+        col3Title: "Local Business Network",
+        col3Text: "Supporting local merchants, services, and neighborhood programs.",
+        col3ImageUrl: "",
         col3Caption: "",
       },
       render: ({
@@ -175,7 +191,7 @@ export const puckConfig: PuckConfig = {
                   />
                 ) : (
                   <div className="w-full h-48 bg-slate-100 rounded-xl border border-dashed border-slate-300 flex items-center justify-center text-slate-400 text-xs">
-                    No image URL provided
+                    No image selected. Click "Browse" in the properties panel to select an image.
                   </div>
                 )}
                 {caption && <p className="text-xs text-slate-500 mt-1.5 font-serif italic">{caption}</p>}
@@ -221,23 +237,32 @@ export const puckConfig: PuckConfig = {
     MediaSection: {
       fields: {
         title: { type: "text" },
-        imageUrl: { type: "text" },
+        imageUrl: {
+          type: "custom",
+          render: ({ value, onChange }) => (
+            <MediaPickerField value={value} onChange={onChange} label="Section Image" />
+          ),
+        },
         caption: { type: "text" },
       },
       defaultProps: {
-        title: "Meet Our 2026 Board Members",
-        imageUrl: "/media/nog/nog-board_orig-1.jpg",
-        caption: "North of Grand Board Members",
+        title: "Featured Image",
+        imageUrl: "",
+        caption: "Community photo caption",
       },
       render: ({ title, imageUrl, caption }) => (
         <div className="theme-nog py-6 px-4 max-w-4xl mx-auto my-4 text-center">
           {title && <h3 className="text-2xl font-serif text-[#42514c] font-bold mb-4">{title}</h3>}
-          {imageUrl && (
+          {imageUrl ? (
             <img
               src={imageUrl}
               alt={caption || title || "Image"}
               className="w-full rounded-2xl border border-gray-200 shadow-md max-h-[600px] object-cover mx-auto"
             />
+          ) : (
+            <div className="w-full h-64 bg-slate-100 rounded-2xl border border-dashed border-slate-300 flex items-center justify-center text-slate-400 text-sm">
+              No image selected. Click "Browse" in the properties panel to select an image from the Media Library.
+            </div>
           )}
           {caption && <p className="text-xs text-slate-500 mt-2 font-serif italic">{caption}</p>}
         </div>
@@ -249,7 +274,7 @@ export const puckConfig: PuckConfig = {
         title: { type: "text" },
       },
       defaultProps: {
-        title: "Neighborhood Photo Gallery",
+        title: "Photo Gallery",
       },
       render: ({ title }) => (
         <div className="theme-nog my-6 max-w-5xl mx-auto">
@@ -265,9 +290,9 @@ export const puckConfig: PuckConfig = {
         address: { type: "text" },
       },
       defaultProps: {
-        title: "Get in Touch with NOG",
-        email: "info@northofgrand.org",
-        address: "Des Moines, Iowa",
+        title: "Get in Touch",
+        email: "contact@community.org",
+        address: "Community Neighborhood Office",
       },
       render: ({ title, email, address }) => (
         <div className="theme-nog my-6 max-w-4xl mx-auto">
@@ -283,9 +308,9 @@ export const puckConfig: PuckConfig = {
         title: { type: "text" },
       },
       defaultProps: {
-        iframeUrl: "https://calendar.google.com/calendar/embed?src=northofgrandpresident%40gmail.com&ctz=America%2FChicago",
+        iframeUrl: "https://calendar.google.com/calendar/embed",
         height: 600,
-        title: "Yearly Calendar",
+        title: "Events Calendar",
       },
       render: ({ iframeUrl, height, title }) => (
         <div className="theme-nog my-6 max-w-5xl mx-auto">
@@ -302,9 +327,9 @@ export const puckConfig: PuckConfig = {
         buttonUrl: { type: "text" },
       },
       defaultProps: {
-        heading: "Prefer Social Updates?",
-        subheading: "Check out our Facebook page for detailed descriptions of meetings and local events.",
-        buttonText: "View Facebook Page",
+        heading: "Connect With Us",
+        subheading: "Follow our social channels for regular updates, meeting schedules, and local announcements.",
+        buttonText: "Visit Social Page",
         buttonUrl: "https://facebook.com",
       },
       render: ({ heading, subheading, buttonText, buttonUrl }) => (
@@ -334,8 +359,8 @@ export const puckConfig: PuckConfig = {
         buttonText: { type: "text" },
       },
       defaultProps: {
-        title: "Explore Local Shops & Services",
-        description: "Support local. Discover restaurants, repair shops, and community organizations right in North of Grand.",
+        title: "Explore Local Businesses",
+        description: "Support local. Discover restaurants, repair services, and community organizations near you.",
         buttonText: "Browse Business Directory →",
       },
       render: ({ title, description, buttonText }) => (

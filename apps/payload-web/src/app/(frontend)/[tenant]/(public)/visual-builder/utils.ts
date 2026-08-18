@@ -76,11 +76,11 @@ export function convertPageLayoutToPuckContent(page: PageItem): any[] {
               const mediaObj = typeof col.media === "object" ? col.media : null
               contentProps[`${colKey}Type`] = "media"
               contentProps[`${colKey}Title`] = mediaObj?.alt || "Column Image"
-              contentProps[`${colKey}ImageUrl`] = mediaObj?.url || "/media/nog/nog-board_orig-1.jpg"
+              contentProps[`${colKey}ImageUrl`] = mediaObj?.url || ""
               contentProps[`${colKey}Caption`] = mediaObj?.alt || ""
             } else {
               contentProps[`${colKey}Type`] = "text"
-              contentProps[`${colKey}Title`] = col.title || (cIdx === 0 ? "About North of Grand" : "Our Mission")
+              contentProps[`${colKey}Title`] = col.title || (cIdx === 0 ? "About Our Community" : "Initiatives")
               contentProps[`${colKey}Text`] = extractTextFromRichText(col.richText)
             }
           })
@@ -95,7 +95,7 @@ export function convertPageLayoutToPuckContent(page: PageItem): any[] {
           type: "SlideshowSection",
           props: {
             id: `${blockId}-slideshow`,
-            title: block.title || "Neighborhood Photo Gallery",
+            title: block.title || "Photo Gallery",
           },
         })
       } else if (block.blockType === "contactBlock") {
@@ -103,9 +103,9 @@ export function convertPageLayoutToPuckContent(page: PageItem): any[] {
           type: "ContactSection",
           props: {
             id: `${blockId}-contact`,
-            title: block.title || "Get in Touch with NOG",
-            email: block.email || "info@northofgrand.org",
-            address: block.address || "Des Moines, Iowa",
+            title: block.title || "Get in Touch",
+            email: block.email || "contact@community.org",
+            address: block.address || "Community Office",
           },
         })
       } else if (block.blockType === "iframeBlock") {
@@ -113,9 +113,9 @@ export function convertPageLayoutToPuckContent(page: PageItem): any[] {
           type: "IframeSection",
           props: {
             id: `${blockId}-iframe`,
-            iframeUrl: block.iframeUrl || "https://calendar.google.com/calendar/embed?src=northofgrandpresident%40gmail.com",
+            iframeUrl: block.iframeUrl || "https://calendar.google.com/calendar/embed",
             height: block.height || 600,
-            title: block.title || "Yearly Calendar",
+            title: block.title || "Events Calendar",
           },
         })
       } else if (block.blockType === "cta") {
@@ -123,9 +123,9 @@ export function convertPageLayoutToPuckContent(page: PageItem): any[] {
           type: "CtaSection",
           props: {
             id: `${blockId}-cta`,
-            heading: "Prefer Social Updates?",
-            subheading: "Check out our Facebook page for detailed descriptions of meetings and local events.",
-            buttonText: "View Facebook Page",
+            heading: "Connect With Us",
+            subheading: "Follow our social channels for regular updates and announcements.",
+            buttonText: "Visit Social Page",
             buttonUrl: "https://facebook.com",
           },
         })
