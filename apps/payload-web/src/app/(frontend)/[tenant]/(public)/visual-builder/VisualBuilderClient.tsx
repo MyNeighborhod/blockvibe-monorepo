@@ -1,79 +1,38 @@
 "use client"
 
-import React, { useState, useEffect, Fragment } from "react"
+import React, { useState, useEffect } from "react"
 import { Puck, type Config as PuckConfig } from "@puckeditor/core"
 import "@puckeditor/core/dist/index.css"
 
-import { ContentBlock } from "@/blocks/Content/Component"
 import { SlideshowBlock } from "@/blocks/SlideshowBlock/Component"
-import { MediaBlock } from "@/blocks/MediaBlock/Component"
 import { ContactBlock } from "@/blocks/ContactBlock/Component"
 import { IframeBlock } from "@/blocks/IframeBlock/Component"
 import { CallToActionBlock } from "@/blocks/CallToAction/Component"
-import { FileListBlock } from "@/blocks/FileListBlock/Component"
-import { PdfBlock } from "@/blocks/PdfBlock/Component"
-
-function ClientRenderBlocks({ blocks }: { blocks: any[] }) {
-  if (!blocks || !Array.isArray(blocks) || blocks.length === 0) return null
-
-  const clientComponents: Record<string, React.FC<any>> = {
-    content: ContentBlock,
-    slideshowBlock: SlideshowBlock,
-    mediaBlock: MediaBlock,
-    contactBlock: ContactBlock,
-    iframeBlock: IframeBlock,
-    cta: CallToActionBlock,
-    fileListBlock: FileListBlock,
-    pdfBlock: PdfBlock,
-  }
-
-  return (
-    <Fragment>
-      {blocks.map((block, index) => {
-        const { blockType } = block
-        const Component = clientComponents[blockType]
-        if (Component) {
-          return (
-            <div key={index} className="mb-8">
-              <Component {...block} disableInnerContainer />
-            </div>
-          )
-        }
-
-        // Fallback for custom or unknown block types
-        return (
-          <div key={index} className="p-6 my-4 bg-slate-50 border border-slate-200 rounded-xl">
-            <h4 className="font-serif font-bold text-lg text-[#42514c] capitalize">{blockType || "Content Block"}</h4>
-            <p className="text-sm text-slate-500 mt-1">Section block from Payload CMS</p>
-          </div>
-        )
-      })}
-    </Fragment>
-  )
-}
 
 const puckConfig: PuckConfig = {
   components: {
-    PageLayoutBlock: {
+    HeroSection: {
       fields: {
         title: { type: "text" },
+        subheading: { type: "textarea" },
+        align: {
+          type: "select",
+          options: [
+            { label: "Left Aligned", value: "left" },
+            { label: "Centered", value: "center" },
+          ],
+        },
       },
       defaultProps: {
-        title: "Page Layout",
+        title: "North of Grand Neighborhood",
+        subheading: "Connecting neighbors, supporting local businesses, and hosting community events.",
+        align: "center",
       },
-      render: ({ _rawBlocks, title }) => (
-        <div className="theme-nog w-full bg-white text-[#42514c] font-sans">
-          {_rawBlocks && Array.isArray(_rawBlocks) && _rawBlocks.length > 0 ? (
-            <div className="container mx-auto px-4 py-6">
-              <ClientRenderBlocks blocks={_rawBlocks} />
-            </div>
-          ) : (
-            <div className="container mx-auto px-4 py-12 text-center text-gray-500">
-              <h2 className="text-3xl font-serif font-bold text-[#42514c] mb-2">{title}</h2>
-              <p>Drag blocks from the left sidebar to add sections to this page.</p>
-            </div>
-          )}
-        </div>
+      render: ({ title, subheading, align }) => (
+        <section className={`theme-nog py-10 px-8 my-4 bg-emerald-50/70 rounded-2xl border border-emerald-200/80 text-${align || "center"}`}>
+          <h1 className="text-3xl md:text-4xl font-serif text-[#42514c] font-bold mb-3">{title}</h1>
+          <p className="text-base text-[#7b8c89] max-w-2xl mx-auto leading-relaxed">{subheading}</p>
+        </section>
       ),
     },
 
@@ -84,12 +43,121 @@ const puckConfig: PuckConfig = {
       },
       defaultProps: {
         title: "About Our Neighborhood",
-        text: "North of Grand is a vibrant community in Des Moines, Iowa.",
+        text: "The North of Grand neighborhood offers a harmonious blend of urban convenience and historic charm.",
       },
       render: ({ title, text }) => (
-        <div className="theme-nog py-6 px-4 max-w-4xl mx-auto my-4 bg-white rounded-2xl border border-gray-100 shadow-sm">
-          <h3 className="text-2xl font-serif text-[#42514c] font-bold mb-3">{title}</h3>
-          <p className="text-base text-[#42514c] leading-relaxed">{text}</p>
+        <div className="theme-nog py-6 px-6 max-w-4xl mx-auto my-4 bg-white rounded-2xl border border-gray-100 shadow-sm">
+          {title && <h3 className="text-2xl font-serif text-[#42514c] font-bold mb-3">{title}</h3>}
+          <div className="text-base text-[#42514c] leading-relaxed whitespace-pre-line">{text}</div>
+        </div>
+      ),
+    },
+
+    MediaSection: {
+      fields: {
+        title: { type: "text" },
+        imageUrl: { type: "text" },
+        caption: { type: "text" },
+      },
+      defaultProps: {
+        title: "Meet Our 2026 Board Members",
+        imageUrl: "/media/nog/nog-board_orig-1.jpg",
+        caption: "North of Grand Board Members",
+      },
+      render: ({ title, imageUrl, caption }) => (
+        <div className="theme-nog py-6 px-4 max-w-4xl mx-auto my-4 text-center">
+          {title && <h3 className="text-2xl font-serif text-[#42514c] font-bold mb-4">{title}</h3>}
+          {imageUrl && (
+            <img
+              src={imageUrl}
+              alt={caption || title || "Image"}
+              className="w-full rounded-2xl border border-gray-200 shadow-md max-h-[600px] object-cover mx-auto"
+            />
+          )}
+          {caption && <p className="text-xs text-slate-500 mt-2 font-serif italic">{caption}</p>}
+        </div>
+      ),
+    },
+
+    SlideshowSection: {
+      fields: {
+        title: { type: "text" },
+      },
+      defaultProps: {
+        title: "Neighborhood Photo Gallery",
+      },
+      render: ({ title }) => (
+        <div className="theme-nog my-6 max-w-5xl mx-auto">
+          <SlideshowBlock title={title} />
+        </div>
+      ),
+    },
+
+    ContactSection: {
+      fields: {
+        title: { type: "text" },
+        email: { type: "text" },
+        address: { type: "text" },
+      },
+      defaultProps: {
+        title: "Get in Touch with NOG",
+        email: "info@northofgrand.org",
+        address: "Des Moines, Iowa",
+      },
+      render: ({ title, email, address }) => (
+        <div className="theme-nog my-6 max-w-4xl mx-auto">
+          <ContactBlock title={title} email={email} address={address} />
+        </div>
+      ),
+    },
+
+    IframeSection: {
+      fields: {
+        iframeUrl: { type: "text" },
+        height: { type: "number" },
+        title: { type: "text" },
+      },
+      defaultProps: {
+        iframeUrl: "https://calendar.google.com/calendar/embed?src=northofgrandpresident%40gmail.com&ctz=America%2FChicago",
+        height: 600,
+        title: "Yearly Calendar",
+      },
+      render: ({ iframeUrl, height, title }) => (
+        <div className="theme-nog my-6 max-w-5xl mx-auto">
+          <IframeBlock iframeUrl={iframeUrl} height={height || 600} title={title} />
+        </div>
+      ),
+    },
+
+    CtaSection: {
+      fields: {
+        heading: { type: "text" },
+        subheading: { type: "text" },
+        buttonText: { type: "text" },
+        buttonUrl: { type: "text" },
+      },
+      defaultProps: {
+        heading: "Prefer Social Updates?",
+        subheading: "Check out our Facebook page for detailed descriptions of meetings and local events.",
+        buttonText: "View Facebook Page",
+        buttonUrl: "https://facebook.com",
+      },
+      render: ({ heading, subheading, buttonText, buttonUrl }) => (
+        <div className="theme-nog py-8 px-8 max-w-4xl mx-auto my-6 bg-gradient-to-r from-emerald-900 to-teal-950 text-white rounded-2xl shadow-lg flex flex-col md:flex-row justify-between items-center gap-6">
+          <div>
+            <h3 className="text-2xl font-serif font-bold mb-2">{heading}</h3>
+            <p className="text-emerald-100 text-sm">{subheading}</p>
+          </div>
+          {buttonText && (
+            <a
+              href={buttonUrl || "#"}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-white text-emerald-950 px-6 py-2.5 rounded-xl font-bold text-sm shadow hover:bg-emerald-50 transition-colors whitespace-nowrap"
+            >
+              {buttonText}
+            </a>
+          )}
         </div>
       ),
     },
@@ -126,6 +194,27 @@ interface PageItem {
   visualBuilderData?: any
   layout?: any[]
   hero?: any
+}
+
+function extractTextFromRichText(richTextObj: any): string {
+  if (!richTextObj) return ""
+  if (typeof richTextObj === "string") return richTextObj
+
+  const paragraphs: string[] = []
+  function traverse(node: any) {
+    if (!node) return
+    if (node.text) {
+      paragraphs.push(node.text)
+    }
+    if (node.children && Array.isArray(node.children)) {
+      node.children.forEach(traverse)
+    }
+  }
+
+  if (richTextObj.root) {
+    traverse(richTextObj.root)
+  }
+  return paragraphs.join("\n\n")
 }
 
 export function VisualBuilderClient({ tenantSlug }: { tenantSlug: string }) {
@@ -175,17 +264,105 @@ export function VisualBuilderClient({ tenantSlug }: { tenantSlug: string }) {
       return
     }
 
-    // Load the EXACT raw Payload layout blocks directly into Puck canvas!
-    const generatedContent: any[] = [
-      {
-        type: "PageLayoutBlock",
+    // Convert EACH item in page.layout into a SEPARATE, EDITABLE Puck block item!
+    const generatedContent: any[] = []
+
+    if (page.hero && page.hero.type && page.hero.type !== "none") {
+      generatedContent.push({
+        type: "HeroSection",
         props: {
-          id: `page-layout-${page.id}`,
+          id: `hero-${page.id}`,
           title: page.title,
-          _rawBlocks: page.layout,
+          subheading: `Welcome to ${page.title}`,
+          align: "center",
         },
-      },
-    ]
+      })
+    }
+
+    if (page.layout && Array.isArray(page.layout)) {
+      page.layout.forEach((block, idx) => {
+        const blockId = `block-${page.id}-${idx}`
+
+        if (block.blockType === "content") {
+          if (block.columns && Array.isArray(block.columns)) {
+            block.columns.forEach((col: any, cIdx: number) => {
+              if (col.type === "media" && col.media) {
+                const mediaObj = typeof col.media === "object" ? col.media : null
+                generatedContent.push({
+                  type: "MediaSection",
+                  props: {
+                    id: `${blockId}-col-${cIdx}-media`,
+                    title: mediaObj?.alt || "Image Section",
+                    imageUrl: mediaObj?.url || "/media/nog/nog-board_orig-1.jpg",
+                    caption: mediaObj?.alt || "",
+                  },
+                })
+              } else if (col.richText) {
+                const textContent = extractTextFromRichText(col.richText)
+                generatedContent.push({
+                  type: "ContentSection",
+                  props: {
+                    id: `${blockId}-col-${cIdx}-text`,
+                    title: col.title || (cIdx === 0 ? "About North of Grand" : "Our Mission"),
+                    text: textContent || "Community content section",
+                  },
+                })
+              }
+            })
+          }
+        } else if (block.blockType === "slideshowBlock") {
+          generatedContent.push({
+            type: "SlideshowSection",
+            props: {
+              id: `${blockId}-slideshow`,
+              title: block.title || "Neighborhood Photo Gallery",
+            },
+          })
+        } else if (block.blockType === "contactBlock") {
+          generatedContent.push({
+            type: "ContactSection",
+            props: {
+              id: `${blockId}-contact`,
+              title: block.title || "Get in Touch with NOG",
+              email: block.email || "info@northofgrand.org",
+              address: block.address || "Des Moines, Iowa",
+            },
+          })
+        } else if (block.blockType === "iframeBlock") {
+          generatedContent.push({
+            type: "IframeSection",
+            props: {
+              id: `${blockId}-iframe`,
+              iframeUrl: block.iframeUrl || "https://calendar.google.com/calendar/embed?src=northofgrandpresident%40gmail.com",
+              height: block.height || 600,
+              title: block.title || "Yearly Calendar",
+            },
+          })
+        } else if (block.blockType === "cta") {
+          generatedContent.push({
+            type: "CtaSection",
+            props: {
+              id: `${blockId}-cta`,
+              heading: "Prefer Social Updates?",
+              subheading: "Check out our Facebook page for detailed descriptions of meetings and local events.",
+              buttonText: "View Facebook Page",
+              buttonUrl: "https://facebook.com",
+            },
+          })
+        }
+      })
+    }
+
+    if (generatedContent.length === 0) {
+      generatedContent.push({
+        type: "ContentSection",
+        props: {
+          id: `default-${page.id}`,
+          title: page.title,
+          text: `Visual editing layout for ${page.title} (${page.slug})`,
+        },
+      })
+    }
 
     setData({
       content: generatedContent,
@@ -234,7 +411,7 @@ export function VisualBuilderClient({ tenantSlug }: { tenantSlug: string }) {
             <span className="bg-emerald-500 text-slate-900 px-2 py-0.5 rounded text-xs uppercase font-extrabold">Visual Builder</span>
             Tenant: <span className="text-emerald-400">{tenantSlug || "nog"}</span>
           </h1>
-          <p className="text-xs text-slate-400">Rendering real website components & Lexical RichText blocks directly in canvas.</p>
+          <p className="text-xs text-slate-400">Click any block on the canvas to select and edit its text, images, and settings on the right panel.</p>
         </div>
 
         <div className="flex items-center gap-3">
