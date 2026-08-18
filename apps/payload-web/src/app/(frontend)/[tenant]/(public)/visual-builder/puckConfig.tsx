@@ -44,7 +44,14 @@ export const puckConfig: PuckConfig = {
           ],
         },
 
-        // Column 1
+        // --- COLUMN 1 ---
+        col1Type: {
+          type: "select",
+          options: [
+            { label: "📝 Text Column", value: "text" },
+            { label: "🖼️ Media Image Column", value: "media" },
+          ],
+        },
         col1Size: {
           type: "select",
           options: [
@@ -56,8 +63,17 @@ export const puckConfig: PuckConfig = {
         },
         col1Title: { type: "text" },
         col1Text: { type: "textarea" },
+        col1ImageUrl: { type: "text" },
+        col1Caption: { type: "text" },
 
-        // Column 2
+        // --- COLUMN 2 ---
+        col2Type: {
+          type: "select",
+          options: [
+            { label: "📝 Text Column", value: "text" },
+            { label: "🖼️ Media Image Column", value: "media" },
+          ],
+        },
         col2Size: {
           type: "select",
           options: [
@@ -69,8 +85,17 @@ export const puckConfig: PuckConfig = {
         },
         col2Title: { type: "text" },
         col2Text: { type: "textarea" },
+        col2ImageUrl: { type: "text" },
+        col2Caption: { type: "text" },
 
-        // Column 3
+        // --- COLUMN 3 ---
+        col3Type: {
+          type: "select",
+          options: [
+            { label: "📝 Text Column", value: "text" },
+            { label: "🖼️ Media Image Column", value: "media" },
+          ],
+        },
         col3Size: {
           type: "select",
           options: [
@@ -82,55 +107,109 @@ export const puckConfig: PuckConfig = {
         },
         col3Title: { type: "text" },
         col3Text: { type: "textarea" },
+        col3ImageUrl: { type: "text" },
+        col3Caption: { type: "text" },
       },
       defaultProps: {
         columnsCount: "1",
+        col1Type: "text",
         col1Size: "full",
         col1Title: "About Our Neighborhood",
         col1Text: "The North of Grand neighborhood offers a harmonious blend of urban convenience and historic charm.",
+        col1ImageUrl: "/media/nog/nog-board_orig-1.jpg",
+        col1Caption: "",
+
+        col2Type: "text",
         col2Size: "half",
         col2Title: "Community Projects",
         col2Text: "We host Ingersoll Live and seasonal neighborhood cleanups.",
+        col2ImageUrl: "/media/nog/nog-board_orig-1.jpg",
+        col2Caption: "",
+
+        col3Type: "text",
         col3Size: "oneThird",
         col3Title: "Local Support",
         col3Text: "Partnering with local neighborhood businesses.",
+        col3ImageUrl: "/media/nog/nog-board_orig-1.jpg",
+        col3Caption: "",
       },
       render: ({
         columnsCount,
+        col1Type,
         col1Size,
         col1Title,
         col1Text,
+        col1ImageUrl,
+        col1Caption,
+        col2Type,
         col2Size,
         col2Title,
         col2Text,
+        col2ImageUrl,
+        col2Caption,
+        col3Type,
         col3Size,
         col3Title,
         col3Text,
+        col3ImageUrl,
+        col3Caption,
       }) => {
         const count = parseInt(columnsCount || "1", 10)
+
+        const renderColContent = (
+          type?: string,
+          title?: string,
+          text?: string,
+          imageUrl?: string,
+          caption?: string
+        ) => {
+          if (type === "media") {
+            return (
+              <div className="w-full text-center">
+                {title && <h4 className="text-lg font-serif text-[#42514c] font-bold mb-2">{title}</h4>}
+                {imageUrl ? (
+                  <img
+                    src={imageUrl}
+                    alt={caption || title || "Column Image"}
+                    className="w-full rounded-xl border border-gray-200 shadow-sm max-h-[450px] object-cover mx-auto"
+                  />
+                ) : (
+                  <div className="w-full h-48 bg-slate-100 rounded-xl border border-dashed border-slate-300 flex items-center justify-center text-slate-400 text-xs">
+                    No image URL provided
+                  </div>
+                )}
+                {caption && <p className="text-xs text-slate-500 mt-1.5 font-serif italic">{caption}</p>}
+              </div>
+            )
+          }
+
+          return (
+            <div>
+              {title && <h3 className="text-xl font-serif text-[#42514c] font-bold mb-2">{title}</h3>}
+              <div className="text-base text-[#42514c] leading-relaxed whitespace-pre-line">{text}</div>
+            </div>
+          )
+        }
 
         return (
           <div className="theme-nog py-6 px-6 max-w-5xl mx-auto my-4 bg-white rounded-2xl border border-gray-100 shadow-sm">
             <div className="grid grid-cols-12 gap-6 items-start">
               {/* Column 1 */}
               <div className={`${colSpanMap[col1Size || "full"] || "col-span-12"}`}>
-                {col1Title && <h3 className="text-xl font-serif text-[#42514c] font-bold mb-2">{col1Title}</h3>}
-                <div className="text-base text-[#42514c] leading-relaxed whitespace-pre-line">{col1Text}</div>
+                {renderColContent(col1Type, col1Title, col1Text, col1ImageUrl, col1Caption)}
               </div>
 
               {/* Column 2 */}
               {count >= 2 && (
                 <div className={`${colSpanMap[col2Size || "half"] || "col-span-6"}`}>
-                  {col2Title && <h3 className="text-xl font-serif text-[#42514c] font-bold mb-2">{col2Title}</h3>}
-                  <div className="text-base text-[#42514c] leading-relaxed whitespace-pre-line">{col2Text}</div>
+                  {renderColContent(col2Type, col2Title, col2Text, col2ImageUrl, col2Caption)}
                 </div>
               )}
 
               {/* Column 3 */}
               {count >= 3 && (
                 <div className={`${colSpanMap[col3Size || "oneThird"] || "col-span-4"}`}>
-                  {col3Title && <h3 className="text-xl font-serif text-[#42514c] font-bold mb-2">{col3Title}</h3>}
-                  <div className="text-base text-[#42514c] leading-relaxed whitespace-pre-line">{col3Text}</div>
+                  {renderColContent(col3Type, col3Title, col3Text, col3ImageUrl, col3Caption)}
                 </div>
               )}
             </div>

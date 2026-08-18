@@ -74,9 +74,12 @@ export function convertPageLayoutToPuckContent(page: PageItem): any[] {
 
             if (col.type === "media" && col.media) {
               const mediaObj = typeof col.media === "object" ? col.media : null
-              contentProps[`${colKey}Title`] = mediaObj?.alt || "Image Column"
-              contentProps[`${colKey}Text`] = mediaObj?.url ? `![Image](${mediaObj.url})` : "Media Image"
-            } else if (col.richText) {
+              contentProps[`${colKey}Type`] = "media"
+              contentProps[`${colKey}Title`] = mediaObj?.alt || "Column Image"
+              contentProps[`${colKey}ImageUrl`] = mediaObj?.url || "/media/nog/nog-board_orig-1.jpg"
+              contentProps[`${colKey}Caption`] = mediaObj?.alt || ""
+            } else {
+              contentProps[`${colKey}Type`] = "text"
               contentProps[`${colKey}Title`] = col.title || (cIdx === 0 ? "About North of Grand" : "Our Mission")
               contentProps[`${colKey}Text`] = extractTextFromRichText(col.richText)
             }
@@ -136,6 +139,7 @@ export function convertPageLayoutToPuckContent(page: PageItem): any[] {
       props: {
         id: `default-${page.id}`,
         columnsCount: "1",
+        col1Type: "text",
         col1Size: "full",
         col1Title: page.title,
         col1Text: `Visual editing layout for ${page.title} (${page.slug})`,
