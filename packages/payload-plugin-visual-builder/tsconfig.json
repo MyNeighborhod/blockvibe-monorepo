@@ -1,0 +1,12 @@
+{
+  "extends": "../../packages/typescript-config/base.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "jsx": "react-jsx",
+    "declaration": true,
+    "emitDeclarationOnly": false,
+    "noEmit": true
+  },
+  "include": ["src/**/*"]
+}

@@ -252,6 +252,18 @@ export interface Page {
    */
   generateSlug?: boolean | null;
   slug: string;
+  /**
+   * Visual Website Builder layout state (Puck Editor)
+   */
+  visualBuilderData?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -1885,6 +1897,7 @@ export interface PagesSelect<T extends boolean = true> {
   publishedAt?: T;
   generateSlug?: T;
   slug?: T;
+  visualBuilderData?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;

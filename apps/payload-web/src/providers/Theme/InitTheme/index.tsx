@@ -5,8 +5,9 @@ import { themeLocalStorageKey } from "../shared"
 
 export const InitTheme: React.FC<{ defaultTheme?: string }> = ({ defaultTheme = "light" }) => {
   return (
-    // eslint-disable-next-line @next/next/no-before-interactive-script-outside-document
-    <Script
+    <script
+      id="theme-script"
+      suppressHydrationWarning
       dangerouslySetInnerHTML={{
         __html: `
   (function () {
@@ -38,8 +39,6 @@ export const InitTheme: React.FC<{ defaultTheme?: string }> = ({ defaultTheme = 
   })();
   `,
       }}
-      id="theme-script"
-      strategy="beforeInteractive"
     />
   )
 }

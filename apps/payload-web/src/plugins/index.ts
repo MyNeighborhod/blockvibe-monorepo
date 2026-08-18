@@ -24,9 +24,13 @@ const generateURL: GenerateURL<Post | Page> = ({ doc }) => {
   return doc?.slug ? `${url}/${doc.slug}` : url
 }
 
-const SUPER_ADMIN_EMAILS = ["eugen8@gmail.com"]
+import { visualBuilderPlugin } from "@blockvibe/payload-plugin-visual-builder"
 
 export const plugins: Plugin[] = [
+  visualBuilderPlugin({
+    collections: ["pages"],
+    enableInlineEditing: true,
+  }),
   redirectsPlugin({
     collections: ["pages", "posts"],
     overrides: {
