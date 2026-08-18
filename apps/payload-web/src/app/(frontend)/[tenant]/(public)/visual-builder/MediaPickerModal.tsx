@@ -28,35 +28,30 @@ export function MediaPickerField({ value, onChange, label = "Image URL", tenantS
   const [loading, setLoading] = useState(false)
   const [search, setSearch] = useState("")
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchMedia()
-    }
-  }, [isOpen])
-
-  async function fetchMedia() {
+  const fetchMedia = async () => {
     try {
       setLoading(true)
-      const res = await fetch("/api/media?depth=2&limit=150")
+      const res = await fetch("/api/media?depth=2&limit=200")
       if (!res.ok) throw new Error("Failed to fetch media")
       const json = await res.json()
       const allDocs: MediaItem[] = json.docs || []
 
-      // 1. Filter ONLY for active tenant's media
-      // 2. EXCLUDE directory uploads (/directory/ subfolder or category === 'directory')
+      // Filter media for tenant, while strictly excluding directory uploads (/directory/ subfolder or category === 'directory')
       const tenantFiltered = allDocs.filter((doc) => {
-        // Exclude directory uploads
+        // 1. Exclude directory uploads
         if (doc.category === "directory" || (doc.url && doc.url.includes("/directory/"))) {
           return false
         }
 
-        // Match tenant
+        // 2. Include tenant-matched or global/seed media
         if (!tenantSlug) return true
-        if (doc.url && doc.url.includes(`/media/${tenantSlug}/`)) return true
+        if (doc.url && (doc.url.includes(`/media/${tenantSlug}/`) || doc.url.includes("/media/global/"))) return true
 
         if (doc.tenant) {
           const docTenantSlug = typeof doc.tenant === "object" ? doc.tenant.slug : doc.tenant
-          return docTenantSlug === tenantSlug
+          if (docTenantSlug && docTenantSlug !== tenantSlug && docTenantSlug !== "global") {
+            return false
+          }
         }
 
         return true
@@ -69,6 +64,12 @@ export function MediaPickerField({ value, onChange, label = "Image URL", tenantS
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchMedia()
+    }
+  }, [isOpen, tenantSlug])
 
   const filteredMedia = mediaList.filter((m) => {
     const term = search.toLowerCase()
@@ -136,7 +137,7 @@ export function MediaPickerField({ value, onChange, label = "Image URL", tenantS
                   className="w-full pl-9 pr-4 py-1.5 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
-              <span className="text-xs text-slate-500 font-medium">{filteredMedia.length} files for {tenantSlug}</span>
+              <span className="text-xs text-slate-500 font-medium">{filteredMedia.length} files available</span>
             </div>
 
             {/* Media Grid */}
@@ -148,7 +149,7 @@ export function MediaPickerField({ value, onChange, label = "Image URL", tenantS
                 </div>
               ) : filteredMedia.length === 0 ? (
                 <div className="text-center py-16 text-slate-400 text-xs">
-                  No page media files found for tenant "{tenantSlug}". (Directory uploads are stored separately).
+                  No media files found. (Directory uploads in /media/{tenantSlug}/directory/ are isolated and hidden).
                 </div>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">

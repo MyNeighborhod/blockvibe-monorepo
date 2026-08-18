@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react"
 import { Puck } from "@puckeditor/core"
 import "@puckeditor/core/dist/index.css"
 
-import { puckConfig } from "./puckConfig"
+import { getPuckConfig } from "./puckConfig"
 import { VisualBuilderHeader } from "./VisualBuilderHeader"
 import { convertPageLayoutToPuckContent, type PageItem } from "./utils"
 
@@ -14,6 +14,8 @@ export function VisualBuilderClient({ tenantSlug }: { tenantSlug: string }) {
   const [data, setData] = useState<any>({ content: [], root: { props: { title: "Visual Layout" } } })
   const [loading, setLoading] = useState(true)
   const [saveStatus, setSaveStatus] = useState<string | null>(null)
+
+  const activePuckConfig = getPuckConfig(tenantSlug || "nog")
 
   useEffect(() => {
     async function fetchPages() {
@@ -102,7 +104,7 @@ export function VisualBuilderClient({ tenantSlug }: { tenantSlug: string }) {
       />
 
       <div className="bg-white text-[#42514c] rounded-xl overflow-hidden shadow-2xl border border-slate-700 min-h-[750px]">
-        <Puck config={puckConfig} data={data} onPublish={handleSave} key={selectedPageId || "default"} />
+        <Puck config={activePuckConfig} data={data} onPublish={handleSave} key={selectedPageId || "default"} />
       </div>
     </div>
   )
