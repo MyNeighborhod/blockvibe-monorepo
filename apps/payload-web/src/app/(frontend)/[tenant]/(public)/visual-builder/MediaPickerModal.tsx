@@ -8,6 +8,8 @@ interface MediaItem {
   filename: string
   url: string
   alt?: string
+  category?: string
+  tenant?: any
   mimeType?: string
   filesize?: number
   sizes?: any
@@ -17,9 +19,10 @@ interface MediaPickerFieldProps {
   value: string
   onChange: (url: string) => void
   label?: string
+  tenantSlug?: string
 }
 
-export function MediaPickerField({ value, onChange, label = "Image URL" }: MediaPickerFieldProps) {
+export function MediaPickerField({ value, onChange, label = "Image URL", tenantSlug = "nog" }: MediaPickerFieldProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [mediaList, setMediaList] = useState<MediaItem[]>([])
   const [loading, setLoading] = useState(false)
@@ -34,12 +37,34 @@ export function MediaPickerField({ value, onChange, label = "Image URL" }: Media
   async function fetchMedia() {
     try {
       setLoading(true)
-      const res = await fetch("/api/media?limit=100")
+      const res = await fetch("/api/media?depth=2&limit=150")
       if (!res.ok) throw new Error("Failed to fetch media")
       const json = await res.json()
-      setMediaList(json.docs || [])
+      const allDocs: MediaItem[] = json.docs || []
+
+      // 1. Filter ONLY for active tenant's media
+      // 2. EXCLUDE directory uploads (/directory/ subfolder or category === 'directory')
+      const tenantFiltered = allDocs.filter((doc) => {
+        // Exclude directory uploads
+        if (doc.category === "directory" || (doc.url && doc.url.includes("/directory/"))) {
+          return false
+        }
+
+        // Match tenant
+        if (!tenantSlug) return true
+        if (doc.url && doc.url.includes(`/media/${tenantSlug}/`)) return true
+
+        if (doc.tenant) {
+          const docTenantSlug = typeof doc.tenant === "object" ? doc.tenant.slug : doc.tenant
+          return docTenantSlug === tenantSlug
+        }
+
+        return true
+      })
+
+      setMediaList(tenantFiltered)
     } catch (err) {
-      console.error("Error loading media items:", err)
+      console.error("Error loading tenant media items:", err)
     } finally {
       setLoading(false)
     }
@@ -86,7 +111,9 @@ export function MediaPickerField({ value, onChange, label = "Image URL" }: Media
             <div className="p-4 bg-slate-800 text-white flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <ImageIcon className="w-5 h-5 text-emerald-400" />
-                <h2 className="font-bold text-base">Payload Media Library</h2>
+                <h2 className="font-bold text-base">
+                  Media Library <span className="text-emerald-400 text-xs font-normal">({tenantSlug})</span>
+                </h2>
               </div>
               <button
                 type="button"
@@ -105,11 +132,11 @@ export function MediaPickerField({ value, onChange, label = "Image URL" }: Media
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search media by filename or alt text..."
+                  placeholder={`Search ${tenantSlug} tenant media...`}
                   className="w-full pl-9 pr-4 py-1.5 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
-              <span className="text-xs text-slate-500 font-medium">{filteredMedia.length} files available</span>
+              <span className="text-xs text-slate-500 font-medium">{filteredMedia.length} files for {tenantSlug}</span>
             </div>
 
             {/* Media Grid */}
@@ -117,10 +144,12 @@ export function MediaPickerField({ value, onChange, label = "Image URL" }: Media
               {loading ? (
                 <div className="flex flex-col items-center justify-center py-16 text-slate-400 text-xs">
                   <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mb-2" />
-                  Loading Media Library...
+                  Loading tenant media...
                 </div>
               ) : filteredMedia.length === 0 ? (
-                <div className="text-center py-16 text-slate-400 text-xs">No media files found matching "{search}"</div>
+                <div className="text-center py-16 text-slate-400 text-xs">
+                  No page media files found for tenant "{tenantSlug}". (Directory uploads are stored separately).
+                </div>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                   {filteredMedia.map((media) => {
@@ -163,7 +192,8 @@ export function MediaPickerField({ value, onChange, label = "Image URL" }: Media
             </div>
 
             {/* Modal Footer */}
-            <div className="p-3 bg-slate-50 border-t border-slate-100 flex justify-end">
+            <div className="p-3 bg-slate-50 border-t border-slate-100 flex justify-between items-center text-xs text-slate-400">
+              <span>Directory uploaded assets isolated in /media/{tenantSlug}/directory/</span>
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}

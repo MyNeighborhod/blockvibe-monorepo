@@ -421,6 +421,10 @@ export interface Post {
 export interface Media {
   id: number;
   tenant?: (number | null) | Tenant;
+  /**
+   * Directory uploads are isolated in /media/{tenant}/directory/ and hidden from Page Media Picker.
+   */
+  category?: ('general' | 'directory') | null;
   alt?: string | null;
   caption?: {
     root: {
@@ -2098,6 +2102,7 @@ export interface PostsSelect<T extends boolean = true> {
  */
 export interface MediaSelect<T extends boolean = true> {
   tenant?: T;
+  category?: T;
   alt?: T;
   caption?: T;
   folder?: T;

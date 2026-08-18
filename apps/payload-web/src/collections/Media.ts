@@ -49,7 +49,9 @@ const afterChangeHook: CollectionAfterChangeHook = async ({ doc, req, operation 
     }
 
     const baseDir = path.resolve(dirname, "../../public/media")
-    const destDir = path.join(baseDir, slug)
+    // Put directory uploaded media into separate tenant subfolder: /media/{tenantSlug}/directory/
+    const isDirectory = doc.category === "directory"
+    const destDir = isDirectory ? path.join(baseDir, slug, "directory") : path.join(baseDir, slug)
 
     if (!fs.existsSync(destDir)) {
       fs.mkdirSync(destDir, { recursive: true })
@@ -96,7 +98,8 @@ const beforeDeleteHook: CollectionBeforeDeleteHook = async ({ id, req }) => {
   }
 
   const baseDir = path.resolve(dirname, "../../public/media")
-  const destDir = path.join(baseDir, slug)
+  const isDirectory = doc.category === "directory"
+  const destDir = isDirectory ? path.join(baseDir, slug, "directory") : path.join(baseDir, slug)
 
   // Delete main file
   if (doc.filename) {
@@ -130,15 +133,17 @@ const afterReadHook: CollectionAfterReadHook = async ({ doc, req }) => {
     slug = await getTenantSlug(req, tenantId)
   }
 
+  const subPath = doc.category === "directory" ? `${slug}/directory` : slug
+
   if (doc.filename) {
-    doc.url = `/media/${slug}/${doc.filename}`
+    doc.url = `/media/${subPath}/${doc.filename}`
   }
 
   if (doc.sizes) {
     for (const sizeKey of Object.keys(doc.sizes)) {
       const size = doc.sizes[sizeKey]
       if (size && size.filename) {
-        size.url = `/media/${slug}/${size.filename}`
+        size.url = `/media/${subPath}/${size.filename}`
       }
     }
   }
@@ -161,6 +166,19 @@ export const Media: CollectionConfig = {
     afterRead: [afterReadHook],
   },
   fields: [
+    {
+      name: "category",
+      type: "select",
+      defaultValue: "general",
+      options: [
+        { label: "General Page Media", value: "general" },
+        { label: "Business Directory Upload", value: "directory" },
+      ],
+      admin: {
+        position: "sidebar",
+        description: "Directory uploads are isolated in /media/{tenant}/directory/ and hidden from Page Media Picker.",
+      },
+    },
     {
       name: "alt",
       type: "text",
