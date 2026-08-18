@@ -1,118 +1,95 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, Fragment } from "react"
 import { Puck, type Config as PuckConfig } from "@puckeditor/core"
 import "@puckeditor/core/dist/index.css"
 
-import { RenderBlocks } from "@/blocks/RenderBlocks"
-import { RenderHero } from "@/heros/RenderHero"
+import { ContentBlock } from "@/blocks/Content/Component"
+import { SlideshowBlock } from "@/blocks/SlideshowBlock/Component"
+import { MediaBlock } from "@/blocks/MediaBlock/Component"
+import { ContactBlock } from "@/blocks/ContactBlock/Component"
+import { IframeBlock } from "@/blocks/IframeBlock/Component"
+import { CallToActionBlock } from "@/blocks/CallToAction/Component"
+import { FileListBlock } from "@/blocks/FileListBlock/Component"
+import { PdfBlock } from "@/blocks/PdfBlock/Component"
+
+function ClientRenderBlocks({ blocks }: { blocks: any[] }) {
+  if (!blocks || !Array.isArray(blocks) || blocks.length === 0) return null
+
+  const clientComponents: Record<string, React.FC<any>> = {
+    content: ContentBlock,
+    slideshowBlock: SlideshowBlock,
+    mediaBlock: MediaBlock,
+    contactBlock: ContactBlock,
+    iframeBlock: IframeBlock,
+    cta: CallToActionBlock,
+    fileListBlock: FileListBlock,
+    pdfBlock: PdfBlock,
+  }
+
+  return (
+    <Fragment>
+      {blocks.map((block, index) => {
+        const { blockType } = block
+        const Component = clientComponents[blockType]
+        if (Component) {
+          return (
+            <div key={index} className="mb-8">
+              <Component {...block} disableInnerContainer />
+            </div>
+          )
+        }
+
+        // Fallback for custom or unknown block types
+        return (
+          <div key={index} className="p-6 my-4 bg-slate-50 border border-slate-200 rounded-xl">
+            <h4 className="font-serif font-bold text-lg text-[#42514c] capitalize">{blockType || "Content Block"}</h4>
+            <p className="text-sm text-slate-500 mt-1">Section block from Payload CMS</p>
+          </div>
+        )
+      })}
+    </Fragment>
+  )
+}
 
 const puckConfig: PuckConfig = {
   components: {
-    HeroSection: {
+    PageLayoutBlock: {
       fields: {
-        type: {
-          type: "select",
-          options: [
-            { label: "High Impact (Large Image)", value: "highImpact" },
-            { label: "Medium Impact", value: "mediumImpact" },
-            { label: "Low Impact (Title Only)", value: "lowImpact" },
-          ],
-        },
-        heading: { type: "text" },
-        subheading: { type: "textarea" },
+        title: { type: "text" },
       },
       defaultProps: {
-        type: "mediumImpact",
-        heading: "North of Grand Neighborhood",
-        subheading: "Connecting neighbors, supporting local businesses, and hosting community events.",
+        title: "Page Layout",
       },
-      render: (props) => (
-        <div className="py-6">
-          <RenderHero
-            type={props.type || "mediumImpact"}
-            richText={{
-              root: {
-                type: "root",
-                children: [
-                  {
-                    type: "h1",
-                    version: 1,
-                    children: [{ type: "text", version: 1, text: props.heading || "North of Grand Neighborhood" }],
-                  },
-                  {
-                    type: "p",
-                    version: 1,
-                    children: [{ type: "text", version: 1, text: props.subheading || "" }],
-                  },
-                ],
-                direction: "ltr",
-                format: "",
-                indent: 0,
-                version: 1,
-              },
-            }}
-          />
+      render: ({ _rawBlocks, title }) => (
+        <div className="theme-nog w-full bg-white text-[#42514c] font-sans">
+          {_rawBlocks && Array.isArray(_rawBlocks) && _rawBlocks.length > 0 ? (
+            <div className="container mx-auto px-4 py-6">
+              <ClientRenderBlocks blocks={_rawBlocks} />
+            </div>
+          ) : (
+            <div className="container mx-auto px-4 py-12 text-center text-gray-500">
+              <h2 className="text-3xl font-serif font-bold text-[#42514c] mb-2">{title}</h2>
+              <p>Drag blocks from the left sidebar to add sections to this page.</p>
+            </div>
+          )}
         </div>
       ),
     },
 
-    ContentBlock: {
+    ContentSection: {
       fields: {
         title: { type: "text" },
-        richTextHTML: { type: "textarea" },
+        text: { type: "textarea" },
       },
       defaultProps: {
-        title: "About Our Community",
-        richTextHTML: "The North of Grand Neighborhood Association is dedicated to preserving our historic character and supporting local commerce.",
+        title: "About Our Neighborhood",
+        text: "North of Grand is a vibrant community in Des Moines, Iowa.",
       },
-      render: ({ title, richTextHTML }) => (
-        <section className="py-8 px-6 max-w-4xl mx-auto my-4 bg-white rounded-2xl border border-gray-100 shadow-sm">
-          {title && <h2 className="text-3xl font-serif text-[#42514c] font-semibold mb-4">{title}</h2>}
-          <div className="prose prose-emerald max-w-none text-[#42514c] leading-relaxed text-base">
-            <p>{richTextHTML}</p>
-          </div>
-        </section>
-      ),
-    },
-
-    SlideshowSection: {
-      fields: {
-        title: { type: "text" },
-      },
-      defaultProps: {
-        title: "Neighborhood Photo Gallery",
-      },
-      render: ({ title }) => (
-        <div className="py-8 px-6 max-w-5xl mx-auto my-6 bg-slate-900 text-white rounded-2xl shadow-xl overflow-hidden text-center">
-          <h3 className="text-2xl font-serif font-semibold mb-2">{title || "Photo Gallery"}</h3>
-          <p className="text-emerald-300 text-sm mb-6">Interactive Community Slideshow Carousel</p>
-          <div className="aspect-video max-w-3xl mx-auto bg-slate-800 rounded-xl border border-slate-700 flex items-center justify-center text-slate-400 font-medium">
-            🖼️ [Slideshow Gallery Carousel Component]
-          </div>
-        </div>
-      ),
-    },
-
-    ContactSection: {
-      fields: {
-        title: { type: "text" },
-        email: { type: "text" },
-        address: { type: "text" },
-      },
-      defaultProps: {
-        title: "Get in Touch with NOG",
-        email: "info@northofgrand.org",
-        address: "Des Moines, Iowa",
-      },
-      render: ({ title, email, address }) => (
-        <div className="py-10 px-8 max-w-4xl mx-auto my-6 bg-emerald-50/70 border border-emerald-200/80 rounded-2xl">
-          <h3 className="text-2xl font-serif text-[#42514c] font-semibold mb-3">{title}</h3>
-          <p className="text-sm text-[#7b8c89] mb-4">Have questions or want to get involved? Reach out anytime!</p>
-          <div className="flex flex-wrap gap-4 text-sm font-medium text-emerald-900">
-            <span className="bg-white px-4 py-2 rounded-lg border border-emerald-100 shadow-sm">📧 {email}</span>
-            <span className="bg-white px-4 py-2 rounded-lg border border-emerald-100 shadow-sm">📍 {address}</span>
-          </div>
+      render: ({ title, text }) => (
+        <div className="theme-nog py-6 px-4 max-w-4xl mx-auto my-4 bg-white rounded-2xl border border-gray-100 shadow-sm">
+          <h3 className="text-2xl font-serif text-[#42514c] font-bold mb-3">{title}</h3>
+          <p className="text-base text-[#42514c] leading-relaxed">{text}</p>
         </div>
       ),
     },
@@ -129,7 +106,7 @@ const puckConfig: PuckConfig = {
         buttonText: "Browse Business Directory →",
       },
       render: ({ title, description, buttonText }) => (
-        <div className="py-10 px-8 max-w-5xl mx-auto my-6 bg-gradient-to-r from-[#1b4332] to-[#2d6a4f] text-white rounded-2xl shadow-lg">
+        <div className="theme-nog py-10 px-8 max-w-5xl mx-auto my-6 bg-gradient-to-r from-[#1b4332] to-[#2d6a4f] text-white rounded-2xl shadow-lg">
           <h3 className="text-3xl font-serif font-bold mb-3">{title}</h3>
           <p className="text-emerald-100 text-base max-w-xl mb-6 leading-relaxed">{description}</p>
           <a href="/businesses" className="inline-block bg-white text-[#1b4332] font-semibold px-6 py-3 rounded-lg shadow hover:bg-emerald-50 transition-colors">
@@ -162,12 +139,12 @@ export function VisualBuilderClient({ tenantSlug }: { tenantSlug: string }) {
     async function fetchPages() {
       try {
         setLoading(true)
-        const res = await fetch("/api/pages?depth=2&limit=100")
+        const res = await fetch("/api/pages?depth=3&limit=100")
         if (!res.ok) throw new Error("Failed to fetch pages")
         const json = await res.json()
         const allPages: PageItem[] = json.docs || []
         
-        // Filter pages for active tenant if multi-tenant
+        // Filter pages for active tenant
         const filteredPages = allPages.filter((p) => {
           if (!p.tenant) return true
           const pageTenantSlug = typeof p.tenant === "object" ? p.tenant.slug : p.tenant
@@ -177,7 +154,7 @@ export function VisualBuilderClient({ tenantSlug }: { tenantSlug: string }) {
         const displayPages = filteredPages.length > 0 ? filteredPages : allPages
         setPages(displayPages)
 
-        // Find About page or first page
+        // Default to About page or first page
         const aboutPage = displayPages.find((p) => p.slug === "about") || displayPages[0]
         if (aboutPage) {
           setSelectedPageId(String(aboutPage.id))
@@ -198,80 +175,17 @@ export function VisualBuilderClient({ tenantSlug }: { tenantSlug: string }) {
       return
     }
 
-    // Convert page layout blocks into Puck canvas format
-    const generatedContent: any[] = []
-
-    if (page.hero && page.hero.type && page.hero.type !== "none") {
-      generatedContent.push({
-        type: "HeroSection",
+    // Load the EXACT raw Payload layout blocks directly into Puck canvas!
+    const generatedContent: any[] = [
+      {
+        type: "PageLayoutBlock",
         props: {
-          id: "hero-1",
-          type: page.hero.type,
-          heading: page.title,
-          subheading: "Welcome to " + page.title,
-        },
-      })
-    }
-
-    if (page.layout && Array.isArray(page.layout)) {
-      page.layout.forEach((block, idx) => {
-        if (block.blockType === "content") {
-          generatedContent.push({
-            type: "ContentBlock",
-            props: {
-              id: `content-${idx}`,
-              title: block.title || page.title,
-              richTextHTML: "Detailed community page content section",
-            },
-          })
-        } else if (block.blockType === "slideshowBlock") {
-          generatedContent.push({
-            type: "SlideshowSection",
-            props: {
-              id: `slideshow-${idx}`,
-              title: block.title || "Photo Gallery",
-            },
-          })
-        } else if (block.blockType === "contactBlock") {
-          generatedContent.push({
-            type: "ContactSection",
-            props: {
-              id: `contact-${idx}`,
-              title: "Contact Us",
-              email: "info@northofgrand.org",
-            },
-          })
-        }
-      })
-    }
-
-    if (generatedContent.length === 0) {
-      generatedContent.push({
-        type: "HeroSection",
-        props: {
-          id: "hero-default",
-          type: "mediumImpact",
-          heading: page.title,
-          subheading: `Visual Layout Editor for ${page.title} (${page.slug})`,
-        },
-      })
-      generatedContent.push({
-        type: "ContentBlock",
-        props: {
-          id: "content-default",
+          id: `page-layout-${page.id}`,
           title: page.title,
-          richTextHTML: `Editing content for ${page.title} on ${tenantSlug || "nog"} tenant site.`,
+          _rawBlocks: page.layout,
         },
-      })
-      generatedContent.push({
-        type: "DirectoryBanner",
-        props: {
-          id: "directory-default",
-          title: "Explore North of Grand Businesses",
-          description: "Discover local restaurants, services, and shops in the neighborhood.",
-        },
-      })
-    }
+      },
+    ]
 
     setData({
       content: generatedContent,
@@ -320,7 +234,7 @@ export function VisualBuilderClient({ tenantSlug }: { tenantSlug: string }) {
             <span className="bg-emerald-500 text-slate-900 px-2 py-0.5 rounded text-xs uppercase font-extrabold">Visual Builder</span>
             Tenant: <span className="text-emerald-400">{tenantSlug || "nog"}</span>
           </h1>
-          <p className="text-xs text-slate-400">Select any CMS Page below to visually build and drag-and-drop sections in real-time.</p>
+          <p className="text-xs text-slate-400">Rendering real website components & Lexical RichText blocks directly in canvas.</p>
         </div>
 
         <div className="flex items-center gap-3">
