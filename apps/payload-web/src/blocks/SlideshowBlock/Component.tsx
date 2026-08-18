@@ -8,6 +8,7 @@ import { getBestMediaUrl } from "@/utilities/getBestMediaUrl"
 
 export type SlideshowBlockType = {
   blockType?: "slideshowBlock"
+  title?: string
   media?: (Media | number | string)[]
   images?: {
     image: Media | number | string

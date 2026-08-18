@@ -16,14 +16,17 @@ const LeafletMap = dynamic(() => import("@/components/LeafletMap"), {
 })
 
 export type ContactBlockProps = {
-  newsletterForm: FormBlockForm
+  title?: string
+  email?: string
+  address?: string
+  newsletterForm?: FormBlockForm
   newsletterIntro?: DefaultTypedEditorState
-  questionForm: FormBlockForm
+  questionForm?: FormBlockForm
   questionIntro?: DefaultTypedEditorState
-  showMap: boolean
-  mapLatitude: number
-  mapLongitude: number
-  mapZoom: number
+  showMap?: boolean
+  mapLatitude?: number
+  mapLongitude?: number
+  mapZoom?: number
   mapBoundaryGeoJSON?: string | null
   facebookUrl?: string
   emailAddress?: string
@@ -73,7 +76,7 @@ export const ContactBlock: React.FC<ContactBlockProps> = (props) => {
 
         {/* Right Column - Map */}
         <div className="lg:col-span-4">
-          {showMap && (
+          {showMap && mapLatitude !== undefined && mapLongitude !== undefined && mapZoom !== undefined && (
             <div className="w-full">
               <LeafletMap
                 latitude={mapLatitude}
