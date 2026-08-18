@@ -7,7 +7,13 @@ import "@puckeditor/core/dist/index.css"
 import { SlideshowBlock } from "@/blocks/SlideshowBlock/Component"
 import { ContactBlock } from "@/blocks/ContactBlock/Component"
 import { IframeBlock } from "@/blocks/IframeBlock/Component"
-import { CallToActionBlock } from "@/blocks/CallToAction/Component"
+
+const colSpanMap: Record<string, string> = {
+  full: "col-span-12",
+  half: "col-span-12 md:col-span-6",
+  oneThird: "col-span-12 md:col-span-4",
+  twoThirds: "col-span-12 md:col-span-8",
+}
 
 const puckConfig: PuckConfig = {
   components: {
@@ -38,19 +44,108 @@ const puckConfig: PuckConfig = {
 
     ContentSection: {
       fields: {
-        title: { type: "text" },
-        text: { type: "textarea" },
+        columnsCount: {
+          type: "select",
+          options: [
+            { label: "1 Column (Full Width)", value: "1" },
+            { label: "2 Columns (Grid)", value: "2" },
+            { label: "3 Columns (Grid)", value: "3" },
+          ],
+        },
+
+        // Column 1
+        col1Size: {
+          type: "select",
+          options: [
+            { label: "Full Width (12/12)", value: "full" },
+            { label: "Half Width (6/12)", value: "half" },
+            { label: "One Third (4/12)", value: "oneThird" },
+            { label: "Two Thirds (8/12)", value: "twoThirds" },
+          ],
+        },
+        col1Title: { type: "text" },
+        col1Text: { type: "textarea" },
+
+        // Column 2
+        col2Size: {
+          type: "select",
+          options: [
+            { label: "Half Width (6/12)", value: "half" },
+            { label: "One Third (4/12)", value: "oneThird" },
+            { label: "Two Thirds (8/12)", value: "twoThirds" },
+            { label: "Full Width (12/12)", value: "full" },
+          ],
+        },
+        col2Title: { type: "text" },
+        col2Text: { type: "textarea" },
+
+        // Column 3
+        col3Size: {
+          type: "select",
+          options: [
+            { label: "One Third (4/12)", value: "oneThird" },
+            { label: "Half Width (6/12)", value: "half" },
+            { label: "Two Thirds (8/12)", value: "twoThirds" },
+            { label: "Full Width (12/12)", value: "full" },
+          ],
+        },
+        col3Title: { type: "text" },
+        col3Text: { type: "textarea" },
       },
       defaultProps: {
-        title: "About Our Neighborhood",
-        text: "The North of Grand neighborhood offers a harmonious blend of urban convenience and historic charm.",
+        columnsCount: "1",
+        col1Size: "full",
+        col1Title: "About Our Neighborhood",
+        col1Text: "The North of Grand neighborhood offers a harmonious blend of urban convenience and historic charm.",
+        col2Size: "half",
+        col2Title: "Community Projects",
+        col2Text: "We host Ingersoll Live and seasonal neighborhood cleanups.",
+        col3Size: "oneThird",
+        col3Title: "Local Support",
+        col3Text: "Partnering with local neighborhood businesses.",
       },
-      render: ({ title, text }) => (
-        <div className="theme-nog py-6 px-6 max-w-4xl mx-auto my-4 bg-white rounded-2xl border border-gray-100 shadow-sm">
-          {title && <h3 className="text-2xl font-serif text-[#42514c] font-bold mb-3">{title}</h3>}
-          <div className="text-base text-[#42514c] leading-relaxed whitespace-pre-line">{text}</div>
-        </div>
-      ),
+      render: ({
+        columnsCount,
+        col1Size,
+        col1Title,
+        col1Text,
+        col2Size,
+        col2Title,
+        col2Text,
+        col3Size,
+        col3Title,
+        col3Text,
+      }) => {
+        const count = parseInt(columnsCount || "1", 10)
+
+        return (
+          <div className="theme-nog py-6 px-6 max-w-5xl mx-auto my-4 bg-white rounded-2xl border border-gray-100 shadow-sm">
+            <div className="grid grid-cols-12 gap-6 items-start">
+              {/* Column 1 */}
+              <div className={`${colSpanMap[col1Size || "full"] || "col-span-12"}`}>
+                {col1Title && <h3 className="text-xl font-serif text-[#42514c] font-bold mb-2">{col1Title}</h3>}
+                <div className="text-base text-[#42514c] leading-relaxed whitespace-pre-line">{col1Text}</div>
+              </div>
+
+              {/* Column 2 */}
+              {count >= 2 && (
+                <div className={`${colSpanMap[col2Size || "half"] || "col-span-6"}`}>
+                  {col2Title && <h3 className="text-xl font-serif text-[#42514c] font-bold mb-2">{col2Title}</h3>}
+                  <div className="text-base text-[#42514c] leading-relaxed whitespace-pre-line">{col2Text}</div>
+                </div>
+              )}
+
+              {/* Column 3 */}
+              {count >= 3 && (
+                <div className={`${colSpanMap[col3Size || "oneThird"] || "col-span-4"}`}>
+                  {col3Title && <h3 className="text-xl font-serif text-[#42514c] font-bold mb-2">{col3Title}</h3>}
+                  <div className="text-base text-[#42514c] leading-relaxed whitespace-pre-line">{col3Text}</div>
+                </div>
+              )}
+            </div>
+          </div>
+        )
+      },
     },
 
     MediaSection: {
@@ -285,29 +380,30 @@ export function VisualBuilderClient({ tenantSlug }: { tenantSlug: string }) {
 
         if (block.blockType === "content") {
           if (block.columns && Array.isArray(block.columns)) {
+            const count = Math.min(block.columns.length, 3)
+            const contentProps: any = {
+              id: `${blockId}-content`,
+              columnsCount: String(count || 1),
+            }
+
             block.columns.forEach((col: any, cIdx: number) => {
+              if (cIdx >= 3) return
+              const colKey = `col${cIdx + 1}`
+              contentProps[`${colKey}Size`] = col.size || (cIdx === 0 ? "full" : "half")
+
               if (col.type === "media" && col.media) {
                 const mediaObj = typeof col.media === "object" ? col.media : null
-                generatedContent.push({
-                  type: "MediaSection",
-                  props: {
-                    id: `${blockId}-col-${cIdx}-media`,
-                    title: mediaObj?.alt || "Image Section",
-                    imageUrl: mediaObj?.url || "/media/nog/nog-board_orig-1.jpg",
-                    caption: mediaObj?.alt || "",
-                  },
-                })
+                contentProps[`${colKey}Title`] = mediaObj?.alt || "Image Column"
+                contentProps[`${colKey}Text`] = mediaObj?.url ? `![Image](${mediaObj.url})` : "Media Image"
               } else if (col.richText) {
-                const textContent = extractTextFromRichText(col.richText)
-                generatedContent.push({
-                  type: "ContentSection",
-                  props: {
-                    id: `${blockId}-col-${cIdx}-text`,
-                    title: col.title || (cIdx === 0 ? "About North of Grand" : "Our Mission"),
-                    text: textContent || "Community content section",
-                  },
-                })
+                contentProps[`${colKey}Title`] = col.title || (cIdx === 0 ? "About North of Grand" : "Our Mission")
+                contentProps[`${colKey}Text`] = extractTextFromRichText(col.richText)
               }
+            })
+
+            generatedContent.push({
+              type: "ContentSection",
+              props: contentProps,
             })
           }
         } else if (block.blockType === "slideshowBlock") {
@@ -358,8 +454,10 @@ export function VisualBuilderClient({ tenantSlug }: { tenantSlug: string }) {
         type: "ContentSection",
         props: {
           id: `default-${page.id}`,
-          title: page.title,
-          text: `Visual editing layout for ${page.title} (${page.slug})`,
+          columnsCount: "1",
+          col1Size: "full",
+          col1Title: page.title,
+          col1Text: `Visual editing layout for ${page.title} (${page.slug})`,
         },
       })
     }
@@ -411,7 +509,7 @@ export function VisualBuilderClient({ tenantSlug }: { tenantSlug: string }) {
             <span className="bg-emerald-500 text-slate-900 px-2 py-0.5 rounded text-xs uppercase font-extrabold">Visual Builder</span>
             Tenant: <span className="text-emerald-400">{tenantSlug || "nog"}</span>
           </h1>
-          <p className="text-xs text-slate-400">Click any block on the canvas to select and edit its text, images, and settings on the right panel.</p>
+          <p className="text-xs text-slate-400">Support 1, 2, or 3 column grid layouts with custom column spans (One Third, Half, Two Thirds, Full).</p>
         </div>
 
         <div className="flex items-center gap-3">
