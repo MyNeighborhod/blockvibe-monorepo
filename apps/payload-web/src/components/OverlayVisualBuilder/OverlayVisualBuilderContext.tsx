@@ -27,6 +27,7 @@ interface OverlayVisualBuilderContextType {
   
   // Actions
   updateBlockData: (index: number, newBlockData: Partial<PageBlock>) => void
+  updateBlockFieldPath: (index: number, fieldPath: string, value: any) => void
   moveBlock: (index: number, direction: "up" | "down") => void
   duplicateBlock: (index: number) => void
   deleteBlock: (index: number) => void
@@ -83,6 +84,28 @@ export const OverlayVisualBuilderProvider: React.FC<{
           ...newBlockData,
         } as PageBlock
       }
+      return next
+    })
+    setIsDirty(true)
+  }
+
+  const updateBlockFieldPath = (index: number, fieldPath: string, value: any) => {
+    setBlocks((prev) => {
+      const next = [...prev]
+      if (!next[index]) return prev
+
+      const clone = JSON.parse(JSON.stringify(next[index]))
+      const parts = fieldPath.split(".")
+      let curr = clone
+      for (let i = 0; i < parts.length - 1; i++) {
+        const part = parts[i]
+        if (!(part in curr)) {
+          curr[part] = {}
+        }
+        curr = curr[part]
+      }
+      curr[parts[parts.length - 1]] = value
+      next[index] = clone as PageBlock
       return next
     })
     setIsDirty(true)
@@ -216,6 +239,7 @@ export const OverlayVisualBuilderProvider: React.FC<{
         isSaving,
         saveMessage,
         updateBlockData,
+        updateBlockFieldPath,
         moveBlock,
         duplicateBlock,
         deleteBlock,
@@ -252,6 +276,7 @@ export const useOverlayVisualBuilder = () => {
       isSaving: false,
       saveMessage: null,
       updateBlockData: () => {},
+      updateBlockFieldPath: () => {},
       moveBlock: () => {},
       duplicateBlock: () => {},
       deleteBlock: () => {},
