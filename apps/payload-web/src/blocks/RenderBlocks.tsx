@@ -12,6 +12,7 @@ import { SlideshowBlock } from "@/blocks/SlideshowBlock/Component"
 import { FileListBlock } from "@/blocks/FileListBlock/Component"
 import { ContactBlock } from "@/blocks/ContactBlock/Component"
 import { PdfBlock } from "@/blocks/PdfBlock/Component"
+import { BlockOverlayWrapper } from "@/components/OverlayVisualBuilder"
 
 const blockComponents = {
   archive: ArchiveBlock,
@@ -44,15 +45,18 @@ export const RenderBlocks: React.FC<{
 
             if (Block) {
               return (
-                <div
-                  className="mb-12 last:mb-0"
-                  data-block-name={blockName || undefined}
+                <BlockOverlayWrapper
+                  key={id || `block-${index}`}
+                  index={index}
+                  blockType={blockType}
+                  blockName={blockName || undefined}
                   id={id ? `block-${id}` : undefined}
-                  key={index}
                 >
-                  {/* @ts-expect-error there may be some mismatch between the expected types here */}
-                  <Block {...block} path={`layout.${index}`} disableInnerContainer />
-                </div>
+                  <div className="mb-12 last:mb-0">
+                    {/* @ts-expect-error there may be some mismatch between the expected types here */}
+                    <Block {...block} path={`layout.${index}`} disableInnerContainer />
+                  </div>
+                </BlockOverlayWrapper>
               )
             }
           }

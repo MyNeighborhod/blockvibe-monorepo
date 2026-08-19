@@ -74,7 +74,7 @@ test.describe("Business Owner Dashboard Update Flow", () => {
         where: { email: { equals: testBizEmail } },
       })
       if (found.docs.length > 0) {
-        testBizSlug = found.docs[0].slug
+        testBizSlug = found.docs[0].slug || undefined
         await payload.update({
           collection: "businesses",
           id: found.docs[0].id,

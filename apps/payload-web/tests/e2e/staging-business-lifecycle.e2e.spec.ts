@@ -76,7 +76,7 @@ test.describe("Staging & Local Business Lifecycle (Pending Staging Area -> Admin
       })
 
       expect(found.docs.length).toBeGreaterThan(0)
-      createdSlug = found.docs[0].slug
+      createdSlug = found.docs[0].slug || undefined
       await payload.update({
         collection: "businesses",
         id: found.docs[0].id,
