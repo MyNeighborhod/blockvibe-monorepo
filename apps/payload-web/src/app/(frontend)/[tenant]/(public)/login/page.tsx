@@ -90,7 +90,8 @@ export default function LoginPage() {
       }
 
       const isStaff = user.role === "superadmin" || user.role === "admin" || user.role === "editor"
-      router.push(isStaff ? "/dashboard" : "/profile")
+      const isBusinessOwner = user.memberType === "business"
+      router.push(isBusinessOwner ? "/dashboard/my-business" : isStaff ? "/dashboard" : "/profile")
       router.refresh()
     } catch (err: any) {
       setError(err.message || "An unexpected error occurred. Please try again.")

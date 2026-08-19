@@ -165,8 +165,8 @@ ssh -i "$SSH_KEY" ubuntu@$IP "
 
   echo \"Warming up Next.js on port \$NEW_PORT...\"
   for i in \$(seq 1 30); do
-    STATUS=\$(curl -s -o /null -w '%{http_code}' http://127.0.0.1:\$NEW_PORT/ || true)
-    if [ \"\$STATUS\" -eq 200 ] || [ \"\$STATUS\" -eq 302 ]; then
+    STATUS=\$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:\$NEW_PORT/ || true)
+    if [ \"\$STATUS\" = \"200\" ] || [ \"\$STATUS\" = \"302\" ]; then
       echo \"✓ New instance on port \$NEW_PORT is healthy (HTTP \$STATUS)!\"
       break
     fi
@@ -174,11 +174,22 @@ ssh -i "$SSH_KEY" ubuntu@$IP "
   done
 
   echo \"Hot-swapping Caddy upstream to port \$NEW_PORT...\"
+  PROD_PORT=\$(sudo grep -oP '(?<=reverse_proxy 127\\.0\\.0\\.1:)\\d+' /etc/caddy/Caddyfile 2>/dev/null | head -n1 || echo \"3000\")
+  STAGING_PORT=\$(sudo grep -oP '(?<=reverse_proxy 127\\.0\\.0\\.1:)\\d+' /etc/caddy/Caddyfile 2>/dev/null | tail -n1 || echo \"3002\")
+
   sudo cp /tmp/Caddyfile /etc/caddy/Caddyfile
-  if [ \"\$STAGING\" -eq 1 ]; then
-    sudo sed -i \"s/127.0.0.1:3002/127.0.0.1:\$NEW_PORT/g\" /etc/caddy/Caddyfile
+
+  # Restore active ports prior to applying new target port
+  sudo perl -i -0pe 's/(^blockvibe\\.org[\\s\\S]*?reverse_proxy )127\\.0\\.0\\.1:\\d+/\${1}127.0.0.1:'"\$PROD_PORT"'/ms' /etc/caddy/Caddyfile
+  sudo perl -i -0pe 's/(staging\\.blockvibe\\.org[\\s\\S]*?reverse_proxy )127\\.0\\.0\\.1:\\d+/\${1}127.0.0.1:'"\$STAGING_PORT"'/s' /etc/caddy/Caddyfile
+
+  # STAGING expands on the deploy host (0|1), not on EC2.
+  if [ \"$STAGING\" -eq 1 ]; then
+    # Scope rewrite to the staging site block only (never retarget production).
+    sudo perl -i -0pe 's/(staging\\.blockvibe\\.org[\\s\\S]*?reverse_proxy )127\\.0\\.0\\.1:\\d+/\${1}127.0.0.1:'"\$NEW_PORT"'/s' /etc/caddy/Caddyfile
   else
-    sudo sed -i \"s/127.0.0.1:3000/127.0.0.1:\$NEW_PORT/g\" /etc/caddy/Caddyfile
+    # Scope rewrite to the production site block only.
+    sudo perl -i -0pe 's/(^blockvibe\\.org[\\s\\S]*?reverse_proxy )127\\.0\\.0\\.1:\\d+/\${1}127.0.0.1:'"\$NEW_PORT"'/ms' /etc/caddy/Caddyfile
   fi
   sudo systemctl reload caddy
 

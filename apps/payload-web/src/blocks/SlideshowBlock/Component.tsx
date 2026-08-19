@@ -103,9 +103,9 @@ export const SlideshowBlock: React.FC<SlideshowBlockType> = ({ media, images }) 
   }
 
   return (
-    <div className="my-8 w-full">
+    <div className="container my-8">
       <div
-        className="relative w-full h-[320px] sm:h-[400px] md:h-[500px] bg-slate-900 rounded-2xl overflow-hidden shadow-lg group select-none touch-pan-y"
+        className="relative w-full h-[320px] sm:h-[400px] md:h-[500px] bg-transparent rounded-2xl overflow-hidden group select-none touch-pan-y"
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
@@ -122,20 +122,12 @@ export const SlideshowBlock: React.FC<SlideshowBlockType> = ({ media, images }) 
                 index === slideIndex ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
               }`}
             >
-              {/* Blurred background layer for aesthetic container filling */}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={url || ""}
-                alt=""
-                className="absolute inset-0 w-full h-full object-cover blur-xl opacity-35 scale-110 pointer-events-none"
-                aria-hidden="true"
-              />
               {/* Main uncropped full image */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={url || ""}
                 alt={alt}
-                className="relative max-w-full max-h-full object-contain z-10 rounded-lg drop-shadow-md"
+                className="relative max-w-full max-h-full object-contain z-10 rounded-xl"
               />
             </div>
           )
@@ -146,14 +138,14 @@ export const SlideshowBlock: React.FC<SlideshowBlockType> = ({ media, images }) 
           <>
             <button
               onClick={handlePrev}
-              className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/40 hover:bg-black/70 text-white flex items-center justify-center backdrop-blur-sm transition-all sm:opacity-0 sm:group-hover:opacity-100 focus:outline-none"
+              className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center backdrop-blur-sm transition-all sm:opacity-0 sm:group-hover:opacity-100 focus:outline-none shadow-md"
               aria-label="Previous slide"
             >
               <ChevronLeft className="w-6 h-6" />
             </button>
             <button
               onClick={handleNext}
-              className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/40 hover:bg-black/70 text-white flex items-center justify-center backdrop-blur-sm transition-all sm:opacity-0 sm:group-hover:opacity-100 focus:outline-none"
+              className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center backdrop-blur-sm transition-all sm:opacity-0 sm:group-hover:opacity-100 focus:outline-none shadow-md"
               aria-label="Next slide"
             >
               <ChevronRight className="w-6 h-6" />
@@ -163,7 +155,7 @@ export const SlideshowBlock: React.FC<SlideshowBlockType> = ({ media, images }) 
 
         {/* Slide Indicators / Dots */}
         {count > 1 && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-20 bg-black/30 backdrop-blur-md px-3 py-1.5 rounded-full">
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-20 bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-full shadow-md">
             {mediaList.map((media, index) => {
               return (
                 <button

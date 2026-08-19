@@ -3,6 +3,7 @@
 import { getPayload } from "payload"
 import configPromise from "@payload-config"
 import { headers } from "next/headers"
+import { revalidatePath } from "next/cache"
 import crypto from "crypto"
 import { getMeUser } from "@/utilities/getMeUser"
 import { getUserTenantIds } from "@/access/roles"
@@ -189,8 +190,13 @@ export async function getResidentsAction(
     }
 
     if (type && type !== "all") {
-      whereQuery.memberType = {
-        equals: type,
+      if (type.startsWith("tag:")) {
+        const tagName = type.replace("tag:", "").trim()
+        whereQuery["customAttributes.tags"] = { contains: tagName }
+      } else {
+        whereQuery.memberType = {
+          equals: type,
+        }
       }
     }
 
@@ -221,6 +227,11 @@ export async function getResidentsAction(
         isNeighbor: (doc as any).isNeighbor,
         household: (doc as any).household,
         memberType: (doc as any).memberType || "residential",
+        tags: Array.isArray((doc as any).customAttributes?.tags)
+          ? (doc as any).customAttributes.tags
+          : Array.isArray((doc as any).tags)
+          ? (doc as any).tags
+          : [],
         customAttributes: (doc as any).customAttributes,
         unsubscribed: doc.unsubscribed,
       })),
@@ -240,6 +251,7 @@ export async function updateResidentAction(
     name?: string
     memberType?: "residential" | "business" | "other"
     household?: string
+    tags?: string[]
     customAttributes?: any
   }
 ) {
@@ -275,7 +287,16 @@ export async function updateResidentAction(
         name: data.name,
         memberType: data.memberType,
         household: data.household,
-        customAttributes: data.customAttributes,
+        customAttributes: {
+          ...((typeof targetUser.customAttributes === "object" &&
+            targetUser.customAttributes !== null
+            ? targetUser.customAttributes
+            : {}) as Record<string, unknown>),
+          ...((typeof data.customAttributes === "object" && data.customAttributes !== null
+            ? data.customAttributes
+            : {}) as Record<string, unknown>),
+          tags: data.tags || [],
+        },
       },
     })
 
@@ -624,6 +645,8 @@ export async function toggleBusinessNOGAction(
         appearOnNOG: appear,
       },
     })
+
+    revalidatePath("/businesses")
 
     return {
       success: true,

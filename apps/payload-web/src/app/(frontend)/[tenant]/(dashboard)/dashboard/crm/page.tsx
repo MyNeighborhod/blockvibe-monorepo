@@ -92,6 +92,7 @@ export default async function CRMDashboard({ params }: Args) {
         initialFields={fields as any}
         initialLists={lists as any}
         initialBusinesses={initialBusinesses as any}
+        directoryEnabled={Boolean((tenant as any).enableBusinessDirectory)}
       />
     </div>
   )
