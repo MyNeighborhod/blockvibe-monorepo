@@ -1,31 +1,33 @@
 # Local Businesses Directory & CRM Integration
 
+> **Canonical feature doc:** [business_directory_feature.md](./business_directory_feature.md) — Enable Directory, configurable fields, CRM sync, passwords, mermaid design.  
+> **CRM groups:** [crm_groups_and_segmentation.md](./crm_groups_and_segmentation.md) — Member Type, tags/attributes, mailing lists.
+
 This feature adds a tenant-specific **Local Businesses Directory**, a public **Self-Registration Intake Form**, and integrates them with the **CRM Admin Dashboard** and **Email Broadcaster**.
 
-## 🚨 HIGHEST PRIORITY TODO: Business Directory Redesign (The Avenues DSM Style)
-> **Feedback from Lu:** *"I would like to be able to include an image of the business, logo, etc. as well as location, contact info, and a link to their website. The Avenues site is a good example. It doesn't have to be that elaborate. https://www.theavenuesdsm.com/businesses/ ---- next task will be to implement that similar look and feel."*
->
-> **Requirements to Implement:**
-> - [ ] **Rich Visual Directory Cards:** Hero image / cover photo support alongside the uploaded business logo (e.g. "world" logo).
-> - [ ] **Full Location & Contact Info:** Street address, Google Maps direction link, phone number, email contact button, operating hours, and website link button.
-> - [ ] **Category Filtering Pills:** Filter businesses by category (Dining & Drinks, Retail & Shopping, Professional Services, Non-Profit, Health & Wellness, etc.).
-> - [ ] **Business Detail View:** Clickable cards opening a dedicated business detail view / modal featuring full description, photo gallery, map, and social links.
+## Status: Business Directory redesign (NOG-first)
 
----
+Implemented as a **tenant feature flag** (`enableBusinessDirectory`) with:
 
-## 1. Architectural Overview
+- Image-forward cards (cover + logo), category filter pills, sort, infinite scroll (10 per page)
+- Dedicated detail pages at `/businesses/[slug]`
+- Configurable core fields + custom `directory-fields`
+- Tenant-scoped `business-categories`
+- NOG visual language (teal accent, serif titles) inspired by — not copied from — [The Avenues](https://www.theavenuesdsm.com/businesses/)
 
-The integration follows a registration-approval-broadcasting pipeline:
+**Admin how-to** (Settings, CRM approval, Payload edit, owner My Business): see [business_directory_feature.md — How admins edit the directory](./business_directory_feature.md#how-admins-edit-the-directory).
+
+## Architectural Overview
 
 ```mermaid
 flowchart TD
     User[Public User] -->|Intake Form| Register[registerBusinessAction]
-    Register -->|1. Create Logo| MediaCollection[Media Collection]
+    Register -->|1. Create Logo/Cover| MediaCollection[Media Collection]
     Register -->|2. Create Business| BusinessCollection[Businesses Collection]
     Register -->|3. Create CRM Contact| UserCollection[Users Collection: memberType=business]
     
     Admin[Admin User] -->|CRM Dashboard| CRMTab[Local Businesses Tab]
-    CRMTab -->|Approve / Toggle NOG| BusinessCollection
+    CRMTab -->|Approve / Toggle| BusinessCollection
     
     BusinessCollection -->|appearOnNOG = true| PublicPage[Public Businesses Page]
     
@@ -34,41 +36,13 @@ flowchart TD
     ListFilter -->|Auto-selects emails| Broadcaster
 ```
 
----
+## Collections
 
-## 2. Technical Implementation Details
+1. **`businesses`** — profiles: name, logo, coverImage, address, phone, email, website, hours, about, categories, socials, customAttributes, appearOnNOG (Appear in Directory).
+2. **`business-categories`** — filter pills (tenant-scoped).
+3. **`directory-fields`** — custom field definitions (tenant-scoped).
+4. **`tenants.enableBusinessDirectory` + `directorySettings`** — feature toggle and field matrix.
 
-### Database Collections Configurations
-1.  **`Businesses` Collection (`src/collections/Businesses.ts`):** 
-    Stores business profiles. Scoped per-tenant. Key fields:
-    *   `logo`: Relationship to `media` collection.
-    *   `name`, `address`, `website`, `email`, `about`, `hours`.
-    *   `appearOnNOG`: Checkbox determining public directory visibility.
-2.  **`Users` Collection Extensions (`src/collections/Users/index.ts`):**
-    *   `memberType`: Dropdown option to segment contacts (`residential`, `business`, `other`).
-    *   `customAttributes`: Dynamic JSON attributes for custom tagging.
-3.  **`Media` Collection Scoping:** Scoped to multi-tenant to isolate business logos per community.
+## Testing
 
-### Backend Integrations & Server Actions
-*   **`registerBusinessAction`:** Decodes base64 logo files sent from the frontend client, uploads them to the `media` collection, registers the business in the `businesses` collection, and upserts a corresponding CRM contact in `users` with `memberType = "business"` and `status = "approved"`.
-*   **`getBusinessesAction`:** Queries businesses per tenant. Publicly filters by `appearOnNOG = true` to hide unapproved submissions.
-*   **`getCRMBusinessesAction` & `toggleBusinessNOGAction`:** Handles admin panel directory viewing and approval toggles.
-
-### Frontend Components
-*   **Businesses Directory page (`[tenant]/businesses`):** Public route rendering a grid of registered, approved businesses. Includes an "Add Your Business" button opening the intake form modal.
-*   **Intake Form Modal:** A self-contained modal collecting details, converting uploaded files to base64, performing validations, and executing the server actions.
-*   **CRM Admin Dashboard (`CRMTabs.tsx`):** Added a **"Local Businesses"** tab listing all submissions under the tenant. Allows admins to review data, check/toggle approval (`Appear on NOG`), and delete entries.
-*   **Broadcaster Selection:** Dynamic list rules compile via `compileRulesToQuery` to match `memberType = "business"`, automatically checking matching business contacts in the Email Broadcaster interface.
-
----
-
-## 3. Testing & E2E Validation
-
-Playwright E2E browser tests are located in [tests/e2e/businesses-directory.e2e.spec.ts](file:///Users/eugen/dev/blockvibe/blockvibe-monorepo/apps/payload-web/tests/e2e/businesses-directory.e2e.spec.ts). The test verifies:
-1.  Registration of a business through the public form.
-2.  Page reloading to verify it is hidden publicly by default.
-3.  Logging in as NOG admin, opening the "Local Businesses" CRM tab, and checking the approval toggle.
-4.  Verification of public visibility on the businesses page.
-5.  Creating a dynamic mailing list in CRM matching `memberType = business` and checking the eval list preview.
-6.  Broadcaster list selection auto-checking the registered business email, composing a broadcast, and verifying the successful delivery trigger.
-7.  Clean database teardown of all test logs, fields, users, and media.
+Playwright: `tests/e2e/businesses-directory.e2e.spec.ts` (requires Directory enabled for NOG).

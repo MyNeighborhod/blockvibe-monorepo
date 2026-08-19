@@ -18,6 +18,7 @@ type HeaderNavProps = {
   logoUrl?: string | null
   tenantName?: string
   overDarkHero?: boolean
+  showDirectoryLink?: boolean
 }
 
 export const HeaderNav: React.FC<HeaderNavProps> = ({
@@ -26,11 +27,19 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
   logoUrl,
   tenantName,
   overDarkHero = false,
+  showDirectoryLink = false,
 }) => {
   const navItems = data?.navItems || []
   const isNog = variant === "nog"
   const pathname = usePathname()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+
+  const hasBusinessesLink = navItems.some((item) => {
+    const link = item?.link as any
+    const url = link?.url || ""
+    const label = (link?.label || "").toLowerCase()
+    return url.includes("/businesses") || label.includes("business")
+  })
 
   useEffect(() => {
     setIsMenuOpen(false)
@@ -58,43 +67,58 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
     }
   }, [isMenuOpen])
 
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<any | undefined>(undefined)
 
   useEffect(() => {
-    fetch("/api/users/me")
+    let cancelled = false
+    fetch("/api/users/me", { credentials: "include" })
       .then((res) => res.json())
       .then((data) => {
-        if (data?.user) setUser(data.user)
+        if (!cancelled) setUser(data?.user ?? null)
       })
-      .catch(() => { })
+      .catch(() => {
+        if (!cancelled) setUser(null)
+      })
+    return () => {
+      cancelled = true
+    }
   }, [pathname])
 
-  const authButton = user ? (
-    <Link
-      href="/dashboard"
-      className={cn(
-        "nav-link inline-flex items-center gap-1.5 font-bold tracking-wider text-[11px] uppercase transition-all",
-        isNog ? "text-[#484848] hover:text-indigo-600" : "text-primary"
-      )}
-    >
-      <span className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold">
-        {user.name ? user.name[0].toUpperCase() : user.email[0].toUpperCase()}
-      </span>
-      <span>MY DASHBOARD</span>
-    </Link>
-  ) : (
-    <Link
-      href="/login"
-      className={cn(
-        "nav-link inline-flex items-center gap-1 font-bold tracking-wider text-[11px] uppercase px-3 py-1.5 rounded-lg border transition-all",
-        isNog
-          ? "border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
-          : "border-primary text-primary"
-      )}
-    >
-      <span>LOGIN / SIGN UP</span>
-    </Link>
-  )
+  const authButton =
+    user === undefined ? (
+      <span
+        className={cn(
+          "inline-block h-7 w-28 rounded-lg animate-pulse",
+          isNog ? "bg-slate-200/80" : "bg-muted",
+        )}
+        aria-hidden
+      />
+    ) : user ? (
+      <Link
+        href="/dashboard"
+        className={cn(
+          "nav-link inline-flex items-center gap-1.5 font-bold tracking-wider text-[11px] uppercase transition-all",
+          isNog ? "text-[#484848] hover:text-indigo-600" : "text-primary",
+        )}
+      >
+        <span className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold">
+          {user.name ? user.name[0].toUpperCase() : user.email[0].toUpperCase()}
+        </span>
+        <span>MY DASHBOARD</span>
+      </Link>
+    ) : (
+      <Link
+        href="/login"
+        className={cn(
+          "nav-link inline-flex items-center gap-1 font-bold tracking-wider text-[11px] uppercase px-3 py-1.5 rounded-lg border transition-all",
+          isNog
+            ? "border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+            : "border-primary text-primary",
+        )}
+      >
+        <span>LOGIN / SIGN UP</span>
+      </Link>
+    )
 
   const links = [
     ...navItems.map(({ link }, i) =>
@@ -107,6 +131,28 @@ export const HeaderNav: React.FC<HeaderNavProps> = ({
       ),
     ),
   ]
+
+  if (showDirectoryLink && !hasBusinessesLink) {
+    if (isNog) {
+      links.push(
+        <li key="directory-nav">
+          <Link
+            href="/businesses"
+            className="nav-link"
+            aria-current={pathname?.includes("/businesses") ? "page" : undefined}
+          >
+            BUSINESSES
+          </Link>
+        </li>,
+      )
+    } else {
+      links.push(
+        <Link key="directory-nav" href="/businesses" className="text-primary">
+          Businesses
+        </Link>,
+      )
+    }
+  }
 
   const search = (
     <Link href="/search" className="nav-search shrink-0" aria-label="Search">

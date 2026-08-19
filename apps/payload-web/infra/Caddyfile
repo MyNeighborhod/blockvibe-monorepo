@@ -7,7 +7,7 @@ blockvibe.org, nog.blockvibe.org, beaverdale.blockvibe.org, oakwood.blockvibe.or
 	}
 
 	handle {
-		reverse_proxy 127.0.0.1:3000
+		reverse_proxy 127.0.0.1:3001
 	}
 }
 

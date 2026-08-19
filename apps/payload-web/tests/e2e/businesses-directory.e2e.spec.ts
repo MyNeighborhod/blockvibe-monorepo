@@ -12,9 +12,9 @@ test.describe("Business Directory & CRM Broadcaster E2E Flow", () => {
   const testEmail = "eugen8@gmail.com"
   const mockLogoPath = path.join("/tmp", "test-logo.png")
 
-  test.beforeAll(({ baseURL }) => {
+  test.beforeAll(async ({ baseURL }) => {
     nogBaseURL = getTenantURL(baseURL || "http://localhost:3000", "nog")
-    
+
     // Create mock logo image
     fs.writeFileSync(
       mockLogoPath,
@@ -23,6 +23,36 @@ test.describe("Business Directory & CRM Broadcaster E2E Flow", () => {
         "base64",
       ),
     )
+
+    if (isLocal) {
+      const payload = await getPayload({ config })
+      const tenants = await payload.find({
+        collection: "tenants",
+        where: { or: [{ slug: { equals: "nog" } }, { slug: { equals: "default" } }] },
+        limit: 5,
+      })
+      const nog =
+        tenants.docs.find((t) => t.slug === "nog") ||
+        tenants.docs.find((t) => t.slug === "default") ||
+        tenants.docs[0]
+      if (nog) {
+        const { DEFAULT_DIRECTORY_FIELD_CONFIG } = await import("../../src/directory/constants")
+        await payload.update({
+          collection: "tenants",
+          id: nog.id,
+          data: {
+            enableBusinessDirectory: true,
+            directorySettings: {
+              pageTitle: "Businesses of North Of Grand",
+              pageIntro: "Support local.",
+              allowPublicRegistration: true,
+              showInNav: true,
+              fieldConfig: DEFAULT_DIRECTORY_FIELD_CONFIG,
+            },
+          },
+        })
+      }
+    }
   })
 
   test.afterAll(async () => {
@@ -97,15 +127,15 @@ test.describe("Business Directory & CRM Broadcaster E2E Flow", () => {
     const page = await context.newPage()
 
     // 1. Visit Businesses Directory Page (Public)
-    await page.goto("/businesses")
+    await page.goto(`${nogBaseURL}/businesses`)
     await expect(page.locator("h1:has-text('Businesses of North Of Grand')")).toBeVisible()
 
     // 2. Open Registration Modal
-    await page.click("button:has-text('Add Your Business')")
-    await expect(page.locator("h2:has-text('Add Your Business')")).toBeVisible()
+    await page.click("button:has-text('Add your business')")
+    await expect(page.locator("h2:has-text('Add your business')")).toBeVisible()
 
     // 3. Fill out Registration Form
-    await page.setInputFiles("input[type='file']", mockLogoPath)
+    await page.setInputFiles("input#logo", mockLogoPath)
     await page.fill("input[id='name']", "Green Meadows Cafe")
     await page.fill("input[id='address']", "123 Grand Ave, Des Moines, IA")
     await page.fill("input[id='website']", "https://greenmeadowscafe.com")
@@ -117,7 +147,7 @@ test.describe("Business Directory & CRM Broadcaster E2E Flow", () => {
     await page.click("button[type='submit']")
 
     // Verify Success Message
-    await expect(page.locator("text=/successfully/i")).toBeVisible()
+    await expect(page.locator("text=/submitted|approval/i")).toBeVisible()
     await page.waitForTimeout(2500) // wait for modal auto-close
     
     // Reload the page to clear local state and verify it is not visible without admin approval
@@ -134,7 +164,7 @@ test.describe("Business Directory & CRM Broadcaster E2E Flow", () => {
     // Auto-accept confirmation dialogs for UI cleanup
     page.on("dialog", (dialog) => dialog.accept())
 
-    await page.goto("/login")
+    await page.goto(`${nogBaseURL}/login`)
     await page.fill("input[type='email']", adminEmail)
     await page.fill("input[type='password']", adminPassword)
     await page.click("button[type='submit']")
@@ -145,20 +175,20 @@ test.describe("Business Directory & CRM Broadcaster E2E Flow", () => {
     await page.waitForURL("**/dashboard/crm")
     await page.click("button:has-text('Local Businesses')")
     
-    // Find the new business row and toggle the checkbox to approve it
-    const approveToggle = page.locator("tr:has-text('Green Meadows Cafe') input.crm-business-approval-toggle").first()
+    const row = page.locator("tr:has-text('Green Meadows Cafe')")
+    const approveToggle = row.locator("input.crm-business-approval-toggle").first()
     await expect(approveToggle).toBeVisible()
     if (!(await approveToggle.isChecked())) {
       await approveToggle.click()
-      await expect(approveToggle).toBeChecked()
     }
+    await expect(row.getByText(/Approved/i)).toBeVisible({ timeout: 10000 })
 
     // 6. Verify that it is now visible publicly
-    await page.goto("/businesses")
+    await page.goto(`${nogBaseURL}/businesses`)
     await expect(page.locator("h3:has-text('Green Meadows Cafe')").first()).toBeVisible()
 
     // 7. Go back to CRM and Create Mailing List
-    await page.goto("/dashboard/crm")
+    await page.goto(`${nogBaseURL}/dashboard/crm`)
     await page.click("button:has-text('Mailing Lists')")
 
     // Pre-clean mailing list if already exists

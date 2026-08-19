@@ -55,6 +55,7 @@ interface Resident {
   isNeighbor?: boolean | null
   household?: string | null
   memberType: "residential" | "business" | "other"
+  tags?: string[]
   customAttributes?: any | null
   unsubscribed?: boolean | null
 }
@@ -64,10 +65,19 @@ interface CRMTabsProps {
   initialFields: CRMField[]
   initialLists: MailingList[]
   initialBusinesses: any[]
+  directoryEnabled?: boolean
 }
 
-export function CRMTabs({ tenantId, initialFields, initialLists, initialBusinesses }: CRMTabsProps) {
-  const [activeTab, setActiveTab] = useState<"directory" | "lists" | "fields" | "businesses">("directory")
+export function CRMTabs({
+  tenantId,
+  initialFields,
+  initialLists,
+  initialBusinesses,
+  directoryEnabled = false,
+}: CRMTabsProps) {
+  const [activeTab, setActiveTab] = useState<"directory" | "lists" | "fields" | "businesses">(
+    "directory",
+  )
 
   // --- Businesses State ---
   const [businesses, setBusinesses] = useState<any[]>(initialBusinesses)
@@ -104,6 +114,8 @@ export function CRMTabs({ tenantId, initialFields, initialLists, initialBusiness
   const [residentName, setResidentName] = useState("")
   const [residentMemberType, setResidentMemberType] = useState<"residential" | "business" | "other">("residential")
   const [residentHousehold, setResidentHousehold] = useState("")
+  const [residentTags, setResidentTags] = useState<string[]>([])
+  const [newTagInput, setNewTagInput] = useState("")
   const [residentCustomAttrs, setResidentCustomAttrs] = useState<Record<string, any>>({})
 
   // Load residents based on filters
@@ -234,8 +246,25 @@ export function CRMTabs({ tenantId, initialFields, initialLists, initialBusiness
     setResidentName(resident.name || "")
     setResidentMemberType(resident.memberType)
     setResidentHousehold(resident.household || "")
+    setResidentTags(resident.tags || [])
+    setNewTagInput("")
     setResidentCustomAttrs(resident.customAttributes || {})
     setIsResidentModalOpen(true)
+  }
+
+  const handleToggleTag = (tag: string) => {
+    setResidentTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+    )
+  }
+
+  const handleAddCustomTag = () => {
+    const trimmed = newTagInput.trim()
+    if (!trimmed) return
+    if (!residentTags.includes(trimmed)) {
+      setResidentTags((prev) => [...prev, trimmed])
+    }
+    setNewTagInput("")
   }
 
   const handleSaveResident = async (e: React.FormEvent) => {
@@ -246,6 +275,7 @@ export function CRMTabs({ tenantId, initialFields, initialLists, initialBusiness
       name: residentName,
       memberType: residentMemberType,
       household: residentHousehold,
+      tags: residentTags,
       customAttributes: residentCustomAttrs,
     })
 
@@ -396,16 +426,18 @@ export function CRMTabs({ tenantId, initialFields, initialLists, initialBusiness
         >
           Custom Attributes
         </button>
-        <button
-          onClick={() => setActiveTab("businesses")}
-          className={`px-4 py-2 font-medium text-sm border-b-2 -mb-px transition-colors ${
-            activeTab === "businesses"
-              ? "border-primary text-primary"
-              : "border-transparent text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          Local Businesses
-        </button>
+        {directoryEnabled && (
+          <button
+            onClick={() => setActiveTab("businesses")}
+            className={`px-4 py-2 font-medium text-sm border-b-2 -mb-px transition-colors ${
+              activeTab === "businesses"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Local Businesses
+          </button>
+        )}
       </div>
 
       {/* --- TAB 1: DIRECTORY --- */}
@@ -414,7 +446,9 @@ export function CRMTabs({ tenantId, initialFields, initialLists, initialBusiness
           <CardHeader>
             <CardTitle className="font-sans text-xl">Directory List</CardTitle>
             <CardDescription>
-              View and manage your neighborhood members, business registrations, and tags.
+              View and manage neighborhood contacts. Filter by Member Type (Residential / Business) or
+              by tags (Landlords, Tenants, Homeowners). Business directory approvals sync emails here
+              automatically.
             </CardDescription>
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pt-2">
               <Input
@@ -440,9 +474,41 @@ export function CRMTabs({ tenantId, initialFields, initialLists, initialBusiness
                   <option value="all">All Members</option>
                   <option value="residential">Residential Members</option>
                   <option value="business">Business Members</option>
+                  <option value="tag:Landlord">Landlords</option>
+                  <option value="tag:Tenant">Tenants</option>
+                  <option value="tag:Homeowner Resident">Homeowners</option>
                   <option value="other">Other</option>
                 </select>
               </div>
+            </div>
+
+            {/* Quick Filter Chips Bar */}
+            <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-border/20">
+              <span className="text-xs font-semibold text-muted-foreground mr-1">Quick Group Filter:</span>
+              {[
+                { label: "All Members", value: "all" },
+                { label: "Residents", value: "residential" },
+                { label: "Businesses", value: "business" },
+                { label: "Landlords", value: "tag:Landlord" },
+                { label: "Tenants", value: "tag:Tenant" },
+                { label: "Homeowners", value: "tag:Homeowner Resident" },
+              ].map((chip) => (
+                <button
+                  key={chip.value}
+                  type="button"
+                  onClick={() => {
+                    setTypeFilter(chip.value)
+                    setPage(1)
+                  }}
+                  className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                    typeFilter === chip.value
+                      ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                      : "bg-background text-muted-foreground hover:text-foreground border-border hover:bg-muted/50"
+                  }`}
+                >
+                  {chip.label}
+                </button>
+              ))}
             </div>
           </CardHeader>
           <CardContent className="p-0">
@@ -453,6 +519,7 @@ export function CRMTabs({ tenantId, initialFields, initialLists, initialBusiness
                     <th className="p-4">Name</th>
                     <th className="p-4">Email</th>
                     <th className="p-4">Type</th>
+                    <th className="p-4">Groups / Tags</th>
                     <th className="p-4">Household</th>
                     <th className="p-4">Status</th>
                     <th className="p-4 text-right">Actions</th>
@@ -461,13 +528,13 @@ export function CRMTabs({ tenantId, initialFields, initialLists, initialBusiness
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan={6} className="p-8 text-center text-muted-foreground">
+                      <td colSpan={7} className="p-8 text-center text-muted-foreground">
                         Loading directory...
                       </td>
                     </tr>
                   ) : residents.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="p-8 text-center text-muted-foreground">
+                      <td colSpan={7} className="p-8 text-center text-muted-foreground">
                         No members found.
                       </td>
                     </tr>
@@ -493,6 +560,30 @@ export function CRMTabs({ tenantId, initialFields, initialLists, initialBusiness
                           }`}>
                             {r.memberType}
                           </span>
+                        </td>
+                        <td className="p-4">
+                          <div className="flex flex-wrap gap-1">
+                            {r.tags && r.tags.length > 0 ? (
+                              r.tags.map((tag) => (
+                                <span
+                                  key={tag}
+                                  className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border ${
+                                    tag.toLowerCase().includes("landlord")
+                                      ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20"
+                                      : tag.toLowerCase().includes("tenant")
+                                      ? "bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/20"
+                                      : tag.toLowerCase().includes("homeowner")
+                                      ? "bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 border-cyan-500/20"
+                                      : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border-slate-300 dark:border-slate-700"
+                                  }`}
+                                >
+                                  {tag}
+                                </span>
+                              ))
+                            ) : (
+                              <span className="text-xs text-muted-foreground/60 italic">—</span>
+                            )}
+                          </div>
                         </td>
                         <td className="p-4 text-muted-foreground">{r.household || "N/A"}</td>
                         <td className="p-4 capitalize">
@@ -545,6 +636,27 @@ export function CRMTabs({ tenantId, initialFields, initialLists, initialBusiness
       {/* --- TAB 2: MAILING LISTS --- */}
       {activeTab === "lists" && (
         <div className="space-y-6">
+          <Card className="border-border/50 bg-muted/20">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base font-sans">How groups work</CardTitle>
+              <CardDescription className="text-sm leading-relaxed space-y-2">
+                <span className="block">
+                  <strong className="text-foreground">Member Type</strong> is the built-in bucket:
+                  Residential, Business, or Other (filter on the Directory tab).
+                </span>
+                <span className="block">
+                  <strong className="text-foreground">Tags / Custom Attributes</strong> let you define
+                  admin groups (e.g. Landlord, Tenant, Homeowner) on each contact.
+                </span>
+                <span className="block">
+                  <strong className="text-foreground">Mailing Lists</strong> are what you email.
+                  Use a <em>dynamic</em> list with rules — for example{" "}
+                  <code className="text-xs">memberType equals business</code> (Approved Businesses) or{" "}
+                  <code className="text-xs">Resident Category equals Landlord</code>.
+                </span>
+              </CardDescription>
+            </CardHeader>
+          </Card>
           <div className="flex justify-end">
             <Button onClick={handleOpenAddList}>Create Mailing List</Button>
           </div>
@@ -616,8 +728,11 @@ export function CRMTabs({ tenantId, initialFields, initialLists, initialBusiness
           <Card className="backdrop-blur-md bg-card/60 border border-border/40">
             <CardHeader>
               <CardTitle className="font-sans text-xl">CRM Fields Schema</CardTitle>
-              <CardDescription>
-                Define new custom properties for contacts in this neighborhood (e.g. membership tiers, tags).
+              <CardDescription className="leading-relaxed">
+                Define custom properties for contacts (e.g. Resident Category: Landlord / Tenant /
+                Homeowner). Pair them with <strong>dynamic mailing lists</strong> to build
+                admin-defined groups without code changes. Directory enablement seeds a{" "}
+                <strong>Resident Category</strong> field when missing.
               </CardDescription>
             </CardHeader>
             <CardContent className="p-0">
@@ -668,13 +783,16 @@ export function CRMTabs({ tenantId, initialFields, initialLists, initialBusiness
       )}
 
       {/* --- TAB 4: LOCAL BUSINESSES --- */}
-      {activeTab === "businesses" && (
+      {directoryEnabled && activeTab === "businesses" && (
         <div className="space-y-6">
           <Card className="backdrop-blur-md bg-card/60 border border-border/40">
             <CardHeader>
               <CardTitle className="font-sans text-xl">Local Businesses Directory</CardTitle>
               <CardDescription>
-                Review and manage local businesses registered under this neighborhood. Toggle approval to control whether they show up in the public directory list.
+                Approve listings for the public directory. Approving syncs the business email into CRM
+                as Member Type = business, adds them to the <strong>Approved Businesses</strong>{" "}
+                mailing list (dynamic), and emails the owner how to set a password (Forgot password or
+                My Business).
               </CardDescription>
             </CardHeader>
             <CardContent className="p-0">
@@ -687,7 +805,7 @@ export function CRMTabs({ tenantId, initialFields, initialLists, initialBusiness
                     <th className="p-4">Address</th>
                     <th className="p-4">Website</th>
                     <th className="p-4">Hours</th>
-                    <th className="p-4">Appear on NOG</th>
+                    <th className="p-4">Appear in Directory</th>
                     <th className="p-4 text-right">Actions</th>
                   </tr>
                 </thead>
@@ -802,6 +920,79 @@ export function CRMTabs({ tenantId, initialFields, initialLists, initialBusiness
                     value={residentHousehold}
                     onChange={(e) => setResidentHousehold(e.target.value)}
                   />
+                </div>
+
+                {/* GROUP TAGS & SEGMENTATION */}
+                <div className="space-y-2 border-t border-border/40 pt-4 mt-2">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    Groups & Segment Tags
+                  </Label>
+                  <div className="flex flex-wrap gap-2">
+                    {["Landlord", "Tenant", "Homeowner Resident", "HOA Board", "Volunteer"].map((presetTag) => {
+                      const isSelected = residentTags.includes(presetTag)
+                      return (
+                        <button
+                          key={presetTag}
+                          type="button"
+                          onClick={() => handleToggleTag(presetTag)}
+                          className={`px-3 py-1 rounded-full text-xs font-medium border transition-all ${
+                            isSelected
+                              ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                              : "bg-muted/40 text-muted-foreground border-border hover:bg-muted"
+                          }`}
+                        >
+                          {isSelected ? "✓ " : "+ "}{presetTag}
+                        </button>
+                      )
+                    })}
+                  </div>
+
+                  {/* Custom Tag Input */}
+                  <div className="flex items-center gap-2 pt-2">
+                    <Input
+                      id="custom-tag-input"
+                      placeholder="Type custom tag (e.g. Block Captain)…"
+                      value={newTagInput}
+                      onChange={(e) => setNewTagInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault()
+                          handleAddCustomTag()
+                        }
+                      }}
+                      className="text-xs h-8"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleAddCustomTag}
+                      className="h-8 text-xs shrink-0"
+                    >
+                      Add Tag
+                    </Button>
+                  </div>
+
+                  {/* Active Tags Badge List */}
+                  {residentTags.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 pt-2">
+                      {residentTags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="inline-flex items-center gap-1 bg-primary/10 text-primary border border-primary/20 px-2.5 py-0.5 rounded-full text-xs font-medium"
+                        >
+                          {tag}
+                          <button
+                            type="button"
+                            onClick={() => handleToggleTag(tag)}
+                            className="hover:text-destructive text-xs font-bold ml-1"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* DYNAMIC CUSTOM ATTRIBUTES */}

@@ -141,6 +141,8 @@ export const plugins: Plugin[] = [
       "crm-fields": {},
       "mailing-lists": {},
       businesses: {},
+      "business-categories": {},
+      "directory-fields": {},
       header: {
         isGlobal: true,
       },

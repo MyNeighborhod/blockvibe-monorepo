@@ -39,6 +39,9 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data, tenant }) => {
   const logoImage = (data as any)?.logoImage
   const logoUrl = logoImage && typeof logoImage === "object" ? logoImage.url : null
   const overDarkHero = isNog ? false : theme === "dark"
+  const showDirectoryNav = Boolean(
+    (tenant as any)?.enableBusinessDirectory && (tenant as any)?.directorySettings?.showInNav !== false,
+  )
 
   if (isNog) {
     return (
@@ -83,6 +86,7 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data, tenant }) => {
               logoUrl={logoUrl}
               tenantName={tenant?.name}
               overDarkHero={overDarkHero}
+              showDirectoryLink={showDirectoryNav}
             />
           </div>
         </div>
@@ -122,7 +126,7 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data, tenant }) => {
             <Logo loading="eager" priority="high" className="invert dark:invert-0" />
           )}
         </Link>
-        <HeaderNav data={data} />
+        <HeaderNav data={data} showDirectoryLink={showDirectoryNav} />
       </div>
     </header>
   )
