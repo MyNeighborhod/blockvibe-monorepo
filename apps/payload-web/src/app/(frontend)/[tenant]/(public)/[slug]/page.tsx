@@ -14,13 +14,6 @@ import { cn } from "@/utilities/ui"
 import PageClient from "./page.client"
 import { LivePreviewListener } from "@/components/LivePreviewListener"
 import { isDefaultNogTenant } from "@/utilities/resolveTenantSlug"
-import { getMeUser } from "@/utilities/getMeUser"
-import {
-  OverlayVisualBuilderProvider,
-  OverlayBuilderToolbar,
-  BlockInspectorDrawer,
-  BlockLibraryModal,
-} from "@/components/OverlayVisualBuilder"
 
 export async function generateStaticParams() {
   try {
@@ -93,37 +86,17 @@ export default async function Page({ params: paramsPromise }: Args) {
   const { hero, layout } = page
   const hasHero = Boolean(hero?.type && hero.type !== "none")
 
-  // Check if current user is logged in staff
-  const { user } = await getMeUser().catch(() => ({ user: null }))
-  const isStaff = Boolean(user && user.role && ["superadmin", "admin", "editor"].includes(user.role))
-
   return (
-    <OverlayVisualBuilderProvider
-      initialBlocks={layout || []}
-      pageId={page.id}
-      pathName={url}
-      canEdit={isStaff}
-    >
-      {isStaff && <OverlayBuilderToolbar />}
-      
-      <article className={cn("pb-24", hasHero ? "pt-16" : "pt-0")}>
-        <PageClient />
-        {/* Allows redirects for valid pages too */}
-        <PayloadRedirects disableNotFound url={url} />
+    <article className={cn("pb-24", hasHero ? "pt-16" : "pt-0")}>
+      <PageClient />
+      {/* Allows redirects for valid pages too */}
+      <PayloadRedirects disableNotFound url={url} />
 
-        {draft && <LivePreviewListener />}
+      {draft && <LivePreviewListener />}
 
-        <RenderHero {...hero} />
-        <RenderBlocks blocks={layout} />
-      </article>
-
-      {isStaff && (
-        <>
-          <BlockInspectorDrawer />
-          <BlockLibraryModal />
-        </>
-      )}
-    </OverlayVisualBuilderProvider>
+      <RenderHero {...hero} />
+      <RenderBlocks blocks={layout} />
+    </article>
   )
 }
 

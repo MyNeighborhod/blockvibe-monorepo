@@ -12,7 +12,6 @@ import { SlideshowBlock } from "@/blocks/SlideshowBlock/Component"
 import { FileListBlock } from "@/blocks/FileListBlock/Component"
 import { ContactBlock } from "@/blocks/ContactBlock/Component"
 import { PdfBlock } from "@/blocks/PdfBlock/Component"
-import { BlockOverlayWrapper } from "@/components/OverlayVisualBuilder"
 
 const blockComponents = {
   archive: ArchiveBlock,
@@ -38,25 +37,17 @@ export const RenderBlocks: React.FC<{
     return (
       <Fragment>
         {blocks.map((block, index) => {
-          const { blockType, id, blockName } = block
+          const { blockType, id } = block
 
           if (blockType && blockType in blockComponents) {
             const Block = blockComponents[blockType]
 
             if (Block) {
               return (
-                <BlockOverlayWrapper
-                  key={id || `block-${index}`}
-                  index={index}
-                  blockType={blockType}
-                  blockName={blockName || undefined}
-                  id={id ? `block-${id}` : undefined}
-                >
-                  <div className="mb-12 last:mb-0">
-                    {/* @ts-expect-error there may be some mismatch between the expected types here */}
-                    <Block {...block} path={`layout.${index}`} disableInnerContainer />
-                  </div>
-                </BlockOverlayWrapper>
+                <div key={id || `block-${index}`} id={id ? `block-${id}` : undefined} className="mb-12 last:mb-0">
+                  {/* @ts-expect-error there may be some mismatch between the expected types here */}
+                  <Block {...block} path={`layout.${index}`} disableInnerContainer />
+                </div>
               )
             }
           }
